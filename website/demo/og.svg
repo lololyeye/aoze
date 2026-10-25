@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Open Graph card. Rendered to public/og.png by build-og (see README). -->
+  <rect width="1200" height="630" fill="#0a0e15"/>
+  <g transform="translate(72 92) scale(0.11)">
+    <path d="M292 772 L512 248 L732 772" fill="none" stroke="#eef1f5" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M392 616 L800 616" fill="none" stroke="#3dd6d0" stroke-width="76" stroke-linecap="round"/>
+    <circle cx="800" cy="616" r="62" fill="#5ff0d4"/>
+  </g>
+  <text x="190" y="158" font-family="Segoe UI Variable Display, Segoe UI, sans-serif" font-size="38" font-weight="600" fill="#e9edf3">Aoze</text>
+  <text x="80" y="300" font-family="Segoe UI Variable Display, Segoe UI, sans-serif" font-size="66" font-weight="600" letter-spacing="-1.5" fill="#e9edf3">Make your media</text>
+  <text x="80" y="378" font-family="Segoe UI Variable Display, Segoe UI, sans-serif" font-size="66" font-weight="600" letter-spacing="-1.5" fill="#e9edf3">look better.</text>
+  <path d="M82 452 H170" stroke="#3dd6d0" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="176" cy="452" r="6" fill="#3dd6d0"/>
+  <text x="80" y="510" font-family="Segoe UI, sans-serif" font-size="26" fill="#a7b0bd">Images, GIFs and clips. On your PC.</text>
+  <text x="80" y="550" font-family="Cascadia Mono, Consolas, monospace" font-size="20" fill="#818b9b">Free · Open source · Windows</text>
+</svg>

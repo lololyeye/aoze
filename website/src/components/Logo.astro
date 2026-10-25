@@ -1,0 +1,10 @@
+---
+// The Aoze mark from src-tauri/icons/app-icon.svg, without its tile, for use on the dark page.
+interface Props { class?: string; title?: string }
+const { class: cls, title } = Astro.props;
+---
+<svg class={cls} viewBox="240 200 640 620" role={title ? "img" : undefined} aria-label={title} aria-hidden={title ? undefined : "true"}>
+  <path d="M292 772 L512 248 L732 772" fill="none" stroke="#eef1f5" stroke-width="96" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M392 616 L800 616" fill="none" stroke="#3dd6d0" stroke-width="76" stroke-linecap="round" />
+  <circle cx="800" cy="616" r="62" fill="#5ff0d4" />
+</svg>

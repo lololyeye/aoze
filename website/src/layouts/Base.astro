@@ -1,0 +1,129 @@
+---
+import "@fontsource-variable/inter/wght.css";
+import "../styles/site.css";
+import Logo from "../components/Logo.astro";
+import { GITHUB_URL, LICENSE_URL, RELEASES_URL, href } from "../lib/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Extra JSON-LD for the page. */
+  jsonLd?: object;
+}
+
+const {
+  title,
+  description = "Aoze makes images, GIFs and clips look better, on your own PC. Enlarge, clean up, smooth motion to 60 FPS, HDR and compression. Free and open source for Windows.",
+  jsonLd,
+} = Astro.props;
+const fullTitle = title ? `${title} · Aoze` : "Aoze · Make your media look better";
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(href("og.png"), Astro.site);
+const path = Astro.url.pathname.replace(/\/$/, "");
+const current = (p: string) => (path === href(p).replace(/\/$/, "") ? "page" : undefined);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#0a0e15" />
+    <link rel="icon" href={href("favicon.svg")} type="image/svg+xml" />
+    <link rel="icon" href={href("favicon.ico")} sizes="any" />
+    <link rel="apple-touch-icon" href={href("apple-touch-icon.png")} />
+    <link rel="sitemap" href={href("sitemap.xml")} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aoze" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Aoze: make your media look better." />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <script is:inline>document.documentElement.classList.add("js");</script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href={href()} aria-label="Aoze home"><Logo /> Aoze</a>
+        <nav class="nav" id="nav" aria-label="Main">
+          <a href={href("#features")}>Features</a>
+          <a href={href("#how")}>How it works</a>
+          <a href={href("download/")} aria-current={current("download/")}>Download</a>
+          <a href={href("#open-source")}>Open source</a>
+        </nav>
+        <a class="btn btn-primary btn-sm header-cta" href={href("download/")}>Download</a>
+        <button class="menu-btn" type="button" aria-controls="nav" aria-expanded="false" aria-label="Menu">
+          <svg class="open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16" /></svg>
+          <svg class="close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div>
+          <a class="brand" href={href()}><Logo /> Aoze</a>
+          <p class="sign">Made for aoxy, by zero.</p>
+        </div>
+        <nav aria-label="Footer">
+          <a href={GITHUB_URL}>GitHub</a>
+          <a href={href("download/")}>Download</a>
+          <a href={RELEASES_URL}>Releases</a>
+          <a href={LICENSE_URL}>License</a>
+          <a href={href("credits/")}>Credits</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script>
+      // Header border once the page scrolls, mobile menu, reveal on scroll.
+      const header = document.querySelector<HTMLElement>(".site-header")!;
+      const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+
+      const btn = header.querySelector<HTMLButtonElement>(".menu-btn")!;
+      const setMenu = (open: boolean) => {
+        header.classList.toggle("menu-open", open);
+        btn.setAttribute("aria-expanded", String(open));
+        btn.setAttribute("aria-label", open ? "Close menu" : "Menu");
+      };
+      btn.addEventListener("click", () => setMenu(!header.classList.contains("menu-open")));
+      header.querySelectorAll(".nav a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && header.classList.contains("menu-open")) {
+          setMenu(false);
+          btn.focus();
+        }
+      });
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add("in");
+              io.unobserve(e.target);
+            }
+          }
+        },
+        { rootMargin: "0px 0px -8% 0px" },
+      );
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+    </script>
+  </body>
+</html>

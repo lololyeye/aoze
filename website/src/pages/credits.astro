@@ -1,0 +1,61 @@
+---
+import Base from "../layouts/Base.astro";
+import { LICENSE_URL, NOTICES_URL } from "../lib/site";
+
+// Mirrors THIRD_PARTY_NOTICES.md and the README credits in the repository.
+const components = [
+  { name: "waifu2x", by: "nagadomi", license: "MIT", use: "The enlargement and noise reduction method and models.", url: "https://github.com/nagadomi/waifu2x" },
+  { name: "waifu2x-ncnn-vulkan", by: "nihui", license: "MIT", use: "The GPU engine for images and GIFs.", url: "https://github.com/nihui/waifu2x-ncnn-vulkan" },
+  { name: "FFmpeg", by: "the FFmpeg developers · GPL build by BtbN, with libplacebo (LGPL-2.1)", license: "GPL-3.0", use: "GIF and video decoding, filters, encoding, HDR tone mapping.", url: "https://ffmpeg.org" },
+  { name: "RIFE", by: "hzwer · v4.6 and v4.25 weights", license: "MIT", use: "Frame interpolation for Smooth Motion and motion blur.", url: "https://github.com/hzwer/Practical-RIFE" },
+  { name: "rife-ncnn-vulkan", by: "TNTwise, fork of nihui's", license: "MIT", use: "The Smooth Motion runtime.", url: "https://github.com/TNTwise/rife-ncnn-vulkan" },
+  { name: "Real-ESRGAN", by: "xinntao · realesr-animevideov3 weights", license: "BSD-3-Clause", use: "Anime clip clean-up.", url: "https://github.com/xinntao/Real-ESRGAN" },
+  { name: "realesrgan-ncnn-vulkan", by: "xinntao", license: "MIT", use: "The anime clip clean-up runtime.", url: "https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan" },
+  { name: "Piper", by: "rhasspy · en_US hfc_female voice, Hi-Fi TTS data (NVIDIA)", license: "CC BY 4.0 (voice)", use: "The welcome voice, mixed with FFmpeg.", url: "https://github.com/rhasspy/piper" },
+];
+const app = "Tauri 2, React 19, TypeScript, Zustand, Radix UI, Motion, Lucide and the Inter typeface (MIT, ISC, OFL-1.1).";
+---
+<Base title="Credits" description="The open source projects Aoze is built on, and their licenses.">
+  <section class="credits">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Credits</span>
+        <h1>Built on the work of others.</h1>
+        <p>Aoze's own code is under the <a class="link" href={LICENSE_URL}>MIT License</a>. The installer also ships the programs and models below,
+          each under its own license. Their license files are installed next to them.</p>
+      </div>
+
+      <ul class="list">
+        {components.map((c) => (
+          <li>
+            <div class="name"><a class="link" href={c.url}>{c.name}</a><span class="by">{c.by}</span></div>
+            <p>{c.use}</p>
+            <span class="lic mono">{c.license}</span>
+          </li>
+        ))}
+        <li>
+          <div class="name"><span>Application</span></div>
+          <p>{app}</p>
+          <span class="lic mono">MIT / ISC / OFL</span>
+        </li>
+      </ul>
+
+      <p class="foot">Full notice: <a class="link" href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a>. This website uses the Inter typeface (OFL-1.1) and Astro (MIT).</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .credits { padding-block: clamp(48px, 8vw, 96px); }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -0.03em; }
+  .list { border-top: 1px solid var(--line); }
+  .list li { display: grid; grid-template-columns: minmax(200px, 1.1fr) 1.6fr auto; gap: 8px 32px; padding: 20px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .name { display: grid; gap: 4px; font-weight: 600; }
+  .by { color: var(--text-3); font-size: 14px; font-weight: 400; }
+  .list p { color: var(--text-2); }
+  .lic { color: var(--text-2); white-space: nowrap; }
+  .foot { margin-top: 32px; color: var(--text-3); font-size: 15px; }
+  @media (max-width: 760px) {
+    .list li { grid-template-columns: 1fr; }
+  }
+</style>

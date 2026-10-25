@@ -7,3 +7,4 @@ release/
 # Local installs of the app.
 Kirei/
 Aoze/
+.playwright-mcp/

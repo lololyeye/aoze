@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <!-- Demo source illustration for the website (drawn for Aoze, MIT). Rendered small and
+       compressed by build-demo.mjs to make the "Original", then processed by Aoze's engines. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141b3a"/>
+      <stop offset="0.45" stop-color="#4a3a78"/>
+      <stop offset="0.75" stop-color="#d9707a"/>
+      <stop offset="1" stop-color="#f6b779"/>
+    </linearGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e59a7d"/>
+      <stop offset="0.35" stop-color="#5b4479"/>
+      <stop offset="1" stop-color="#161b33"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff3d6" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#fff3d6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="640" fill="url(#sky)"/>
+
+  <!-- stars -->
+  <g fill="#fdf6e3">
+    <circle cx="120" cy="80" r="2.4"/><circle cx="260" cy="150" r="1.6"/><circle cx="380" cy="60" r="2"/>
+    <circle cx="520" cy="120" r="1.4"/><circle cx="640" cy="40" r="2.2"/><circle cx="760" cy="170" r="1.5"/>
+    <circle cx="900" cy="70" r="1.8"/><circle cx="1010" cy="140" r="1.3"/><circle cx="1500" cy="60" r="2.3"/>
+    <circle cx="1420" cy="180" r="1.5"/><circle cx="1320" cy="40" r="1.7"/><circle cx="60" cy="220" r="1.4"/>
+    <circle cx="460" cy="230" r="1.2"/><circle cx="820" cy="250" r="1.2"/><circle cx="1550" cy="260" r="1.3"/>
+  </g>
+
+  <!-- moon -->
+  <circle cx="1180" cy="230" r="150" fill="url(#glow)"/>
+  <circle cx="1180" cy="230" r="78" fill="#fff1d0"/>
+  <circle cx="1152" cy="208" r="12" fill="#f1dcae"/><circle cx="1206" cy="252" r="8" fill="#f1dcae"/>
+  <circle cx="1196" cy="196" r="5" fill="#f1dcae"/>
+
+  <!-- far mountains -->
+  <path d="M0 520 L180 380 L300 450 L470 300 L640 460 L780 360 L960 480 L1120 340 L1300 470 L1450 390 L1600 470 L1600 640 L0 640 Z"
+        fill="#6b4f8f" stroke="#2a2147" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M470 300 L520 345 L495 340 L470 365 L448 338 L425 345 Z" fill="#efe4f7" stroke="#2a2147" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M1120 340 L1165 382 L1140 378 L1118 398 L1098 376 L1078 380 Z" fill="#efe4f7" stroke="#2a2147" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- near hills -->
+  <path d="M0 600 C200 520 360 560 520 540 C700 515 820 590 1000 560 C1180 530 1320 580 1600 540 L1600 640 L0 640 Z"
+        fill="#3a2d5c" stroke="#1b1630" stroke-width="5"/>
+
+  <!-- lake -->
+  <rect y="640" width="1600" height="360" fill="url(#lake)"/>
+  <g stroke="#fff1d0" stroke-linecap="round" opacity="0.85">
+    <path d="M1110 690 H1250" stroke-width="6"/><path d="M1130 720 H1230" stroke-width="5"/>
+    <path d="M1145 750 H1215" stroke-width="4"/><path d="M1160 780 H1200" stroke-width="3"/>
+  </g>
+  <g stroke="#f6c9a6" stroke-linecap="round" stroke-width="2.5" opacity="0.6">
+    <path d="M140 700 H260"/><path d="M380 760 H460"/><path d="M620 720 H720"/><path d="M860 800 H930"/>
+    <path d="M1360 740 H1470"/><path d="M220 860 H300"/><path d="M1000 900 H1090"/>
+  </g>
+
+  <!-- cabin -->
+  <g stroke="#120f20" stroke-width="5" stroke-linejoin="round">
+    <path d="M300 640 L300 560 L360 515 L420 560 L420 640 Z" fill="#2b2140"/>
+    <path d="M286 568 L360 505 L434 568" fill="none" stroke-linecap="round"/>
+    <rect x="335" y="580" width="34" height="30" fill="#ffc861"/>
+    <path d="M352 580 V610 M335 595 H369" stroke-width="3"/>
+    <rect x="392" y="500" width="16" height="36" fill="#2b2140"/>
+  </g>
+  <path d="M360 640 L340 760 L380 760 Z" fill="#ffc861" opacity="0.25"/>
+
+  <!-- pines -->
+  <g fill="#1d2a3a" stroke="#0b0f18" stroke-width="4" stroke-linejoin="round">
+    <path d="M110 640 L150 470 L190 640 Z"/><path d="M175 640 L210 520 L245 640 Z"/>
+    <path d="M470 640 L500 540 L530 640 Z"/><path d="M1400 640 L1445 450 L1490 640 Z"/>
+    <path d="M1470 640 L1510 510 L1550 640 Z"/><path d="M1340 640 L1370 545 L1400 640 Z"/>
+  </g>
+  <g stroke="#0b0f18" stroke-width="4"><path d="M150 640 V660 M1445 640 V662 M210 640 V655 M1510 640 V656"/></g>
+
+  <!-- bird line art -->
+  <g fill="none" stroke="#1b1630" stroke-width="3.5" stroke-linecap="round">
+    <path d="M700 260 q14 -14 28 0 q14 -14 28 0"/><path d="M780 300 q10 -10 20 0 q10 -10 20 0"/>
+    <path d="M640 310 q8 -8 16 0 q8 -8 16 0"/>
+  </g>
+
+</svg>

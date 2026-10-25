@@ -1,0 +1,115 @@
+---
+// Before/after slider. A real <input type="range"> drives it, so it works with a keyboard,
+// a screen reader, touch and a mouse; the visible handle is decoration.
+interface Props {
+  before: string;
+  after: string;
+  width: number;
+  height: number;
+  beforeLabel?: string;
+  afterLabel?: string;
+  alt: string;
+}
+const { before, after, width, height, beforeLabel = "Original", afterLabel = "Aoze", alt } = Astro.props;
+---
+<div class="compare" style={`--pos: 50%; aspect-ratio: ${width} / ${height}`} data-compare>
+  <img class="cmp-before" src={before} alt={`${alt} Original.`} width={width} height={height} loading="lazy" decoding="async" />
+  <img class="cmp-after" src={after} alt={`${alt} Processed by Aoze.`} width={width} height={height} loading="lazy" decoding="async" />
+  <span class="cmp-label cmp-label-before">{beforeLabel}</span>
+  <span class="cmp-label cmp-label-after">{afterLabel}</span>
+  <span class="cmp-handle" aria-hidden="true"><span class="cmp-knob"></span></span>
+  <input class="cmp-range" type="range" min="0" max="100" step="0.5" value="50" aria-label={`Compare ${beforeLabel.toLowerCase()} and ${afterLabel}`} />
+</div>
+
+<style>
+  .compare {
+    position: relative; overflow: hidden; width: 100%;
+    border-radius: var(--radius); background: var(--bg-deep);
+    border: 1px solid var(--line);
+    isolation: isolate; touch-action: pan-y;
+  }
+  .compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cmp-after { clip-path: inset(0 0 0 var(--pos)); }
+  .cmp-label {
+    position: absolute; top: 14px; z-index: 2;
+    padding: 5px 10px; border-radius: 6px;
+    background: rgb(7 10 16 / 0.72); color: var(--text);
+    font: 500 12px/1.2 var(--mono); pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .cmp-label-before { left: 14px; }
+  .cmp-label-after { right: 14px; }
+  .compare[data-near="left"] .cmp-label-before,
+  .compare[data-near="right"] .cmp-label-after { opacity: 0; }
+
+  /* The handle is the logo's crossbar turned upright: a line, with the dot as the grip. */
+  .cmp-handle {
+    position: absolute; top: 0; bottom: 0; left: var(--pos); z-index: 2;
+    width: 2px; margin-left: -1px; background: var(--accent);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
+    pointer-events: none;
+  }
+  .cmp-knob {
+    position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px;
+    border-radius: 50%; background: var(--accent);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.45);
+    transition: transform 0.25s var(--ease);
+  }
+  .cmp-knob::before, .cmp-knob::after {
+    content: ""; position: absolute; top: 50%; width: 0; height: 0; margin-top: -4px;
+    border: 4px solid transparent;
+  }
+  .cmp-knob::before { left: 5px; border-right-color: var(--accent-ink); }
+  .cmp-knob::after { right: 5px; border-left-color: var(--accent-ink); }
+  .compare:hover .cmp-knob, .compare.dragging .cmp-knob { transform: scale(1.12); }
+
+  .cmp-range {
+    position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; margin: 0;
+    opacity: 0; cursor: ew-resize; -webkit-appearance: none; appearance: none;
+  }
+  .compare:has(.cmp-range:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+</style>
+
+<script>
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  document.querySelectorAll<HTMLElement>("[data-compare]").forEach((el) => {
+    const range = el.querySelector<HTMLInputElement>(".cmp-range")!;
+    const set = (v: number) => {
+      el.style.setProperty("--pos", `${v}%`);
+      el.dataset.near = v < 14 ? "left" : v > 86 ? "right" : "";
+    };
+    range.addEventListener("input", () => set(Number(range.value)));
+    range.addEventListener("pointerdown", () => el.classList.add("dragging"));
+    window.addEventListener("pointerup", () => el.classList.remove("dragging"));
+
+    // One gentle sweep the first time the slider is seen, so people notice it moves.
+    if (reduce) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        let touched = false;
+        range.addEventListener("pointerdown", () => (touched = true), { once: true });
+        range.addEventListener("keydown", () => (touched = true), { once: true });
+        const keys = [50, 32, 66, 50];
+        const start = performance.now() + 500;
+        const dur = 2200;
+        const ease = (t: number) => 0.5 - Math.cos(Math.PI * t) / 2;
+        const step = (now: number) => {
+          if (touched) return;
+          const t = Math.min(Math.max((now - start) / dur, 0), 1);
+          const seg = Math.min(Math.floor(t * 3), 2);
+          const local = ease(t * 3 - seg);
+          const v = keys[seg] + (keys[seg + 1] - keys[seg]) * local;
+          range.value = String(v);
+          set(v);
+          if (t < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(el);
+  });
+</script>

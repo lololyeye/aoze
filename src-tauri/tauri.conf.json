@@ -71,6 +71,7 @@
       },
       "nsis": {
         "installMode": "currentUser",
+        "template": "windows/installer.nsi",
         "installerHooks": "windows/hooks.nsh",
         "displayLanguageSelector": false,
         "languages": [

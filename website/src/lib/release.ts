@@ -61,12 +61,13 @@ export function latestRelease(): Promise<Release> {
 
 export const version = (r: Release) => r.tag.replace(/^v/, "");
 
-export function formatSize(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+export function formatSize(bytes: number, lang: "en" | "fr" = "en"): string {
+  const mb = (bytes / 1024 / 1024).toFixed(1);
+  return lang === "fr" ? `${mb.replace(".", ",")} Mo` : `${mb} MB`;
 }
 
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+export function formatDate(iso: string, lang: "en" | "fr" = "en"): string {
+  return new Date(iso).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
 export function sha256(r: Release): string | null {

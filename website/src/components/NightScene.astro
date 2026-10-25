@@ -1,0 +1,57 @@
+---
+// The night landscape of the app's home screen (stars, a soft moon, mountains, pines),
+// redrawn in SVG so it stays sharp and weighs almost nothing. Purely decorative.
+// The sky fills the whole area; the land keeps its proportions and sits at the bottom.
+interface Props { class?: string; stars?: number }
+const { class: cls, stars = 80 } = Astro.props;
+const id = (name: string) => `${cls ?? "night"}-${name}`; // unique per instance on a page
+
+// Fixed seed: the same sky on every build.
+let seed = 7;
+const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const sky = Array.from({ length: stars }, () => ({
+  x: Math.round(rand() * 1600),
+  y: Math.round(rand() * 900),
+  r: (0.6 + rand() * 1).toFixed(2),
+  o: (0.15 + rand() * 0.45).toFixed(2),
+}));
+// Pines along the near ridge, mostly on the right like in the app.
+const pines = [
+  [1180, 268, 46], [1222, 280, 34], [1262, 256, 58], [1310, 276, 40], [1352, 246, 70],
+  [1404, 268, 48], [1446, 238, 84], [1500, 264, 56], [1548, 248, 72], [1590, 270, 44],
+  [96, 296, 36], [132, 284, 48], [168, 302, 30],
+];
+---
+<div class={`night ${cls ?? ""}`} aria-hidden="true">
+  <svg class="night-sky" viewBox="0 0 1600 900" preserveAspectRatio="xMaxYMin slice" focusable="false">
+    <defs>
+      <radialGradient id={id("moon")} cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#9fb6d6" stop-opacity="0.1" />
+        <stop offset="1" stop-color="#9fb6d6" stop-opacity="0" />
+      </radialGradient>
+    </defs>
+    <g class="night-moon">
+      <circle cx="1330" cy="190" r="120" fill={`url(#${id("moon")})`} />
+      <circle cx="1330" cy="190" r="7" fill="#d5e0ee" opacity="0.55" />
+    </g>
+    <g fill="#dbe6f5">
+      {sky.map((s) => <circle cx={s.x} cy={s.y} r={s.r} opacity={s.o} />)}
+    </g>
+  </svg>
+  <svg class="night-land" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice" focusable="false">
+    <path d="M0 190 L150 100 L260 150 L420 30 L560 130 L700 60 L860 150 L1010 50 L1150 130 L1300 70 L1450 140 L1600 80 V420 H0Z" fill="#111a26" />
+    <path d="M0 270 C180 220 330 240 480 230 C660 216 800 270 980 250 C1160 230 1320 270 1600 230 V420 H0Z" fill="#0d1420" />
+    <g fill="#0a1019">
+      {pines.map(([x, y, h]) => <path d={`M${x - h * 0.28} ${y + 4} L${x} ${y - h} L${x + h * 0.28} ${y + 4}Z`} />)}
+    </g>
+  </svg>
+</div>
+
+<style>
+  .night { pointer-events: none; overflow: hidden; }
+  .night svg { position: absolute; left: 0; width: 100%; display: block; }
+  .night-sky { top: 0; height: 100%; }
+  .night-land { bottom: 0; height: var(--land, 46%); }
+  /* On narrow screens the sky is cropped hard and the moon lands in the text. */
+  @media (max-width: 720px) { .night-moon { display: none; } }
+</style>

@@ -1,0 +1,64 @@
+---
+import Base from "../layouts/Base.astro";
+import { LICENSE_URL, NOTICES_URL } from "../lib/site";
+import { ui, type Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = ui[lang].credits;
+
+// Mirrors THIRD_PARTY_NOTICES.md and the README credits in the repository.
+const components = [
+  { name: "waifu2x", by: "nagadomi", license: "MIT", use: t.uses.waifu2x, url: "https://github.com/nagadomi/waifu2x" },
+  { name: "waifu2x-ncnn-vulkan", by: "nihui", license: "MIT", use: t.uses.waifu2xNcnn, url: "https://github.com/nihui/waifu2x-ncnn-vulkan" },
+  { name: "FFmpeg", by: "The FFmpeg developers. GPL build by BtbN, with libplacebo (LGPL-2.1)", license: "GPL-3.0", use: t.uses.ffmpeg, url: "https://ffmpeg.org" },
+  { name: "RIFE", by: "hzwer, v4.6 and v4.25 weights", license: "MIT", use: t.uses.rife, url: "https://github.com/hzwer/Practical-RIFE" },
+  { name: "rife-ncnn-vulkan", by: "TNTwise, fork of nihui's", license: "MIT", use: t.uses.rifeNcnn, url: "https://github.com/TNTwise/rife-ncnn-vulkan" },
+  { name: "Real-ESRGAN", by: "xinntao, realesr-animevideov3 weights", license: "BSD-3-Clause", use: t.uses.realesrgan, url: "https://github.com/xinntao/Real-ESRGAN" },
+  { name: "realesrgan-ncnn-vulkan", by: "xinntao", license: "MIT", use: t.uses.realesrganNcnn, url: "https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan" },
+  { name: "Piper", by: "rhasspy. en_US hfc_female voice, Hi-Fi TTS data (NVIDIA)", license: "CC BY 4.0 (voice)", use: t.uses.piper, url: "https://github.com/rhasspy/piper" },
+];
+---
+<Base lang={lang} path="credits/" title={t.title} description={t.description}>
+  <section class="credits">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">{t.title}</span>
+        <h1>{t.h1}</h1>
+        <p>{t.lead[0]} <a class="link" href={LICENSE_URL}>{t.lead[1]}</a>{t.lead[2]}</p>
+      </div>
+
+      <ul class="list">
+        {components.map((c) => (
+          <li>
+            <div class="name"><a class="link" href={c.url}>{c.name}</a><span class="by">{c.by}</span></div>
+            <p>{c.use}</p>
+            <span class="lic mono">{c.license}</span>
+          </li>
+        ))}
+        <li>
+          <div class="name"><span>{t.app}</span></div>
+          <p>{t.appText}</p>
+          <span class="lic mono">MIT, ISC, OFL</span>
+        </li>
+      </ul>
+
+      <p class="foot">{t.foot[0]} <a class="link" href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a>. {t.foot[1]}</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .credits { padding-block: clamp(48px, 8vw, 96px); }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -0.03em; }
+  .list { border-top: 1px solid var(--line); }
+  .list li { display: grid; grid-template-columns: minmax(200px, 1.1fr) 1.6fr auto; gap: 8px 32px; padding: 20px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .name { display: grid; gap: 4px; font-weight: 600; }
+  .by { color: var(--text-3); font-size: 14px; font-weight: 400; }
+  .list p { color: var(--text-2); }
+  .lic { color: var(--text-2); white-space: nowrap; }
+  .foot { margin-top: 32px; color: var(--text-3); font-size: 15px; }
+  @media (max-width: 760px) {
+    .list li { grid-template-columns: 1fr; }
+  }
+</style>

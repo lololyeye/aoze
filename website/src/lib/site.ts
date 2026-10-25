@@ -11,7 +11,12 @@ export const VIDEO_ENGINE_URL = `${GITHUB_URL}/blob/main/docs/VIDEO_ENGINE.md`;
 export const KOFI_URL = "https://ko-fi.com/aoze_support";
 export const API_LATEST = `https://api.github.com/repos/${REPO}/releases/latest`;
 
-/** Prefixes a site path with the GitHub Pages base ("/aoze/"). */
+/** Prefixes a site path with the GitHub Pages base ("/aoze/"). Use it for assets. */
 export function href(path = ""): string {
   return import.meta.env.BASE_URL.replace(/\/$/, "") + "/" + path.replace(/^\//, "");
+}
+
+/** A page in a given language: English at the root, French under /fr/. */
+export function pageHref(lang: "en" | "fr", path = ""): string {
+  return href((lang === "fr" ? "fr/" : "") + path.replace(/^\//, ""));
 }

@@ -2,34 +2,41 @@
 import "@fontsource-variable/inter/wght.css";
 import "../styles/site.css";
 import Logo from "../components/Logo.astro";
-import { GITHUB_URL, LICENSE_URL, RELEASES_URL, href } from "../lib/site";
+import { GITHUB_URL, LICENSE_URL, RELEASES_URL, href, pageHref } from "../lib/site";
+import { ui, type Lang } from "../i18n/ui";
 
 interface Props {
+  lang: Lang;
+  /** The page's path inside its language ("" or "download/"), used for the language switch. */
+  path: string | null;
   title?: string;
   description?: string;
   /** Extra JSON-LD for the page. */
   jsonLd?: object;
 }
 
-const {
-  title,
-  description = "Aoze makes images, GIFs and clips look better, on your own PC. Enlarge, clean up, smooth motion to 60 FPS, HDR and compression. Free and open source for Windows.",
-  jsonLd,
-} = Astro.props;
-const fullTitle = title ? `${title} · Aoze` : "Aoze · Make your media look better";
+const { lang, path, title, jsonLd } = Astro.props;
+const t = ui[lang];
+const other: Lang = lang === "en" ? "fr" : "en";
+const description = Astro.props.description ?? t.meta.description;
+const fullTitle = title ? `${title} · Aoze` : t.meta.title;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(href("og.png"), Astro.site);
-const path = Astro.url.pathname.replace(/\/$/, "");
-const current = (p: string) => (path === href(p).replace(/\/$/, "") ? "page" : undefined);
+const alternate = (l: Lang) => new URL(pageHref(l, path ?? ""), Astro.site);
+const current = (p: string) => (path === p ? "page" : undefined);
+const home = pageHref(lang);
 ---
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {path !== null && <link rel="canonical" href={canonical} />}
+    {path !== null && <link rel="alternate" hreflang="en" href={alternate("en")} />}
+    {path !== null && <link rel="alternate" hreflang="fr" href={alternate("fr")} />}
+    {path !== null && <link rel="alternate" hreflang="x-default" href={alternate("en")} />}
     <meta name="theme-color" content="#0a0e15" />
     <link rel="icon" href={href("favicon.svg")} type="image/svg+xml" />
     <link rel="icon" href={href("favicon.ico")} sizes="any" />
@@ -38,32 +45,51 @@ const current = (p: string) => (path === href(p).replace(/\/$/, "") ? "page" : u
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Aoze" />
+    <meta property="og:locale" content={t.ogLocale} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Aoze: make your media look better." />
+    <meta property="og:image:alt" content={t.meta.ogAlt} />
     <meta name="twitter:card" content="summary_large_image" />
 
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
-    <script is:inline>document.documentElement.classList.add("js");</script>
+    <script is:inline define:vars={{ lang, en: path === null ? null : pageHref("en", path), fr: path === null ? null : pageHref("fr", path) }}>
+      document.documentElement.classList.add("js");
+      // Language: a choice made with the switch wins; otherwise a French browser gets the French
+      // pages. English pages never send French readers back, so links shared in French stay French.
+      let saved = null;
+      try {
+        saved = localStorage.getItem("aoze-lang");
+      } catch {}
+      const browser = ((navigator.languages && navigator.languages[0]) || navigator.language || "").toLowerCase();
+      const wanted = saved || (browser.startsWith("fr") ? "fr" : null);
+      if (en && wanted && wanted !== lang && (saved || lang === "en")) {
+        location.replace((wanted === "fr" ? fr : en) + location.hash);
+      }
+    </script>
   </head>
   <body>
-    <a class="skip" href="#main">Skip to content</a>
+    <a class="skip" href="#main">{t.nav.skip}</a>
 
     <header class="site-header">
       <div class="wrap">
-        <a class="brand" href={href()} aria-label="Aoze home"><Logo /> Aoze</a>
-        <nav class="nav" id="nav" aria-label="Main">
-          <a href={href("#features")}>Features</a>
-          <a href={href("#how")}>How it works</a>
-          <a href={href("download/")} aria-current={current("download/")}>Download</a>
-          <a href={href("#open-source")}>Open source</a>
+        <a class="brand" href={home} aria-label={t.nav.home}><Logo /> Aoze</a>
+        <nav class="nav" id="nav" aria-label={t.nav.main}>
+          <a href={`${home}#features`}>{t.nav.features}</a>
+          <a href={`${home}#how`}>{t.nav.how}</a>
+          <a href={pageHref(lang, "download/")} aria-current={current("download/")}>{t.nav.download}</a>
+          <a href={`${home}#open-source`}>{t.nav.openSource}</a>
         </nav>
-        <a class="btn btn-primary btn-sm header-cta" href={href("download/")}>Download</a>
-        <button class="menu-btn" type="button" aria-controls="nav" aria-expanded="false" aria-label="Menu">
+        {path !== null && (
+          <a class="lang-switch" href={pageHref(other, path)} hreflang={other} lang={other} data-lang={other} aria-label={t.nav.switchTo}>
+            {other.toUpperCase()}
+          </a>
+        )}
+        <a class="btn btn-primary btn-sm header-cta" href={pageHref(lang, "download/")}>{t.nav.download}</a>
+        <button class="menu-btn" type="button" aria-controls="nav" aria-expanded="false" aria-label={t.nav.menu} data-open={t.nav.menu} data-close={t.nav.closeMenu}>
           <svg class="open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16" /></svg>
           <svg class="close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
@@ -77,21 +103,21 @@ const current = (p: string) => (path === href(p).replace(/\/$/, "") ? "page" : u
     <footer class="site-footer">
       <div class="wrap">
         <div>
-          <a class="brand" href={href()}><Logo /> Aoze</a>
-          <p class="sign">Made for aoxy, by zero.</p>
+          <a class="brand" href={home}><Logo /> Aoze</a>
+          <p class="sign">{t.nav.sign}</p>
         </div>
-        <nav aria-label="Footer">
-          <a href={GITHUB_URL}>GitHub</a>
-          <a href={href("download/")}>Download</a>
-          <a href={RELEASES_URL}>Releases</a>
-          <a href={LICENSE_URL}>License</a>
-          <a href={href("credits/")}>Credits</a>
+        <nav aria-label={t.nav.footer}>
+          <a href={GITHUB_URL}>{t.nav.github}</a>
+          <a href={pageHref(lang, "download/")}>{t.nav.download}</a>
+          <a href={RELEASES_URL}>{t.nav.releases}</a>
+          <a href={LICENSE_URL}>{t.nav.license}</a>
+          <a href={pageHref(lang, "credits/")}>{t.nav.credits}</a>
         </nav>
       </div>
     </footer>
 
     <script>
-      // Header border once the page scrolls, mobile menu, reveal on scroll.
+      // Header border once the page scrolls, mobile menu, language choice, reveal on scroll.
       const header = document.querySelector<HTMLElement>(".site-header")!;
       const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
       onScroll();
@@ -101,7 +127,7 @@ const current = (p: string) => (path === href(p).replace(/\/$/, "") ? "page" : u
       const setMenu = (open: boolean) => {
         header.classList.toggle("menu-open", open);
         btn.setAttribute("aria-expanded", String(open));
-        btn.setAttribute("aria-label", open ? "Close menu" : "Menu");
+        btn.setAttribute("aria-label", open ? btn.dataset.close! : btn.dataset.open!);
       };
       btn.addEventListener("click", () => setMenu(!header.classList.contains("menu-open")));
       header.querySelectorAll(".nav a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
@@ -110,6 +136,14 @@ const current = (p: string) => (path === href(p).replace(/\/$/, "") ? "page" : u
           setMenu(false);
           btn.focus();
         }
+      });
+
+      header.querySelector<HTMLAnchorElement>(".lang-switch")?.addEventListener("click", (e) => {
+        const a = e.currentTarget as HTMLAnchorElement;
+        try {
+          localStorage.setItem("aoze-lang", a.dataset.lang!);
+        } catch {}
+        a.href += location.hash;
       });
 
       const io = new IntersectionObserver(

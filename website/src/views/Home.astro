@@ -1,0 +1,550 @@
+---
+import Base from "../layouts/Base.astro";
+import Compare from "../components/Compare.astro";
+import NightScene from "../components/NightScene.astro";
+import { latestRelease, version, formatSize } from "../lib/release";
+import { GITHUB_URL, RELEASES_URL, LICENSE_URL, ISSUES_URL, README_URL, VIDEO_ENGINE_URL, href, pageHref } from "../lib/site";
+import { ui, type Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = ui[lang];
+const release = await latestRelease();
+const v = version(release);
+const size = formatSize(release.asset.size, lang);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Aoze",
+  description: t.meta.description,
+  inLanguage: lang,
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Windows 10, Windows 11",
+  softwareVersion: v,
+  downloadUrl: release.asset.url,
+  fileSize: size,
+  license: LICENSE_URL,
+  url: new URL(pageHref(lang), Astro.site).toString(),
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
+---
+<Base lang={lang} path="" jsonLd={jsonLd}>
+  <!-- Hero -->
+  <section class="hero">
+    <NightScene class="hero-bg" />
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <a class="eyebrow release-tag reveal" href={release.url}>{t.hero.tag(v)}</a>
+        <h1 class="reveal" data-delay="1">{t.hero.title}</h1>
+        <p class="lead reveal" data-delay="2">{t.hero.lead}</p>
+        <div class="actions reveal" data-delay="3">
+          <a class="btn btn-primary btn-lg" href={pageHref(lang, "download/")}>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={downloadIcon} />
+            {t.hero.download}
+          </a>
+          <a class="btn btn-ghost btn-lg" href={GITHUB_URL}>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" /></svg>
+            {t.hero.github}
+          </a>
+        </div>
+        <p class="meta reveal" data-delay="3">{t.hero.meta}</p>
+      </div>
+
+      <figure class="window" data-shots>
+        <div class="window-frame">
+          <img class="shot is-active" data-shot="image" src={href("shots/app-image.webp")}
+               srcset={`${href("shots/app-image-760.webp")} 760w, ${href("shots/app-image.webp")} 1320w`}
+               sizes="(max-width: 1000px) 100vw, 1160px" width="1320" height="840"
+               alt={t.hero.shotImageAlt} fetchpriority="high" />
+          <img class="shot" data-shot="home" src={href("shots/app-home.webp")}
+               srcset={`${href("shots/app-home-760.webp")} 760w, ${href("shots/app-home.webp")} 1320w`}
+               sizes="(max-width: 1000px) 100vw, 1160px" width="1320" height="840"
+               alt={t.hero.shotHomeAlt} loading="lazy" />
+        </div>
+        <figcaption>
+          <div class="shot-tabs" role="group" aria-label={t.hero.shotGroup}>
+            <button type="button" aria-pressed="true" data-show="image">{t.hero.shotImage}</button>
+            <button type="button" aria-pressed="false" data-show="home">{t.hero.shotHome}</button>
+          </div>
+          <span class="muted">{t.hero.shotCaption(v)}</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Before / after -->
+  <section id="compare" class="compare-section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{t.compare.eyebrow}</span>
+        <h2>{t.compare.title}</h2>
+        <p>{t.compare.lead}</p>
+      </div>
+
+      <div class="demo-tabs reveal" role="tablist" aria-label={t.compare.tabs}>
+        <button role="tab" id="tab-image" aria-controls="panel-image" aria-selected="true">{t.compare.image}</button>
+        <button role="tab" id="tab-motion" aria-controls="panel-motion" aria-selected="false" tabindex="-1">{t.compare.motion}</button>
+      </div>
+
+      <div class="demo-panel reveal" id="panel-image" role="tabpanel" aria-labelledby="tab-image">
+        <Compare
+          before={href("demo/image-original.jpg")}
+          after={href("demo/image-enhanced.webp")}
+          width={1600} height={1000}
+          alt={t.compare.alt}
+          beforeLabel={t.compare.original}
+          afterLabel="Aoze"
+          altBefore={t.compare.altOriginal}
+          altAfter={t.compare.altAfter}
+          sliderLabel={t.compare.sliderLabel}
+        />
+        <dl class="demo-facts">
+          <div><dt>{t.compare.factOriginalTerm}</dt><dd>{t.compare.factOriginal}</dd></div>
+          <div><dt>{t.compare.factAozeTerm}</dt><dd>{t.compare.factAoze}</dd></div>
+        </dl>
+      </div>
+
+      <div class="demo-panel" id="panel-motion" role="tabpanel" aria-labelledby="tab-motion" hidden>
+        <div class="motion">
+          <div class="motion-labels" aria-hidden="true"><span>{t.compare.motion24}</span><span>{t.compare.motion60}</span></div>
+          <video data-autoplay muted loop playsinline preload="none" width="1280" height="360"
+                 poster={href("demo/motion-poster.jpg")}
+                 data-wide={href("demo/motion-24-60.mp4")}
+                 data-tall={href("demo/motion-24-60-v.mp4")} data-tall-poster={href("demo/motion-poster-v.jpg")}
+                 aria-label={t.compare.videoLabel}></video>
+          <button class="motion-toggle" type="button" aria-pressed="false" data-pause={t.compare.pause} data-play={t.compare.play}>{t.compare.pause}</button>
+        </div>
+        <dl class="demo-facts">
+          <div><dt>{t.compare.fact24Term}</dt><dd>{t.compare.fact24}</dd></div>
+          <div><dt>{t.compare.fact60Term}</dt><dd>{t.compare.fact60}</dd></div>
+        </dl>
+      </div>
+      <p class="demo-note">{t.compare.note} <a class="link" href={`${GITHUB_URL}/tree/main/website/demo`}>{t.compare.noteLink}</a>.</p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- Features -->
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{t.features.eyebrow}</span>
+        <h2>{t.features.title}</h2>
+        <p>{t.features.lead}</p>
+      </div>
+
+      <div class="features">
+        {[t.features.image, t.features.clips, t.features.convert].map((f, i) => (
+          <article class="feature reveal" data-delay={String(i)}>
+            <h3>{f.title}</h3>
+            <ul>{f.items.map((item) => <li>{item}</li>)}</ul>
+            <p class="formats">{f.formats}</p>
+          </article>
+        ))}
+      </div>
+      <p class="more reveal">{t.features.more[0]} <a class="link" href={README_URL}>{t.features.more[1]}</a>{t.features.more[2]}
+        {" "}<a class="link" href={VIDEO_ENGINE_URL}>{t.features.more[3]}</a>{t.features.more[4]}</p>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="how">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{t.how.eyebrow}</span>
+        <h2>{t.how.title}</h2>
+      </div>
+      <ol class="steps reveal">
+        {t.how.steps.map((s, i) => (
+          <li>
+            <span class="step-num" aria-hidden="true">{i + 1}</span>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- Editors -->
+  <section id="editors" class="editors">
+    <div class="wrap editors-grid">
+      <div>
+        <div class="section-head reveal">
+          <span class="eyebrow">{t.editors.eyebrow}</span>
+          <h2>{t.editors.title}</h2>
+          <p class="trio">{t.editors.trio.map((line, i) => <>{line}{i < 2 && <br />}</>)}</p>
+        </div>
+        <p class="fps reveal" aria-label={t.editors.fpsLabel}><span>24</span><span class="to" aria-hidden="true"></span><span>60</span><small>FPS</small></p>
+        <div class="points reveal">
+          {t.editors.points.map((p) => (
+            <div class="point"><h3>{p.title}</h3><p>{p.text}</p></div>
+          ))}
+          <div class="point point-preset">
+            <span class="preset-tag">{t.editors.presetTag}</span>
+            <h3>{t.editors.preset.title}</h3>
+            <p>{t.editors.preset.text}</p>
+          </div>
+        </div>
+      </div>
+      <figure class="panel-shot reveal" data-delay="1">
+        <img src={href("shots/app-clip-panel.webp")} width="316" height="796" loading="lazy" decoding="async" alt={t.editors.panelAlt} />
+        <figcaption class="muted">{t.editors.panelCaption}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Performance -->
+  <section id="performance" class="perf">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{t.perf.eyebrow}</span>
+        <h2>{t.perf.title}</h2>
+        <p>{t.perf.lead}</p>
+      </div>
+      <div class="perf-grid">
+        {t.perf.items.map((p, i) => (
+          <div class="reveal" data-delay={String(i)}><h3>{p.title}</h3><p>{p.text}</p></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Local -->
+  <section id="local" class="local">
+    <div class="wrap local-inner reveal">
+      <svg class="local-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="6" y="9" width="36" height="24" rx="3" /><path d="M17 39h14M24 33v6" stroke-linecap="round" />
+        <path d="M19 21l4 4 7-8" stroke="var(--accent)" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <h2>{t.local.title}</h2>
+      <p>{t.local.text}</p>
+      <p class="fine">{t.local.fine}</p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- Open source -->
+  <section id="open-source" class="oss">
+    <div class="wrap oss-grid">
+      <div class="section-head reveal">
+        <span class="eyebrow">{t.oss.eyebrow}</span>
+        <h2>{t.oss.title}</h2>
+        <p>{t.oss.lead}</p>
+        <div class="actions">
+          <a class="btn btn-ghost" href={GITHUB_URL}>{t.oss.github}</a>
+          <a class="btn btn-ghost" href={RELEASES_URL}>{t.oss.releases}</a>
+        </div>
+      </div>
+      <dl class="oss-list reveal" data-delay="1">
+        <div><dt>{t.oss.repo}</dt><dd><a class="link" href={GITHUB_URL}>github.com/lololyeye/aoze</a></dd></div>
+        <div><dt>{t.oss.license}</dt><dd><a class="link" href={LICENSE_URL}>MIT</a></dd></div>
+        <div><dt>{t.oss.contribute}</dt><dd>{t.oss.contributeText[0]} <a class="link" href={ISSUES_URL}>{t.oss.contributeText[1]}</a>{t.oss.contributeText[2]}</dd></div>
+        <div><dt>{t.oss.builtWith}</dt><dd>Tauri 2, Rust, React, TypeScript</dd></div>
+        <div><dt>{t.oss.engines}</dt><dd>waifu2x, FFmpeg, RIFE, Real-ESRGAN. <a class="link" href={pageHref(lang, "credits/")}>{t.oss.credits}</a></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Final call -->
+  <section class="final">
+    <div class="wrap">
+      <div class="final-inner reveal">
+        <NightScene class="final-bg" />
+        <h2>{t.final.title}</h2>
+        <a class="btn btn-primary btn-lg" href={release.asset.url}>
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={downloadIcon} />
+          {t.final.download(v)}
+        </a>
+        <p class="muted">{t.final.meta(size)} <a class="link" href={pageHref(lang, "download/")}>{t.final.details}</a></p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Hero: the night backdrop of the app's home screen sits behind the window. */
+  .hero { position: relative; isolation: isolate; padding-block: clamp(48px, 8vw, 96px) clamp(56px, 8vw, 104px); overflow: hidden; }
+  .hero :global(.hero-bg) {
+    position: absolute; inset: 0; z-index: -1; --land: 52%;
+    /* Fades out under the header and into the next section. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  }
+  .hero-grid { display: grid; gap: clamp(40px, 6vw, 72px); }
+  .hero-copy { display: grid; gap: 22px; justify-items: start; max-width: 760px; }
+  .release-tag { text-decoration: none; transition: color 0.2s; }
+  .release-tag:hover { color: var(--text); }
+  h1 { font-size: clamp(2.6rem, 7vw, 5rem); letter-spacing: -0.035em; font-weight: 640; }
+  .lead { color: var(--text-2); font-size: clamp(1.08rem, 1.6vw, 1.25rem); max-width: 34em; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+  .meta { color: var(--text-3); font-size: 15px; }
+
+  .window { margin: 0; perspective: 1800px; }
+  .window-frame {
+    position: relative; aspect-ratio: 1320 / 840; border-radius: 12px; overflow: hidden;
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(0 0 0 / 0.4);
+    transform-origin: 50% 0;
+    transition: transform 1.2s var(--ease), box-shadow 0.4s;
+  }
+  .js .window:not(.in) .window-frame { transform: rotateX(9deg) scale(0.97); }
+  .window-frame:hover { box-shadow: 0 48px 90px -30px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(61 214 208 / 0.18); }
+  .shot { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.45s var(--ease); }
+  .shot.is-active { opacity: 1; position: relative; }
+  .window figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: 14px; }
+  .shot-tabs { display: inline-flex; padding: 3px; border-radius: 9px; background: var(--surface); border: 1px solid var(--line); }
+  .shot-tabs button, .demo-tabs button {
+    border: 0; background: none; color: var(--text-2); padding: 7px 14px; border-radius: 7px;
+    font: 500 14px/1 var(--font); cursor: pointer; transition: color 0.2s, background-color 0.2s;
+  }
+  .shot-tabs button:hover, .demo-tabs button:hover { color: var(--text); }
+  .shot-tabs button[aria-pressed="true"], .demo-tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  @media (prefers-reduced-motion: reduce) {
+    .js .window:not(.in) .window-frame { transform: none; }
+  }
+
+  /* Before / after */
+  .demo-tabs { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); margin-bottom: 20px; }
+  .demo-tabs button { padding: 9px 18px; font-size: 15px; }
+  .demo-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 40px; margin: 18px 0 0; font-size: 15px; }
+  .demo-facts div { display: grid; gap: 2px; }
+  .demo-facts dt { color: var(--text); font-weight: 600; font-size: 14px; }
+  .demo-facts dd { margin: 0; color: var(--text-2); }
+  .demo-note { margin-top: 28px; color: var(--text-3); font-size: 14px; }
+  .motion { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--bg-deep); }
+  .motion video { width: 100%; aspect-ratio: 1280 / 360; }
+  .motion::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--accent); }
+  .motion-labels { position: absolute; inset: 14px 14px auto; display: flex; justify-content: space-between; z-index: 1; pointer-events: none; }
+  .motion-labels span { padding: 5px 10px; border-radius: 6px; background: rgb(7 10 16 / 0.72); font: 500 12px/1.2 var(--mono); }
+  .motion-toggle {
+    position: absolute; right: 14px; bottom: 14px; z-index: 1;
+    padding: 6px 12px; border-radius: 7px; border: 1px solid var(--line-strong);
+    background: rgb(7 10 16 / 0.78); color: var(--text); font: 500 13px/1 var(--font); cursor: pointer;
+  }
+  /* Phones get the same clip stacked: 24 FPS on top, 60 FPS below. */
+  @media (max-width: 640px) {
+    .demo-facts { grid-template-columns: 1fr; }
+    .motion video { aspect-ratio: 640 / 720; }
+    .motion::after { top: 50%; bottom: auto; left: 0; right: 0; width: auto; height: 2px; margin: -1px 0 0; }
+    .motion-labels { inset: 0; }
+    .motion-labels span { position: absolute; left: 12px; top: 12px; }
+    .motion-labels span:last-child { top: calc(50% + 12px); }
+  }
+
+  /* Features */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+  .feature { padding: 32px 32px 8px 0; display: flex; flex-direction: column; gap: 18px; }
+  .feature + .feature { padding-left: 32px; border-left: 1px solid var(--line); }
+  .feature h3 { font-size: 1.3rem; }
+  .feature ul { display: grid; gap: 10px; color: var(--text-2); }
+  .formats { margin-top: auto; padding-top: 10px; color: var(--text-3); font-size: 15px; }
+  .more { margin-top: 40px; color: var(--text-2); }
+  @media (max-width: 860px) {
+    .features { grid-template-columns: 1fr; }
+    .feature, .feature + .feature { padding: 28px 0; border-left: 0; border-bottom: 1px solid var(--line); }
+  }
+
+  /* Steps: four cells of one panel, numbered, read left to right. */
+  .steps {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+    counter-reset: step;
+  }
+  .steps li { position: relative; display: grid; align-content: start; gap: 10px; padding: 28px 26px 30px; background: var(--bg); }
+  .step-num {
+    display: inline-grid; place-items: center; width: 34px; height: 34px; margin-bottom: 8px;
+    border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent);
+    font: 600 15px/1 var(--font); font-variant-numeric: tabular-nums;
+  }
+  /* A small arrow on each divider points to the next step. */
+  .steps li:not(:last-child)::after {
+    content: ""; position: absolute; top: 44px; right: -7px; z-index: 1;
+    width: 12px; height: 12px; background: var(--bg);
+    border-top: 1px solid var(--line-strong); border-right: 1px solid var(--line-strong);
+    transform: rotate(45deg);
+  }
+  .steps h3 { font-size: 1.2rem; }
+  .steps p { color: var(--text-2); font-size: 16px; }
+  @media (max-width: 960px) {
+    .steps { grid-template-columns: 1fr 1fr; }
+    .steps li:nth-child(2)::after { display: none; }
+  }
+  @media (max-width: 560px) {
+    .steps { grid-template-columns: 1fr; }
+    .steps li { grid-template-columns: auto 1fr; column-gap: 16px; padding: 22px 20px; }
+    .steps li > * { grid-column: 2; }
+    .step-num { grid-column: 1 !important; grid-row: 1 / span 2; margin: 0; }
+    .steps li:not(:last-child)::after { display: none; }
+  }
+
+  /* Editors */
+  .editors-grid { display: grid; grid-template-columns: 1fr auto; gap: clamp(40px, 7vw, 96px); align-items: start; }
+  .trio { color: var(--text) !important; font-size: clamp(1.25rem, 2.2vw, 1.6rem) !important; line-height: 1.35; font-weight: 500; letter-spacing: -0.015em; }
+  .fps { display: flex; align-items: center; gap: 18px; font: 600 clamp(3rem, 8vw, 5.5rem)/1 var(--font); letter-spacing: -0.04em; margin-bottom: 40px; font-variant-numeric: tabular-nums; }
+  .fps span:first-child { color: var(--text-3); }
+  .fps .to {
+    width: clamp(48px, 9vw, 110px); height: 12px; flex: none;
+    background:
+      radial-gradient(circle at calc(100% - 6px) 50%, var(--accent) 6px, transparent 6.5px),
+      linear-gradient(var(--accent), var(--accent)) 0 50% / calc(100% - 8px) 3px no-repeat;
+  }
+  .fps small { font-size: 0.32em; font-weight: 500; color: var(--text-2); letter-spacing: 0; align-self: flex-end; margin-bottom: 0.5em; }
+  /* A 2 × 2 grid read row by row, then the preset that combines them across the full width. */
+  .points {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .point { display: grid; align-content: start; gap: 6px; padding: 22px 24px; background: var(--bg); }
+  .point h3 { font-size: 1.05rem; }
+  .point p { color: var(--text-2); font-size: 16px; }
+  .point-preset { grid-column: 1 / -1; background: var(--surface); grid-template-columns: auto 1fr; column-gap: 20px; align-items: baseline; }
+  .point-preset > * { grid-column: 2; }
+  .preset-tag {
+    grid-column: 1 !important; grid-row: 1 / span 2; align-self: center;
+    padding: 6px 10px; border-radius: 6px; background: var(--accent-soft); color: var(--accent);
+    font: 600 13px/1 var(--font); white-space: nowrap;
+  }
+  .panel-shot { margin: 0; position: sticky; top: 96px; }
+  .panel-shot img { width: 316px; border-radius: 12px; border: 1px solid var(--line-strong); box-shadow: 0 30px 60px -24px rgb(0 0 0 / 0.7); }
+  .panel-shot figcaption { margin-top: 14px; font-size: 14px; }
+  @media (max-width: 900px) {
+    .editors-grid { grid-template-columns: 1fr; }
+    .panel-shot { position: static; justify-self: center; }
+  }
+  @media (max-width: 560px) {
+    .points { grid-template-columns: 1fr; }
+    .point-preset { grid-template-columns: 1fr; }
+    .point-preset > *, .preset-tag { grid-column: 1 !important; grid-row: auto; }
+    .preset-tag { justify-self: start; margin-bottom: 4px; }
+    .panel-shot img { width: min(316px, 100%); }
+  }
+
+  /* Performance */
+  .perf { background: var(--bg-deep); border-block: 1px solid var(--line); }
+  .perf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; }
+  .perf-grid h3 { font-size: 1.1rem; margin-bottom: 10px; }
+  .perf-grid p { color: var(--text-2); font-size: 16px; }
+  @media (max-width: 960px) { .perf-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .perf-grid { grid-template-columns: 1fr; gap: 28px; } }
+
+  /* Local */
+  .local-inner { display: grid; justify-items: center; text-align: center; gap: 18px; max-width: 720px; }
+  .local-icon { width: 52px; height: 52px; color: var(--text-2); margin-bottom: 6px; }
+  .local h2 { font-size: clamp(2rem, 5vw, 3.4rem); }
+  .local p { color: var(--text-2); font-size: clamp(1.02rem, 1.4vw, 1.14rem); max-width: 52ch; }
+  .local .fine { font-size: 14px; color: var(--text-3); }
+
+  /* Open source */
+  .oss-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(40px, 6vw, 80px); align-items: start; }
+  .oss-grid .section-head { margin-bottom: 0; }
+  .oss-list { margin: 0; border-top: 1px solid var(--line); }
+  .oss-list div { display: grid; grid-template-columns: 140px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .oss-list dt { color: var(--text-3); font-family: var(--mono); font-size: 13px; padding-top: 3px; }
+  .oss-list dd { margin: 0; color: var(--text-2); }
+  @media (max-width: 860px) {
+    .oss-grid { grid-template-columns: 1fr; }
+    .oss-list div { grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  /* Final */
+  .final { padding-top: 0; }
+  .final-inner {
+    position: relative; isolation: isolate; overflow: hidden;
+    display: grid; justify-items: center; gap: 22px; text-align: center;
+    padding: clamp(56px, 8vw, 96px) 24px clamp(64px, 9vw, 120px); border-radius: 20px;
+    background: var(--bg-deep); border: 1px solid var(--line);
+  }
+  .final-inner :global(.final-bg) { position: absolute; inset: 0; z-index: -1; --land: 62%; }
+  .final h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+  .final p { font-size: 14px; }
+</style>
+
+<script>
+  // Hero screenshots: Image & GIF / Home.
+  const shots = document.querySelector<HTMLElement>("[data-shots]")!;
+  shots.querySelectorAll<HTMLButtonElement>("[data-show]").forEach((b) =>
+    b.addEventListener("click", () => {
+      shots.querySelectorAll<HTMLButtonElement>("[data-show]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      shots.querySelectorAll<HTMLImageElement>("[data-shot]").forEach((img) => {
+        const on = img.dataset.shot === b.dataset.show;
+        if (on) img.loading = "eager";
+        img.classList.toggle("is-active", on);
+      });
+    }),
+  );
+  // Flatten the window once it is on screen.
+  new IntersectionObserver(([e], io) => {
+    if (e.isIntersecting) {
+      shots.classList.add("in");
+      io.disconnect();
+    }
+  }, { threshold: 0.25 }).observe(shots);
+
+  // Demo tabs (WAI-ARIA tabs pattern).
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.demo-tabs [role="tab"]')];
+  const video = document.querySelector<HTMLVideoElement>("video[data-autoplay]")!;
+  const toggle = document.querySelector<HTMLButtonElement>(".motion-toggle")!;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let userPaused = reduce;
+  if (matchMedia("(max-width: 640px)").matches) {
+    video.poster = video.dataset.tallPoster!;
+    video.src = video.dataset.tall!;
+    video.width = 640;
+    video.height = 720;
+  } else {
+    video.src = video.dataset.wide!;
+  }
+
+  const select = (tab: HTMLButtonElement) => {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")!)!.hidden = !on;
+    }
+    if (tab.id === "tab-motion" && !userPaused) video.play().catch(() => {});
+    else video.pause();
+    syncToggle();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(t));
+    t.addEventListener("keydown", (e) => {
+      const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      const next = tabs[(i + d + tabs.length) % tabs.length];
+      next.focus();
+      select(next);
+    });
+  });
+
+  // The clip only plays while visible, and never on its own with reduced motion.
+  const syncToggle = () => {
+    const playing = !video.paused;
+    toggle.textContent = playing ? toggle.dataset.pause! : toggle.dataset.play!;
+    toggle.setAttribute("aria-pressed", String(!playing));
+  };
+  toggle.addEventListener("click", () => {
+    if (video.paused) {
+      userPaused = false;
+      video.play().catch(() => {});
+    } else {
+      userPaused = true;
+      video.pause();
+    }
+  });
+  video.addEventListener("play", syncToggle);
+  video.addEventListener("pause", syncToggle);
+  new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) video.pause();
+    else if (!userPaused) video.play().catch(() => {});
+  }, { threshold: 0.4 }).observe(video);
+  syncToggle();
+</script>

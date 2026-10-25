@@ -9,16 +9,24 @@ interface Props {
   beforeLabel?: string;
   afterLabel?: string;
   alt: string;
+  altBefore?: string;
+  altAfter?: string;
+  sliderLabel?: string;
 }
-const { before, after, width, height, beforeLabel = "Original", afterLabel = "Aoze", alt } = Astro.props;
+const {
+  before, after, width, height, alt,
+  beforeLabel = "Original", afterLabel = "Aoze",
+  altBefore = "Original.", altAfter = "Processed by Aoze.",
+  sliderLabel = `Compare ${beforeLabel.toLowerCase()} and ${afterLabel}`,
+} = Astro.props;
 ---
 <div class="compare" style={`--pos: 50%; aspect-ratio: ${width} / ${height}`} data-compare>
-  <img class="cmp-before" src={before} alt={`${alt} Original.`} width={width} height={height} loading="lazy" decoding="async" />
-  <img class="cmp-after" src={after} alt={`${alt} Processed by Aoze.`} width={width} height={height} loading="lazy" decoding="async" />
+  <img class="cmp-before" src={before} alt={`${alt} ${altBefore}`} width={width} height={height} loading="lazy" decoding="async" />
+  <img class="cmp-after" src={after} alt={`${alt} ${altAfter}`} width={width} height={height} loading="lazy" decoding="async" />
   <span class="cmp-label cmp-label-before">{beforeLabel}</span>
   <span class="cmp-label cmp-label-after">{afterLabel}</span>
   <span class="cmp-handle" aria-hidden="true"><span class="cmp-knob"></span></span>
-  <input class="cmp-range" type="range" min="0" max="100" step="0.5" value="50" aria-label={`Compare ${beforeLabel.toLowerCase()} and ${afterLabel}`} />
+  <input class="cmp-range" type="range" min="0" max="100" step="0.5" value="50" aria-label={sliderLabel} />
 </div>
 
 <style>

@@ -134,11 +134,19 @@ ul { margin: 0; padding: 0; list-style: none; }
 .nav a:hover, .nav a[aria-current="page"] { color: var(--text); }
 .nav a:hover { background: rgb(160 195 235 / 0.05); }
 .menu-btn { display: none; }
+.lang-switch {
+  display: inline-grid; place-items: center; height: 36px; padding: 0 10px; border-radius: 8px;
+  border: 1px solid var(--line-strong); color: var(--text-2); text-decoration: none;
+  font: 600 13px/1 var(--font); letter-spacing: 0.04em;
+  transition: color 0.2s, border-color 0.2s;
+}
+.lang-switch:hover { color: var(--text); border-color: rgb(160 195 235 / 0.3); }
 
 @media (max-width: 820px) {
   .site-header .wrap { gap: 12px; }
   .nav { display: none; }
-  .header-cta { margin-left: auto; }
+  .header-cta, .lang-switch { margin-left: auto; }
+  .lang-switch + .header-cta { margin-left: 0; }
   .menu-btn {
     display: inline-grid; place-items: center; width: 40px; height: 40px; margin-right: -8px;
     background: none; border: 0; color: var(--text); border-radius: 8px; cursor: pointer;

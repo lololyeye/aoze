@@ -24,6 +24,11 @@ npm run build
 - `/download/`: the latest GitHub release (version, date, size, SHA-256, notes).
 - `/credits/`: third-party components and their licenses (mirrors `THIRD_PARTY_NOTICES.md`).
 
+Every page exists in English (root) and French (`/fr/`). The pages themselves are in `src/views/`;
+`src/pages/` only routes each language to them, and all text is in `src/i18n/ui.ts`.
+A French browser landing on an English page is sent to the French one; the EN / FR switch in the
+header remembers the reader's choice (localStorage), which then wins over the browser language.
+
 ## Release data
 
 At build time `src/lib/release.ts` reads `releases/latest` from the GitHub API and picks the

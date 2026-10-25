@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import Compare from "../components/Compare.astro";
 import NightScene from "../components/NightScene.astro";
+import KofiButton from "../components/KofiButton.astro";
 import { latestRelease, version, formatSize } from "../lib/release";
 import { GITHUB_URL, RELEASES_URL, LICENSE_URL, ISSUES_URL, README_URL, VIDEO_ENGINE_URL, href, pageHref } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
@@ -241,6 +242,11 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
           <a class="btn btn-ghost" href={GITHUB_URL}>{t.oss.github}</a>
           <a class="btn btn-ghost" href={RELEASES_URL}>{t.oss.releases}</a>
         </div>
+        <div class="support">
+          <h3>{t.kofi.title}</h3>
+          <p>{t.kofi.text}</p>
+          <KofiButton lang={lang} />
+        </div>
       </div>
       <dl class="oss-list reveal" data-delay="1">
         <div><dt>{t.oss.repo}</dt><dd><a class="link" href={GITHUB_URL}>github.com/lololyeye/aoze</a></dd></div>
@@ -445,6 +451,10 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
   /* Open source */
   .oss-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(40px, 6vw, 80px); align-items: start; }
   .oss-grid .section-head { margin-bottom: 0; }
+  .support { display: grid; justify-items: start; gap: 10px; margin-top: 22px; padding-top: 26px; border-top: 1px solid var(--line); }
+  .support h3 { font-size: 1.05rem; }
+  .support p { color: var(--text-2); font-size: 16px; max-width: 46ch; }
+  .support :global(.btn-kofi) { margin-top: 4px; }
   .oss-list { margin: 0; border-top: 1px solid var(--line); }
   .oss-list div { display: grid; grid-template-columns: 140px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
   .oss-list dt { color: var(--text-3); font-family: var(--mono); font-size: 13px; padding-top: 3px; }

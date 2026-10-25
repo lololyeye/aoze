@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { ui, type Lang } from "../i18n/ui";
 import Logo from "../components/Logo.astro";
+import KofiButton from "../components/KofiButton.astro";
 import { latestRelease, version, formatSize, formatDate, sha256 } from "../lib/release";
 import { API_LATEST, GITHUB_URL, RELEASES_URL } from "../lib/site";
 
@@ -58,6 +59,11 @@ const hash = sha256(release);
         <div class="card">
           <h2>{t.installTitle}</h2>
           <p>{t.installText}</p>
+        </div>
+        <div class="card">
+          <h2>{ui[lang].kofi.title}</h2>
+          <p>{ui[lang].kofi.text}</p>
+          <KofiButton lang={lang} size="sm" />
         </div>
       </aside>
     </div>

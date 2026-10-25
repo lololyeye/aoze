@@ -183,6 +183,7 @@ section { padding-block: clamp(72px, 11vw, 136px); }
 .site-footer { border-top: 1px solid var(--line); padding-block: 40px 48px; }
 .site-footer .wrap { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 28px; }
 .site-footer .sign { color: var(--text-3); font-size: 14px; margin-top: 8px; }
+.footer-kofi { margin-top: 16px; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 15px; }
 .site-footer nav a { color: var(--text-2); text-decoration: none; transition: color 0.2s; }
 .site-footer nav a:hover { color: var(--text); }

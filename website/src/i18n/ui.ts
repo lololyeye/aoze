@@ -31,6 +31,12 @@ const en = {
     credits: "Credits",
     sign: "Made for aoxy, by zero.",
   },
+  kofi: {
+    button: "Support on Ko-fi",
+    label: "Support Aoze on Ko-fi (opens ko-fi.com)",
+    title: "Support Aoze",
+    text: "Aoze is free and stays free. If it saves you time, you can buy us a coffee.",
+  },
   hero: {
     tag: (v: string) => `Aoze ${v} for Windows`,
     title: "Make your media look better.",
@@ -267,6 +273,12 @@ const fr: Dict = {
     license: "Licence",
     credits: "Crédits",
     sign: "Made for aoxy, by zero.",
+  },
+  kofi: {
+    button: "Soutenir sur Ko-fi",
+    label: "Soutenir Aoze sur Ko-fi (ouvre ko-fi.com)",
+    title: "Soutenir Aoze",
+    text: "Aoze est gratuit et le restera. S'il vous fait gagner du temps, vous pouvez nous offrir un café.",
   },
   hero: {
     tag: (v: string) => `Aoze ${v} pour Windows`,

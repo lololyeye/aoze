@@ -1,0 +1,32 @@
+---
+// A plain link to Ko-fi, styled like the rest of the site. Ko-fi's floating widget is not used:
+// it would load a third-party script (and its cookies) on every page and float over the content.
+import { KOFI_URL } from "../lib/site";
+import { ui, type Lang } from "../i18n/ui";
+
+interface Props { lang: Lang; size?: "sm" | "md" }
+const { lang, size = "md" } = Astro.props;
+const t = ui[lang].kofi;
+---
+<a class:list={["btn", "btn-kofi", size === "sm" && "btn-sm"]} href={KOFI_URL} target="_blank" rel="noopener" aria-label={t.label}>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M17.2 8.6h1.1a3.1 3.1 0 0 1 0 6.2h-1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    <path d="M3 7.2h14.6v6.9a5.2 5.2 0 0 1-5.2 5.2H8.2A5.2 5.2 0 0 1 3 14.1Z" fill="currentColor" />
+    <path class="heart" d="M10.3 16.2s-3.4-2-3.4-4.25a1.75 1.75 0 0 1 3.4-.65 1.75 1.75 0 0 1 3.4.65c0 2.25-3.4 4.25-3.4 4.25Z" />
+  </svg>
+  {t.button}
+</a>
+
+<style>
+  .btn-kofi {
+    background: var(--surface-2); color: var(--text);
+    border-color: var(--line-strong);
+  }
+  .btn-kofi svg { width: 21px; height: 21px; }
+  .btn-kofi .heart { fill: #ff5e5b; transform-origin: 10.3px 13.4px; transition: transform 0.3s var(--ease); }
+  .btn-kofi:hover { border-color: rgb(255 94 91 / 0.45); background: rgb(255 94 91 / 0.06); }
+  .btn-kofi:hover .heart { transform: scale(1.18); }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-kofi:hover .heart { transform: none; }
+  }
+</style>

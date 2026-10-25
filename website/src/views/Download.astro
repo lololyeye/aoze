@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import { ui, type Lang } from "../i18n/ui";
 import Logo from "../components/Logo.astro";
 import KofiButton from "../components/KofiButton.astro";
+import DownloadCount from "../components/DownloadCount.astro";
 import { latestRelease, version, formatSize, formatDate, sha256 } from "../lib/release";
 import { API_LATEST, GITHUB_URL, RELEASES_URL } from "../lib/site";
 
@@ -21,10 +22,13 @@ const hash = sha256(release);
         <h1>{t.h1}</h1>
         <p class="lead">{t.lead}</p>
 
+        <div class="dl-row">
         <a class="btn btn-primary btn-lg" href={release.asset.url} data-r="href:asset.url">
           <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" /></svg>
           {t.button}
         </a>
+        <DownloadCount lang={lang} />
+        </div>
         <p class="sub">{t.sub} <span data-r="size">{formatSize(release.asset.size, lang)}</span></p>
 
         <dl class="facts">
@@ -142,6 +146,7 @@ const hash = sha256(release);
   .dl-main :global(.dl-logo) { width: 56px; height: 56px; margin-bottom: 8px; }
   h1 { font-size: clamp(2.4rem, 6vw, 4rem); letter-spacing: -0.035em; }
   .lead { color: var(--text-2); font-size: 1.15rem; margin-bottom: 10px; }
+  .dl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
   .sub { color: var(--text-3); font-size: 14px; }
   .facts { margin: 28px 0 0; width: 100%; border-top: 1px solid var(--line); }
   .facts div { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }

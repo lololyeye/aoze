@@ -31,6 +31,12 @@ const en = {
     credits: "Credits",
     sign: "Made for aoxy, by zero.",
   },
+  downloads: {
+    one: "{n} download",
+    many: "{n} downloads",
+    label: "Downloads",
+    title: "Downloads of the installer, counted by GitHub Releases",
+  },
   kofi: {
     button: "Support on Ko-fi",
     label: "Support Aoze on Ko-fi (opens ko-fi.com)",
@@ -273,6 +279,12 @@ const fr: Dict = {
     license: "Licence",
     credits: "Crédits",
     sign: "Made for aoxy, by zero.",
+  },
+  downloads: {
+    one: "{n} téléchargement",
+    many: "{n} téléchargements",
+    label: "Téléchargements",
+    title: "Téléchargements de l'installeur, comptés par GitHub Releases",
   },
   kofi: {
     button: "Soutenir sur Ko-fi",

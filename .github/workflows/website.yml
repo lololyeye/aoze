@@ -1,6 +1,6 @@
 # Builds website/ and publishes it to GitHub Pages (https://lololyeye.github.io/aoze/).
-# Runs when the site changes, and when a release is published so the download page
-# shows the new version right away.
+# Runs when the site changes, when a release is published so the download page shows
+# the new version right away, and every 6 hours to refresh the download count.
 name: Website
 
 on:
@@ -9,6 +9,8 @@ on:
     paths: ["website/**", ".github/workflows/website.yml"]
   release:
     types: [published]
+  schedule:
+    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 permissions:

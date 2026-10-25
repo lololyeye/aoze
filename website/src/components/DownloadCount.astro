@@ -1,0 +1,48 @@
+---
+// How many times the installer was downloaded, from GitHub's own counter on the release assets.
+// Built with the value at build time, then refreshed in the browser. Hidden if GitHub never answered.
+import { downloadCount } from "../lib/release";
+import { ui, type Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = ui[lang].downloads;
+const count = await downloadCount();
+const locale = ui[lang].locale;
+const text = (n: number) => (n === 1 || (lang === "fr" && n === 0) ? t.one : t.many).replace("{n}", n.toLocaleString(locale));
+---
+<span class="dl-count" data-downloads data-locale={locale} data-lang={lang}
+      data-one={t.one} data-many={t.many} title={t.title} hidden={count === null}>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" /></svg>
+  <span class="dl-count-text">{count !== null && text(count)}</span>
+</span>
+
+<style>
+  .dl-count[hidden] { display: none; }
+  .dl-count {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 10px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--text);
+    font-size: 14px; font-variant-numeric: tabular-nums;
+  }
+  .dl-count svg { width: 15px; height: 15px; color: var(--accent); }
+</style>
+
+<script>
+  import { API_RELEASES, INSTALLER } from "../lib/site";
+
+  const els = document.querySelectorAll<HTMLElement>("[data-downloads]");
+  if (els.length) {
+    fetch(API_RELEASES, { headers: { Accept: "application/vnd.github+json" } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((releases: { assets: { name: string; download_count: number }[] }[]) => {
+        const n = releases.flatMap((r) => r.assets).filter((a) => INSTALLER.test(a.name)).reduce((s, a) => s + a.download_count, 0);
+        els.forEach((el) => {
+          const one = n === 1 || (el.dataset.lang === "fr" && n === 0);
+          el.querySelector(".dl-count-text")!.textContent = (one ? el.dataset.one! : el.dataset.many!).replace("{n}", n.toLocaleString(el.dataset.locale));
+          el.hidden = false;
+        });
+      })
+      .catch(() => {});
+  }
+</script>

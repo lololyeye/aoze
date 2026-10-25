@@ -1,5 +1,5 @@
 import fallback from "../data/release-fallback.json";
-import { API_LATEST } from "./site";
+import { API_LATEST, API_RELEASES, INSTALLER } from "./site";
 
 export interface Release {
   tag: string;
@@ -20,9 +20,8 @@ interface GitHubRelease {
   assets: { name: string; size: number; digest?: string | null; browser_download_url: string }[];
 }
 
-/** The Windows installer is the asset Tauri names `<Product>_<version>_x64-setup.exe`. */
 export function fromGitHub(r: GitHubRelease): Release | null {
-  const a = r.assets.find((x) => /_x64-setup\.exe$/i.test(x.name));
+  const a = r.assets.find((x) => INSTALLER.test(x.name));
   if (!a) return null;
   return {
     tag: r.tag_name,
@@ -60,6 +59,25 @@ export function latestRelease(): Promise<Release> {
 }
 
 export const version = (r: Release) => r.tag.replace(/^v/, "");
+
+
+/**
+ * Total downloads of the Windows installer across every release, as counted by GitHub.
+ * Every download counts, including repeats from the same person. null when GitHub can't be reached.
+ */
+export async function downloadCount(): Promise<number | null> {
+  try {
+    const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
+    if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    const res = await fetch(API_RELEASES, { headers });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const releases: { assets: { name: string; download_count: number }[] }[] = await res.json();
+    return releases.flatMap((r) => r.assets).filter((a) => INSTALLER.test(a.name)).reduce((n, a) => n + a.download_count, 0);
+  } catch (e) {
+    console.warn(`[release] no download count: ${(e as Error).message}`);
+    return null;
+  }
+}
 
 export function formatSize(bytes: number, lang: "en" | "fr" = "en"): string {
   const mb = (bytes / 1024 / 1024).toFixed(1);

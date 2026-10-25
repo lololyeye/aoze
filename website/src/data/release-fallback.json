@@ -3,11 +3,11 @@
   "name": "Aoze 1.0.0",
   "url": "https://github.com/lololyeye/aoze/releases/tag/v1.0.0",
   "publishedAt": "2026-10-25T19:51:48Z",
-  "bodyHtml": "<p><strong>Aoze 1.0.0</strong> — fast, simple, local image, GIF and clip enhancement for Windows 10/11 (x64).</p>\n<ul>\n<li>Image &amp; GIF: enlarge (waifu2x), clean up, compress, Discord sizes.</li>\n<li>Clip: Clean-up (Real-ESRGAN anime video model / waifu2x), Smooth Motion 60/120 FPS (RIFE, never across scene cuts), motion blur from the motion, HDR (keep / tone map / HDR10), Look.</li>\n<li>Convert: clip ↔ GIF, GIF → video, images → GIF.</li>\n<li>Everything runs on your PC: no upload, no account. Works on NVIDIA, AMD and Intel GPUs (Vulkan), CPU fallback.</li>\n</ul>\n<p>Download <strong>Aoze_1.0.0_x64-setup.exe</strong>, run it, done (FFmpeg and every engine are included).</p>\n<p>SHA-256: <code>61aea767b3625e0c50ccb991a787daac368fbbcf7d060d88b63dcd708827d980</code></p>\n<p>Made for aoxy, by zero.</p>",
+  "bodyHtml": "<p><strong>Aoze 1.0.0</strong> — fast, simple, local image, GIF and clip enhancement for Windows 10/11 (x64).</p>\n<ul>\n<li>Image &amp; GIF: enlarge (waifu2x), clean up, compress, Discord sizes.</li>\n<li>Clip: Clean-up (Real-ESRGAN anime video model / waifu2x), Smooth Motion 60/120 FPS (RIFE, never across scene cuts), motion blur from the motion, HDR (keep / tone map / HDR10), Look.</li>\n<li>Convert: clip ↔ GIF, GIF → video, images → GIF.</li>\n<li>Everything runs on your PC: no upload, no account. Works on NVIDIA, AMD and Intel GPUs (Vulkan), CPU fallback.</li>\n</ul>\n<p>Download <strong>Aoze_1.0.0_x64-setup.exe</strong>, run it, done (FFmpeg and every engine are included).</p>\n<p>SHA-256: <code>768c9267b516b542c07555450adfb6596e908b6a482447967a69db232c4adb92</code></p>\n<p>Made for aoxy, by zero.</p>",
   "asset": {
     "name": "Aoze_1.0.0_x64-setup.exe",
-    "size": 118546612,
-    "digest": "sha256:61aea767b3625e0c50ccb991a787daac368fbbcf7d060d88b63dcd708827d980",
+    "size": 118585799,
+    "digest": "sha256:768c9267b516b542c07555450adfb6596e908b6a482447967a69db232c4adb92",
     "url": "https://github.com/lololyeye/aoze/releases/download/v1.0.0/Aoze_1.0.0_x64-setup.exe"
   }
 }

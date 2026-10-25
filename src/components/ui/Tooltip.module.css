@@ -1,0 +1,26 @@
+.content {
+  z-index: 100;
+  max-width: 240px;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-md);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+  animation: in var(--dur) var(--ease-out);
+  transform-origin: var(--radix-tooltip-content-transform-origin);
+}
+
+.wide {
+  max-width: 300px;
+  color: var(--text-2);
+}
+
+@keyframes in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}

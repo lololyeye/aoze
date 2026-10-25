@@ -1,0 +1,306 @@
+.home {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  /* The night backdrop (app shell) shows through. */
+  background: transparent;
+  transition: box-shadow var(--dur) var(--ease-out);
+}
+
+:root[data-theme="light"] .home {
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 38%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--bg-sunken);
+}
+
+.hover {
+  box-shadow: inset 0 0 0 2px var(--accent-line);
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 32px 24px 12px;
+}
+
+.brand {
+  color: var(--text);
+  margin-bottom: -2px;
+}
+
+.title {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 360px));
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* Cards: deep blue glass, a scene in the corner, the accent on hover. */
+.cardWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card,
+.convert {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgb(120 180 220 / 0.16);
+  background: linear-gradient(160deg, rgb(21 32 47 / 0.9), rgb(11 16 24 / 0.94));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset;
+  transition:
+    border-color var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  height: 100%;
+  min-height: 250px;
+  padding: 22px 22px 20px;
+  text-align: left;
+}
+
+.card:hover,
+.convert:hover {
+  border-color: var(--accent-line);
+  box-shadow:
+    0 14px 40px -18px rgb(0 0 0 / 0.7),
+    0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+    0 1px 0 rgb(255 255 255 / 0.04) inset;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 72%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.card:hover .art,
+.convert:hover .art {
+  opacity: 1;
+}
+
+.card > :not(.art),
+.convert > :not(.art) {
+  position: relative;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, rgb(10 16 24 / 0.6));
+  color: var(--accent);
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.cardBody {
+  max-width: 236px;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.chip {
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgb(255 255 255 / 0.035);
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.02em;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.cta svg {
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.card:hover .cta svg {
+  transform: translateX(3px);
+}
+
+/* Convert: one wide row under the two cards. */
+.convert {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.convert .icon {
+  margin-bottom: 0;
+}
+
+.convertText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.convertTitle {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.convert .art {
+  width: 60%;
+}
+
+.convertButton {
+  flex: none;
+}
+
+.resume {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.resume:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+
+.how {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+
+.how:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.signature {
+  padding: 0 0 16px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+/* Light theme: plain surfaces, no night scenes. */
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .convert {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+:root[data-theme="light"] .art {
+  display: none;
+}
+
+:root[data-theme="light"] .icon {
+  background: var(--accent-soft);
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: minmax(0, 380px);
+  }
+  .convert {
+    flex-wrap: wrap;
+  }
+}

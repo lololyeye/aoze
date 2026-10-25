@@ -1,0 +1,40 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 40% at 72% 18%, rgb(56 120 170 / 0.13), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 18% 85%, rgb(40 150 170 / 0.08), transparent 70%),
+    linear-gradient(180deg, #0b121d 0%, #0a0f17 55%, #080b11 100%);
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.85;
+}
+
+/* Thin waves rising from the bottom of the sidebar. */
+.waves {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  height: 46%;
+  color: var(--accent);
+  opacity: 0.16;
+}
+
+:root[data-theme="light"] .backdrop {
+  display: none;
+}
+
+@media (max-width: 1180px) {
+  .waves {
+    width: 70px;
+  }
+}

@@ -1,0 +1,212 @@
+.folder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.folderPath {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.threads {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 12px;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.input:hover {
+  border-color: var(--border-strong);
+}
+
+.input:focus {
+  border-color: var(--accent-line);
+}
+
+.limitRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.limitRow > :first-child {
+  flex: none;
+}
+
+.number {
+  width: 64px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.number:focus {
+  border-color: var(--accent-line);
+}
+
+.unit {
+  width: 72px;
+}
+
+.unit button {
+  height: 28px;
+}
+
+.estimate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 9px 11px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+}
+
+.estimateLabel {
+  color: var(--text-3);
+}
+
+.estimateValue {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.estimateValue strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--text-3);
+}
+
+.over,
+.estimateValue strong.over {
+  color: var(--warning);
+  font-size: 11.5px;
+}
+
+.example {
+  margin: 0;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+
+.example span {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-3);
+  font-family: var(--font);
+}
+
+.target {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+.targetTitle {
+  margin-bottom: 6px;
+  color: #8ea1ff;
+  font-weight: 600;
+}
+
+.target dl {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 0 6px;
+}
+
+.target dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.target dt {
+  color: var(--text-3);
+}
+
+.target dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.target p {
+  margin: 4px 0 0;
+  color: var(--text-3);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.target .targetNote {
+  color: var(--accent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  transition: border-color var(--dur-fast), background-color var(--dur-fast), color var(--dur-fast);
+}
+
+.chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.chipOn,
+.chipOn:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.autoValue {
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

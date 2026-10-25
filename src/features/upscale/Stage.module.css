@@ -1,0 +1,122 @@
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-sunken);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 44px;
+  flex: none;
+  padding: 0 10px 0 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.name {
+  flex: 0 1 auto;
+  min-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.meta {
+  flex: 0 100 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg-sunken) 55%, transparent);
+}
+
+.notice,
+.hintPill {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.notice {
+  background: var(--warning-soft);
+  color: var(--warning);
+  backdrop-filter: blur(10px);
+}
+
+.hintPill {
+  top: 12px;
+  background: rgb(10 11 14 / 0.62);
+  color: #c9ced6;
+  backdrop-filter: blur(8px);
+}
+
+.dropHint {
+  position: absolute;
+  inset: 12px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  pointer-events: none;
+  animation: in var(--dur) var(--ease-out);
+}
+
+@keyframes in {
+  from {
+    opacity: 0;
+  }
+}

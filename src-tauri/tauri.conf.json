@@ -1,0 +1,83 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Aoze",
+  "version": "1.0.0",
+  "identifier": "app.aoze",
+  "build": {
+    "beforeDevCommand": "npm run vite:dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run vite:build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Aoze",
+        "width": 1320,
+        "height": 840,
+        "minWidth": 960,
+        "minHeight": 620,
+        "center": true,
+        "decorations": false,
+        "dragDropEnabled": true,
+        "visible": false,
+        "backgroundColor": "#0b0c0f",
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' asset: http://asset.localhost data: blob:",
+        "font-src": "'self' data:",
+        "connect-src": "ipc: http://ipc.localhost"
+      },
+      "assetProtocol": {
+        "enable": true,
+        "scope": []
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "msi"
+    ],
+    "publisher": "zero",
+    "copyright": "Aoze by zero. waifu2x-ncnn-vulkan (c) nihui, MIT License. FFmpeg (c) the FFmpeg developers, GPL.",
+    "category": "GraphicsAndDesign",
+    "shortDescription": "Upscale, enhance and compress images, GIFs and clips",
+    "longDescription": "Aoze upscales, enhances and compresses images, GIFs and short clips locally. Fast. Simple. Optimized. Made for aoxy, by zero.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "resources/engine/": "engine/",
+      "resources/ffmpeg/": "ffmpeg/",
+      "resources/rife/": "rife/",
+      "resources/realesrgan/": "realesrgan/"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "installerHooks": "windows/hooks.nsh",
+        "displayLanguageSelector": false,
+        "languages": [
+          "English",
+          "French"
+        ]
+      }
+    }
+  }
+}

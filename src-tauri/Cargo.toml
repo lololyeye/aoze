@@ -1,0 +1,46 @@
+[package]
+name = "aoze"
+version = "1.0.0"
+description = "Aoze - fast local image, GIF and clip enhancement (waifu2x-ncnn-vulkan + FFmpeg)"
+edition = "2021"
+rust-version = "1.85"
+
+[lib]
+name = "aoze_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-log = "2"
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["process", "sync", "time", "io-util", "macros", "rt-multi-thread", "fs"] }
+tokio-util = "0.7"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "bmp", "tiff", "rayon"] }
+webp = "0.3"
+fast_image_resize = "5"
+ash = { version = "0.38", default-features = false, features = ["loaded", "std"] }
+uuid = { version = "1", features = ["v4"] }
+log = "0.4"
+thiserror = "2"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true
+panic = "abort"
+
+[profile.dev.package."*"]
+opt-level = 2

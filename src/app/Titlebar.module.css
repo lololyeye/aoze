@@ -1,0 +1,150 @@
+.bar {
+  position: relative;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--titlebar-h);
+  flex: none;
+  padding-left: 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+}
+
+.brand svg {
+  flex: none;
+}
+
+.name {
+  padding-left: 11px;
+  border-left: 1px solid var(--border-strong);
+  margin-left: 3px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 16px;
+}
+
+/* Status: a quiet line of text, not a badge. */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 260px;
+  height: 24px;
+  margin-right: 2px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11.5px;
+  transition:
+    color var(--dur-fast),
+    background-color var(--dur-fast);
+}
+
+.status:hover {
+  color: var(--text-2);
+  background: var(--surface-2);
+}
+
+.statusText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+
+.ok .dot {
+  background: var(--success);
+}
+
+.busy .dot {
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.busy {
+  color: var(--text-2);
+}
+
+.warn .dot {
+  background: var(--warning);
+}
+
+.bad {
+  color: var(--danger);
+}
+
+.bad .dot {
+  background: var(--danger);
+}
+
+.idle .dot {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  height: 100%;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 6px;
+  background: var(--border-strong);
+}
+
+.winBtn {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  transition: background-color var(--dur-fast), color var(--dur-fast);
+}
+
+.winBtn:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.close:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 1080px) {
+  .status {
+    max-width: 160px;
+  }
+}

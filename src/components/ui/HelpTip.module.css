@@ -1,0 +1,56 @@
+.trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  transition: color var(--dur-fast), border-color var(--dur-fast), background-color var(--dur-fast);
+}
+
+.trigger:hover,
+.trigger[data-state="open"] {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.content {
+  z-index: 110;
+  width: 260px;
+  padding: 11px 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-lg);
+  animation: in var(--dur) var(--ease-out);
+}
+
+.q {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.a {
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.arrow {
+  fill: var(--surface-2);
+}
+
+@keyframes in {
+  from {
+    opacity: 0;
+    transform: translateX(4px);
+  }
+}

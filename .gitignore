@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+.vite/
+# Built installers go to GitHub Releases, not into the repository.
+release/
+# Local installs of the app.
+Kirei/
+Aoze/

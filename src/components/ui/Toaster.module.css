@@ -1,0 +1,72 @@
+.stack {
+  position: fixed;
+  right: 16px;
+  top: calc(var(--titlebar-h) + 12px);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  padding: 11px 10px 11px 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+}
+
+.icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+.info .icon {
+  color: var(--accent);
+}
+
+.success .icon {
+  color: var(--success);
+}
+
+.error .icon {
+  color: var(--danger);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 500;
+}
+
+.body {
+  margin-top: 2px;
+  color: var(--text-2);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.close {
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-3);
+}
+
+.close:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}

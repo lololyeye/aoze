@@ -1,0 +1,256 @@
+.rail {
+  display: flex;
+  flex-direction: column;
+  width: 264px;
+  flex: none;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  flex: none;
+  padding: 0 6px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.headTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+}
+
+.count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.headActions {
+  display: flex;
+  gap: 1px;
+}
+
+.paused {
+  margin: 8px 8px 0;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 11.5px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+  padding: 7px 6px 7px 7px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.item:hover {
+  background: var(--surface-2);
+}
+
+.selected,
+.selected:hover {
+  background: var(--surface-3);
+  box-shadow: 0 0 0 1px var(--border-strong) inset;
+}
+
+.thumb {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  box-shadow: 0 0 0 1px var(--border) inset;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: fade var(--dur-slow) var(--ease-out);
+}
+
+.thumbPh {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
+  background-size: 200% 100%;
+  animation: pulse 1.2s linear infinite;
+}
+
+.thumbEmpty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--surface-2);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.detail {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 1px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.processing .detail {
+  color: var(--accent);
+}
+
+.failed .detail {
+  color: var(--danger);
+}
+
+.bar {
+  margin-top: 6px;
+}
+
+.itemActions {
+  display: flex;
+  opacity: 0;
+  transition: opacity var(--dur-fast);
+}
+
+.item:hover .itemActions,
+.item:focus-within .itemActions {
+  opacity: 1;
+}
+
+.ring {
+  width: 11px;
+  height: 11px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-3);
+  flex: none;
+}
+
+.ok {
+  color: var(--success);
+  flex: none;
+}
+
+.bad {
+  color: var(--danger);
+  flex: none;
+}
+
+.muted {
+  color: var(--text-3);
+  flex: none;
+}
+
+.spin {
+  color: var(--accent);
+  flex: none;
+  animation: spin 1s linear infinite;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 1180px) {
+  .rail {
+    width: 216px;
+  }
+  .thumb {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+.kindBadge {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 13px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: rgb(10 11 14 / 0.75);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}

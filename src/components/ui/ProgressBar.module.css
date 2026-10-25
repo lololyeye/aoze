@@ -1,0 +1,68 @@
+.track {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-3);
+  /* Own layer: updates never repaint the panel around it. */
+  contain: strict;
+  isolation: isolate;
+}
+
+.xs {
+  height: 3px;
+}
+
+.sm {
+  height: 4px;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform: translateX(-100%);
+  transition: transform 300ms linear;
+  will-change: transform;
+}
+
+.accent {
+  background: var(--accent);
+}
+
+.success {
+  background: var(--success);
+}
+
+.danger {
+  background: var(--danger);
+}
+
+.muted {
+  background: var(--text-3);
+}
+
+.sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.4), transparent);
+  transform: translateX(-100%);
+  animation: sheen 1.5s linear infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+
+@keyframes sheen {
+  to {
+    transform: translateX(290%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheen {
+    animation-duration: 3s;
+  }
+}

@@ -1,0 +1,7 @@
+/target/
+/gen/schemas
+# Third-party binaries: downloaded and SHA-256-checked by scripts/fetch-engine.mjs.
+/resources/engine/
+/resources/ffmpeg/
+/resources/rife/
+/resources/realesrgan/

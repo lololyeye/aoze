@@ -1,0 +1,79 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0 4px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.name {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.version {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.privacy {
+  display: flex;
+  gap: 9px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--success-soft);
+  color: var(--text);
+}
+
+.privacy svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--success);
+}
+
+.credits {
+  display: block;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+.creditsTitle {
+  margin-bottom: 4px;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.credits ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.signature {
+  align-self: stretch;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text-3);
+  font-size: 12px;
+  text-align: center;
+}

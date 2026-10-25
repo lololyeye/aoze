@@ -1,0 +1,212 @@
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+.twoPanes {
+  gap: 1px;
+  background: var(--border-strong);
+}
+
+.pane {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-sunken);
+}
+
+.world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+  background-color: var(--checker-a);
+  background-image:
+    linear-gradient(45deg, var(--checker-b) 25%, transparent 25%, transparent 75%, var(--checker-b) 75%),
+    linear-gradient(45deg, var(--checker-b) 25%, transparent 25%, transparent 75%, var(--checker-b) 75%);
+  background-size: calc(16px * var(--inv-zoom)) calc(16px * var(--inv-zoom));
+  background-position:
+    0 0,
+    calc(8px * var(--inv-zoom)) calc(8px * var(--inv-zoom));
+  box-shadow: 0 0 0 calc(1px * var(--inv-zoom)) var(--border-strong);
+}
+
+.layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease-out);
+}
+
+/* Processing: a static dim layer and one thin moving line. No filter on the
+   image and a small repaint area, so weak GPUs busy with the upscale can
+   still draw it. */
+.scan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgb(0 0 0 / 0.22);
+}
+
+.scan::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* A thin bright band at the bottom edge of a full-size layer: rasterized
+     once, then only moved. */
+  background: linear-gradient(180deg, transparent 0 92%, color-mix(in srgb, var(--accent) 30%, transparent) 98.5%, color-mix(in srgb, var(--accent) 85%, transparent) 99.6%, transparent 100%);
+  transform: translateY(-100%);
+  animation: scan 2.4s var(--ease-in-out) infinite;
+  will-change: transform;
+}
+
+@keyframes scan {
+  to {
+    transform: translateY(0%);
+  }
+}
+
+:root[data-lite] .scan::after {
+  display: none;
+}
+
+.handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split-px, 50%);
+  will-change: left;
+  width: 24px;
+  margin-left: -12px;
+  cursor: ew-resize;
+  z-index: 2;
+}
+
+.handleLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
+}
+
+.handleKnob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  background: #f4f6f8;
+  color: #111317;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.4);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.handle:hover .handleKnob {
+  transform: scale(1.08);
+}
+
+.badge {
+  position: absolute;
+  top: 12px;
+  z-index: 3;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgb(10 11 14 / 0.62);
+  backdrop-filter: blur(8px);
+  color: #e9ebef;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
+.badgeLeft {
+  left: 12px;
+}
+
+.badgeRight {
+  right: 12px;
+}
+
+.toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+}
+
+.sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 3px;
+  background: var(--border-strong);
+}
+
+.zoomLabel {
+  min-width: 48px;
+  height: 26px;
+  padding: 0 4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoomLabel:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.notice {
+  position: absolute;
+  left: 50%;
+  bottom: 58px;
+  z-index: 4;
+  max-width: calc(100% - 32px);
+  padding: 6px 10px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-md);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 12px;
+  text-align: center;
+}

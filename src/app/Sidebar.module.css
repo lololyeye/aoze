@@ -1,0 +1,175 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  flex: none;
+  padding: 12px 10px;
+  border-right: 1px solid var(--border);
+  /* Translucent: the night backdrop shows through, a touch lighter than the page. */
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 60%, transparent), color-mix(in srgb, var(--bg) 35%, transparent));
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.divider {
+  height: 1px;
+  margin: 12px 10px;
+  background: linear-gradient(90deg, var(--border-strong), transparent);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  height: 36px;
+  padding: 0 11px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-2);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-align: left;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+
+.item:hover:not(.active) {
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  color: var(--text);
+}
+
+.active,
+.active:hover {
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
+}
+
+/* Selected section: a soft surface with a short accent line and a faint glow. */
+.highlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 7%, var(--surface-3)), var(--surface-2));
+  box-shadow: 0 0 0 1px var(--border) inset;
+  pointer-events: none;
+}
+
+.line {
+  position: absolute;
+  left: -10px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.icon,
+.label,
+.badge {
+  position: relative;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--text-3);
+  transition:
+    color var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-out);
+}
+
+.icon svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.8;
+}
+
+.item:hover .icon {
+  color: var(--text-2);
+  transform: translateX(1px);
+}
+
+.active .icon,
+.active:hover .icon {
+  color: var(--accent);
+  transform: none;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  text-align: center;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+
+.busy {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.support {
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+.support:hover .icon {
+  color: #ff5e5b;
+}
+
+/* Narrow windows: icons only. */
+@media (max-width: 1180px) {
+  .sidebar {
+    width: 58px;
+    padding: 12px 9px;
+  }
+  .line {
+    left: -9px;
+  }
+  .item {
+    justify-content: center;
+    padding: 0;
+  }
+  .label {
+    display: none;
+  }
+  .badge {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    font-size: 9.5px;
+    line-height: 15px;
+  }
+}

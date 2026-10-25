@@ -1,0 +1,115 @@
+.device,
+.problem {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.problem {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: transparent;
+}
+
+.deviceIcon {
+  margin-top: 2px;
+  color: var(--accent);
+  flex: none;
+}
+
+.deviceText {
+  min-width: 0;
+}
+
+.deviceName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.tag {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.kv {
+  color: var(--text-2);
+  font-size: 12px;
+  user-select: text;
+}
+
+.path {
+  overflow-wrap: anywhere;
+  color: var(--text-3);
+}
+
+.models {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.model {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.bad {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.size {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.log {
+  max-height: 260px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

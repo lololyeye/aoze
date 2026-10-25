@@ -1,0 +1,88 @@
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  /* Night blue: a hint of navy in every surface (matches the home backdrop). */
+  --bg: #0a0e15;
+  --bg-sunken: #070a10;
+  --surface: #0f141c;
+  --surface-2: #141a24;
+  --surface-3: #1a212c;
+  --surface-hover: #202835;
+  --border: rgb(160 195 235 / 0.07);
+  --border-strong: rgb(160 195 235 / 0.12);
+  --text: #e9edf3;
+  --text-2: #a2abb8;
+  --text-3: #6a7484;
+  --accent: #3dd6d0;
+  --accent-hover: #62e6df;
+  --accent-ink: #032321;
+  --accent-soft: rgb(61 214 208 / 0.11);
+  --accent-line: rgb(61 214 208 / 0.45);
+  --danger: #f2686f;
+  --danger-soft: rgb(242 104 111 / 0.12);
+  --warning: #f1b65e;
+  --warning-soft: rgb(241 182 94 / 0.12);
+  --success: #52d394;
+  --success-soft: rgb(82 211 148 / 0.12);
+  --checker-a: #121720;
+  --checker-b: #181e28;
+  --scrim: rgb(4 5 7 / 0.6);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 8px 24px -6px rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.03) inset;
+  --shadow-lg: 0 24px 60px -12px rgb(0 0 0 / 0.65);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f4f6;
+  --bg-sunken: #e9ebee;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --surface-3: #eef0f3;
+  --surface-hover: #e8ebef;
+  --border: rgb(15 20 30 / 0.08);
+  --border-strong: rgb(15 20 30 / 0.14);
+  --text: #15181d;
+  --text-2: #4d5562;
+  --text-3: #8a919c;
+  --accent: #0aa7a2;
+  --accent-hover: #078f8b;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(10 167 162 / 0.1);
+  --accent-line: rgb(10 167 162 / 0.45);
+  --danger: #d6404a;
+  --danger-soft: rgb(214 64 74 / 0.09);
+  --warning: #b9771a;
+  --warning-soft: rgb(185 119 26 / 0.1);
+  --success: #1e9d63;
+  --success-soft: rgb(30 157 99 / 0.1);
+  --checker-a: #eceef1;
+  --checker-b: #f8f9fa;
+  --scrim: rgb(20 24 30 / 0.28);
+  --shadow-sm: 0 1px 2px rgb(15 20 30 / 0.08);
+  --shadow-md: 0 8px 24px -8px rgb(15 20 30 / 0.18);
+  --shadow-lg: 0 24px 60px -16px rgb(15 20 30 / 0.28);
+}
+
+:root {
+  --font: "Inter Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --titlebar-h: 44px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 280ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+    --dur-slow: 0ms;
+  }
+}

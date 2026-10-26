@@ -9,6 +9,7 @@
     "vite:build": "tsc --noEmit && vite build",
     "dev": "node scripts/fetch-engine.mjs --if-missing && tauri dev",
     "build": "node scripts/fetch-engine.mjs --if-missing && tauri build",
+    "release": "node scripts/release.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run && cargo test --manifest-path src-tauri/Cargo.toml",

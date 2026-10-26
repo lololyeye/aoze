@@ -49,7 +49,7 @@
       "msi"
     ],
     "publisher": "zero",
-    "copyright": "Aoze by zero. waifu2x-ncnn-vulkan (c) nihui, MIT License. FFmpeg (c) the FFmpeg developers, GPL.",
+    "copyright": "Copyright (c) 2026 zero. MIT License. Third-party components: see THIRD_PARTY_NOTICES.",
     "category": "GraphicsAndDesign",
     "shortDescription": "Upscale, enhance and compress images, GIFs and clips",
     "longDescription": "Aoze upscales, enhances and compresses images, GIFs and short clips locally. Fast. Simple. Optimized. Made for aoxy, by zero.",

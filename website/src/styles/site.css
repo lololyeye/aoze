@@ -124,8 +124,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .site-header.scrolled { border-bottom-color: var(--line); }
 .site-header .wrap { display: flex; align-items: center; height: 64px; gap: 32px; }
-.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; font-size: 17px; letter-spacing: -0.01em; }
-.brand svg { width: 26px; height: 26px; }
+/* Wordmark: the logo is the "A" of Aoze, sitting on the baseline of "oze". */
+.brand { display: inline-flex; align-items: baseline; text-decoration: none; font-weight: 650; font-size: 23px; line-height: 1; letter-spacing: -0.02em; }
+.brand svg { width: auto; height: 0.86em; margin-right: 0.07em; transform: translateY(0.06em); }
 .nav { display: flex; gap: 4px; margin-right: auto; }
 .nav a {
   padding: 8px 12px; border-radius: 8px; color: var(--text-2); text-decoration: none; font-size: 15px;
@@ -183,7 +184,6 @@ section { padding-block: clamp(72px, 11vw, 136px); }
 .site-footer { border-top: 1px solid var(--line); padding-block: 40px 48px; }
 .site-footer .wrap { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 28px; }
 .site-footer .sign { color: var(--text-3); font-size: 14px; margin-top: 8px; }
-.footer-kofi { margin-top: 16px; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 15px; }
 .site-footer nav a { color: var(--text-2); text-decoration: none; transition: color 0.2s; }
 .site-footer nav a:hover { color: var(--text); }

@@ -2,7 +2,6 @@
 import Base from "../layouts/Base.astro";
 import Compare from "../components/Compare.astro";
 import NightScene from "../components/NightScene.astro";
-import KofiButton from "../components/KofiButton.astro";
 import DownloadCount from "../components/DownloadCount.astro";
 import AppDemo from "../components/AppDemo.astro";
 import ReleaseSync from "../components/ReleaseSync.astro";
@@ -32,6 +31,13 @@ const jsonLd = {
   url: new URL(pageHref(lang), Astro.site).toString(),
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
 };
+// Performance icons, in the order of t.perf.items: graphics chip, video encoding, tuning sliders, low-priority gauge.
+const perfIcons = [
+  '<rect x="6" y="6" width="12" height="12" rx="2" /><rect x="9.5" y="9.5" width="5" height="5" rx="1" /><path d="M9.5 3v3M14.5 3v3M9.5 18v3M14.5 18v3M3 9.5h3M3 14.5h3M18 9.5h3M18 14.5h3" />',
+  '<rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4" /><path d="M10.5 9.5 14.5 12l-4 2.5Z" />',
+  '<path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" />',
+  '<path d="M4.6 16.5a8 8 0 1 1 14.8 0" /><path d="m12 13.5-3.6-3.2" /><circle cx="12" cy="13.5" r="1.3" /><path d="M7.5 19.5h9" />',
+];
 const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
 ---
 <Base lang={lang} path="" jsonLd={jsonLd}>
@@ -48,14 +54,13 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
             <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={downloadIcon} />
             {t.hero.download}
           </a>
-          <KofiButton lang={lang} short />
           <a class="btn btn-ghost btn-lg" href={GITHUB_URL}>
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" /></svg>
             {t.hero.github}
           </a>
           <DownloadCount lang={lang} />
         </div>
-        <p class="meta reveal" data-delay="3">Aoze <span data-r="version">{v}</span> · {t.hero.system} · {t.hero.meta}</p>
+        <p class="meta reveal" data-delay="3">{t.hero.metaVersion} <span data-r="version">{v}</span> {t.hero.metaSystem} {t.hero.meta}</p>
       </div>
 
       <AppDemo lang={lang} version={v} />
@@ -195,9 +200,14 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
         <h2>{t.perf.title}</h2>
         <p>{t.perf.lead}</p>
       </div>
-      <div class="perf-grid">
+      <div class="perf-grid reveal">
         {t.perf.items.map((p, i) => (
-          <div class="reveal" data-delay={String(i)}><h3>{p.title}</h3><p>{p.text}</p></div>
+          <div class="perf-cell">
+            <span class="perf-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" set:html={perfIcons[i]} />
+            </span>
+            <div><h3>{p.title}</h3><p>{p.text}</p></div>
+          </div>
         ))}
       </div>
     </div>
@@ -229,11 +239,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
           <a class="btn btn-ghost" href={GITHUB_URL}>{t.oss.github}</a>
           <a class="btn btn-ghost" href={RELEASES_URL}>{t.oss.releases}</a>
         </div>
-        <div class="support">
-          <h3>{t.kofi.title}</h3>
-          <p>{t.kofi.text}</p>
-          <KofiButton lang={lang} />
-        </div>
       </div>
       <dl class="oss-list reveal" data-delay="1">
         <div><dt>{t.oss.repo}</dt><dd><a class="link" href={GITHUB_URL}>github.com/lololyeye/aoze</a></dd></div>
@@ -256,7 +261,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
             <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={downloadIcon} />
             {t.final.download} <span data-r="version">{v}</span>
           </a>
-          <KofiButton lang={lang} short />
         </div>
         <p class="muted">{t.final.meta} <span data-r="size">{size}</span>. <a class="link" href={pageHref(lang, "download/")}>{t.final.details}</a></p>
       </div>
@@ -410,11 +414,23 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
 
   /* Performance */
   .perf { background: var(--bg-deep); border-block: 1px solid var(--line); }
-  .perf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; }
-  .perf-grid h3 { font-size: 1.1rem; margin-bottom: 10px; }
-  .perf-grid p { color: var(--text-2); font-size: 16px; }
-  @media (max-width: 960px) { .perf-grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 560px) { .perf-grid { grid-template-columns: 1fr; gap: 28px; } }
+  /* Four cells of one panel, read row by row; each icon says what its cell is about. */
+  .perf-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .perf-cell { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; padding: 28px 28px 30px; background: var(--bg-deep); }
+  .perf-icon {
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px;
+    background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1px rgb(61 214 208 / 0.18);
+  }
+  .perf-icon svg { width: 24px; height: 24px; }
+  .perf-cell h3 { font-size: 1.1rem; margin: 2px 0 8px; }
+  .perf-cell p { color: var(--text-2); font-size: 16px; max-width: 44ch; }
+  @media (max-width: 720px) {
+    .perf-grid { grid-template-columns: 1fr; }
+    .perf-cell { padding: 22px 20px; gap: 16px; }
+  }
 
   /* Local */
   .local-inner { display: grid; justify-items: center; text-align: center; gap: 18px; max-width: 720px; }
@@ -426,10 +442,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
   /* Open source */
   .oss-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(40px, 6vw, 80px); align-items: start; }
   .oss-grid .section-head { margin-bottom: 0; }
-  .support { display: grid; justify-items: start; gap: 10px; margin-top: 22px; padding-top: 26px; border-top: 1px solid var(--line); }
-  .support h3 { font-size: 1.05rem; }
-  .support p { color: var(--text-2); font-size: 16px; max-width: 46ch; }
-  .support :global(.btn-kofi) { margin-top: 4px; }
   .oss-list { margin: 0; border-top: 1px solid var(--line); }
   .oss-list div { display: grid; grid-template-columns: 140px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
   .oss-list dt { color: var(--text-3); font-family: var(--mono); font-size: 13px; padding-top: 3px; }

@@ -2,7 +2,6 @@
 import "@fontsource-variable/inter/wght.css";
 import "../styles/site.css";
 import Logo from "../components/Logo.astro";
-import KofiButton from "../components/KofiButton.astro";
 import { GITHUB_URL, LICENSE_URL, RELEASES_URL, href, pageHref } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
 
@@ -77,7 +76,7 @@ const home = pageHref(lang);
 
     <header class="site-header">
       <div class="wrap">
-        <a class="brand" href={home} aria-label={t.nav.home}><Logo /> Aoze</a>
+        <a class="brand" href={home} aria-label={t.nav.home}><Logo /><span class="brand-rest" aria-hidden="true">oze</span></a>
         <nav class="nav" id="nav" aria-label={t.nav.main}>
           <a href={`${home}#features`}>{t.nav.features}</a>
           <a href={`${home}#how`}>{t.nav.how}</a>
@@ -104,9 +103,8 @@ const home = pageHref(lang);
     <footer class="site-footer">
       <div class="wrap">
         <div>
-          <a class="brand" href={home}><Logo /> Aoze</a>
+          <a class="brand" href={home} aria-label="Aoze"><Logo /><span class="brand-rest" aria-hidden="true">oze</span></a>
           <p class="sign">{t.nav.sign}</p>
-          <div class="footer-kofi"><KofiButton lang={lang} size="sm" /></div>
         </div>
         <nav aria-label={t.nav.footer}>
           <a href={GITHUB_URL}>{t.nav.github}</a>

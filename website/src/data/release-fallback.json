@@ -1,13 +1,13 @@
 {
-  "tag": "v1.0.0",
-  "name": "Aoze 1.0.0",
-  "url": "https://github.com/lololyeye/aoze/releases/tag/v1.0.0",
-  "publishedAt": "2026-10-25T19:51:48Z",
-  "bodyHtml": "<p><strong>Aoze 1.0.0</strong>: fast, simple, local image, GIF and clip enhancement for Windows 10/11 (x64).</p>\n<ul>\n<li>Image &amp; GIF: enlarge (waifu2x), clean up, compress, Discord sizes.</li>\n<li>Clip: Clean-up (Real-ESRGAN anime video model / waifu2x), Smooth Motion 60/120 FPS (RIFE, never across scene cuts), motion blur from the motion, HDR (keep / tone map / HDR10), Look.</li>\n<li>Convert: clip ↔ GIF, GIF → video, images → GIF.</li>\n<li>Everything runs on your PC: no upload, no account. Works on NVIDIA, AMD and Intel GPUs (Vulkan), CPU fallback.</li>\n</ul>\n<p>Download <strong>Aoze_1.0.0_x64-setup.exe</strong>, run it, done (FFmpeg and every engine are included).<br>\nThe installer is per-user (no admin rights). It is not code-signed yet, so Windows SmartScreen<br>\nmay show \"Windows protected your PC\": choose \"More info\", then \"Run anyway\".</p>\n<p>SHA-256 of <strong>Aoze_1.0.0_x64-setup.exe</strong>: <code>e0d3be447581cf9ae464f62def03d786d83005c627bdef840907f2c91ca61968</code><br>\n(all files: <code>SHA256SUMS.txt</code>). Third-party licences: <a href=\"https://github.com/lololyeye/aoze/blob/main/THIRD_PARTY_NOTICES.md\">THIRD_PARTY_NOTICES.md</a> and<br>\n<code>THIRD_PARTY_LICENSES.txt</code>.</p>\n<p>Made for aoxy, by zero.</p>",
+  "tag": "v1.1.0",
+  "name": "Aoze 1.1.0",
+  "url": "https://github.com/lololyeye/aoze/releases/tag/v1.1.0",
+  "publishedAt": "2026-10-26T18:03:10Z",
+  "bodyHtml": "<p><strong>Aoze 1.1.0</strong>: Aoze now keeps itself up to date.</p>\n<h3>New</h3>\n<ul>\n<li>Updates: Aoze tells you when a new version is out and installs it in one click, then reopens.</li>\n<li>What's new: after an update, a short list of the changes, shown once.</li>\n<li>Settings: turn the update check off, or check now. The installed version is shown at the bottom of the sidebar.</li>\n</ul>\n<h3>Improved</h3>\n<ul>\n<li>Every update is checked before it is installed: official GitHub release only, Aoze's signature and SHA-256. Your current version stays untouched until the new one is ready.</li>\n</ul>\n<p>Download <strong>Aoze_1.1.0_x64-setup.exe</strong>, run it, done (FFmpeg and every engine are included).<br>\nAoze 1.1.0 and later update themselves: they offer the new version when it is out.<br>\nThe installer is per-user (no admin rights). It is not code-signed yet, so Windows SmartScreen<br>\nmay show \"Windows protected your PC\": choose \"More info\", then \"Run anyway\".</p>\n<p>SHA-256 of <strong>Aoze_1.1.0_x64-setup.exe</strong>: <code>7cabbfa2aec15432d25d6f95c897e1f71290216d75298f052d1cde946b1836e0</code><br>\n(all files: <code>SHA256SUMS.txt</code>). Third-party licences: <code>THIRD_PARTY_NOTICES.md</code> and<br>\n<code>THIRD_PARTY_LICENSES.txt</code>.</p>\n<p>Made for aoxy, by zero.</p>",
   "asset": {
-    "name": "Aoze_1.0.0_x64-setup.exe",
-    "size": 118576047,
-    "digest": "sha256:e0d3be447581cf9ae464f62def03d786d83005c627bdef840907f2c91ca61968",
-    "url": "https://github.com/lololyeye/aoze/releases/download/v1.0.0/Aoze_1.0.0_x64-setup.exe"
+    "name": "Aoze_1.1.0_x64-setup.exe",
+    "size": 119384605,
+    "digest": "sha256:7cabbfa2aec15432d25d6f95c897e1f71290216d75298f052d1cde946b1836e0",
+    "url": "https://github.com/lololyeye/aoze/releases/download/v1.1.0/Aoze_1.1.0_x64-setup.exe"
   }
 }

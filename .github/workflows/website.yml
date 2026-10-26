@@ -1,6 +1,8 @@
 # Builds website/ and publishes it to GitHub Pages (https://lololyeye.github.io/aoze/).
 # Runs when the site changes, when a release is published so the download page shows
 # the new version right away, and every 6 hours to refresh the download count.
+# The github-pages environment only deploys from main, and a release event runs on its tag:
+# for a release, the workflow starts itself again on main instead of deploying.
 name: Website
 
 on:
@@ -23,7 +25,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh workflow run website.yml --repo "$GITHUB_REPOSITORY" --ref main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
     defaults:
       run:

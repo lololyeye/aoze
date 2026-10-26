@@ -1,0 +1,602 @@
+---
+// Interactive preview of the Aoze window, drawn in HTML from the app's own layout, colours and
+// wording (src/app, src/features, src/styles/tokens.css). Only the four main sections of the
+// sidebar (and the Home cards that lead to them) do something: they switch the view, as in
+// the app. Settings are drawn as plain text, not as controls. No file is ever processed.
+import NightScene from "./NightScene.astro";
+import DemoField from "./demo/DemoField.astro";
+import { href } from "../lib/site";
+import { ui, type Lang } from "../i18n/ui";
+
+interface Props { lang: Lang; version: string }
+const { lang, version } = Astro.props;
+const d = ui[lang].demo;
+
+// Lucide icons, as in the app (lucide-react).
+const icon = {
+  home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  image: '<path d="M18 22H4a2 2 0 0 1-2-2V6"/><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18"/><circle cx="12" cy="8" r="2"/><rect width="16" height="16" x="6" y="2" rx="2"/>',
+  clip: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/>',
+  convert: '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
+  history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  settings: '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+  help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  coffee: '<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  minus: '<path d="M5 12h14"/>',
+  sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>',
+  arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  chevron: '<path d="m6 9 6 6 6-6"/>',
+  chevronRight: '<path d="m9 18 6-6-6-6"/>',
+  fit: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  full: '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
+};
+const sections = [
+  { id: "home", label: d.nav.home, badge: null },
+  { id: "image", label: d.nav.image, badge: "1" },
+  { id: "clip", label: d.nav.clip, badge: "1" },
+  { id: "convert", label: d.nav.convert, badge: "1" },
+] as const;
+const initial = "image";
+---
+<figure class="window demo" data-demo>
+  <div class="app" role="group" aria-label={d.label}>
+    <!-- Title bar -->
+    <div class="tb" aria-hidden="true">
+      <span class="tb-brand">
+        <svg viewBox="250 210 600 600" width="17" height="17">
+          <defs><linearGradient id="demo-ac" gradientUnits="userSpaceOnUse" x1="392" y1="0" x2="862" y2="0"><stop offset="0" stop-color="#2bb8d6" /><stop offset="1" stop-color="#5ff0d4" /></linearGradient></defs>
+          <path d="M292 772 L512 248 L732 772" fill="none" stroke="currentColor" stroke-width="96" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M392 616 L790 616" fill="none" stroke="url(#demo-ac)" stroke-width="76" stroke-linecap="round" />
+          <circle cx="790" cy="616" r="60" fill="url(#demo-ac)" />
+        </svg>
+        <span class="tb-sep"></span>
+        Aoze
+      </span>
+      <span class="tb-right">
+        <span class="tb-status"><span class="tb-dot"></span>{d.status}</span>
+        <span class="tb-line tb-extra"></span>
+        <svg class="tb-icon tb-extra" viewBox="0 0 24 24" set:html={icon.sun} />
+        <svg class="tb-icon tb-extra" viewBox="0 0 24 24" set:html={icon.info} />
+        <span class="tb-line tb-extra"></span>
+        <span class="tb-win"><svg viewBox="0 0 24 24" set:html={icon.minus} /></span>
+        <span class="tb-win"><svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" rx="1" /></svg></span>
+        <span class="tb-win"><svg viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg></span>
+      </span>
+    </div>
+
+    <div class="body">
+      <!-- Sidebar -->
+      <nav class="sb" aria-label={d.label}>
+        <div class="sb-group sb-tabs" role="tablist" aria-orientation="vertical">
+          <span class="sb-hl" aria-hidden="true"><span class="sb-line"></span></span>
+          {sections.map((sec) => (
+            <button type="button" class="sb-i" role="tab" id={`demo-tab-${sec.id}`} aria-controls={`demo-view-${sec.id}`}
+                    aria-selected={String(sec.id === initial)} tabindex={sec.id === initial ? 0 : -1} data-view={sec.id}>
+              <svg class="sb-icon" viewBox="0 0 24 24" aria-hidden="true" set:html={icon[sec.id]} />
+              <span class="sb-label">{sec.label}</span>
+              {sec.badge && <span class="sb-badge" aria-hidden="true">{sec.badge}</span>}
+            </button>
+          ))}
+        </div>
+        <div class="sb-secondary" aria-hidden="true">
+          <span class="sb-div"></span>
+          {(["history", "settings", "help"] as const).map((k) => (
+            <span class="sb-i sb-static"><svg class="sb-icon" viewBox="0 0 24 24" set:html={icon[k]} /><span class="sb-label">{d.nav[k]}</span></span>
+          ))}
+        </div>
+        <span class="sb-spacer"></span>
+        <span class="sb-i sb-static sb-support" aria-hidden="true"><svg class="sb-icon" viewBox="0 0 24 24" set:html={icon.coffee} /><span class="sb-label">{d.nav.support}</span></span>
+        <span class="sb-version">Aoze <span data-r="version">{version}</span></span>
+      </nav>
+
+      <div class="views">
+        <!-- Home -->
+        <div class="view v-home" id="demo-view-home" role="tabpanel" aria-labelledby="demo-tab-home" hidden>
+          <NightScene class="demo-night" stars={50} />
+          <div class="home-center">
+            <svg class="home-logo" viewBox="250 210 600 600" width="40" height="40" aria-hidden="true">
+              <path d="M292 772 L512 248 L732 772" fill="none" stroke="currentColor" stroke-width="96" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M392 616 L790 616" fill="none" stroke="url(#demo-ac)" stroke-width="76" stroke-linecap="round" />
+              <circle cx="790" cy="616" r="60" fill="url(#demo-ac)" />
+            </svg>
+            <p class="home-title">{d.home.title}</p>
+            <div class="home-grid">
+              {([["image", d.home.imageTitle, d.home.imageBody, d.home.formatsImage], ["clip", d.home.clipTitle, d.home.clipBody, d.home.formatsClip]] as const).map(([id, title, body, formats]) => (
+                <button type="button" class="card" data-go={id}>
+                  <span class="card-art" aria-hidden="true"></span>
+                  <span class="card-icon"><svg viewBox="0 0 24 24" aria-hidden="true" set:html={icon[id]} /></span>
+                  <span class="card-title">{title}</span>
+                  <span class="card-body">{body}</span>
+                  <span class="card-chips" aria-hidden="true">{formats.map((f) => <span>{f}</span>)}</span>
+                  <span class="card-cta">{d.home.browse}<svg viewBox="0 0 24 24" aria-hidden="true" set:html={icon.arrow} /></span>
+                </button>
+              ))}
+              <div class="card-convert">
+                <span class="card-icon"><svg viewBox="0 0 24 24" aria-hidden="true" set:html={icon.convert} /></span>
+                <span class="cc-text"><span class="card-title">{d.home.convertTitle}</span><span class="card-body">{d.home.convertBody}</span></span>
+                <button type="button" class="cc-btn" data-go="convert"><svg viewBox="0 0 24 24" aria-hidden="true" set:html={icon.arrow} />{d.home.openConvert}</button>
+              </div>
+            </div>
+            <p class="home-foot" aria-hidden="true">{d.home.drop}<span class="home-dot"></span><span class="home-how"><svg viewBox="0 0 24 24" set:html={icon.help} />{d.home.how}</span></p>
+          </div>
+          <p class="home-sign" aria-hidden="true">Made for aoxy, by zero.</p>
+        </div>
+
+        <!-- Image & GIF -->
+        <div class="view" id="demo-view-image" role="tabpanel" aria-labelledby="demo-tab-image">
+          <div class="stage">
+            <div class="st-head">
+              <span class="st-name">{d.image.file}</span><span class="st-meta">{d.image.meta}</span>
+              <span class="st-actions" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={icon.trash} /><span class="st-add"><svg viewBox="0 0 24 24" set:html={icon.plus} />{d.addFiles}</span></span>
+            </div>
+            <div class="st-area">
+              <span class="st-tag" aria-hidden="true">{d.original}</span>
+              <span class="st-wait" aria-hidden="true">{d.image.waiting}</span>
+              <img class="st-img" src={href("demo/image-original.jpg")} width="400" height="250" alt={d.image.alt} loading="lazy" decoding="async" />
+              <span class="st-zoom" aria-hidden="true">
+                <svg viewBox="0 0 24 24" set:html={icon.minus} /><span>46%</span><svg viewBox="0 0 24 24" set:html={icon.plus} />
+                <span class="st-zsep"></span><svg viewBox="0 0 24 24" set:html={icon.fit} /><svg viewBox="0 0 24 24" set:html={icon.full} />
+              </span>
+            </div>
+          </div>
+          <aside class="panel" aria-hidden="true">
+            <div class="p-scroll">
+              <DemoField opts={d.image.presets} active={3} chips />
+              <DemoField label={d.image.action} opts={d.image.actionOpts} active={0} />
+              <DemoField label={d.image.style} opts={d.image.styleOpts} active={0} secondary />
+              <DemoField label={d.image.size} opts={["1×", "1.6×", "2×", "4×", "8×"]} active={3} aside={d.image.sizeAside} />
+              <DemoField label={d.image.noise} opts={d.image.noiseOpts} active={2} />
+              <DemoField label={d.image.discord} opts={d.image.discordOpts} active={0} chips secondary />
+              <div class="p-section p-secondary"><svg viewBox="0 0 24 24" set:html={icon.chevron} />{d.output}</div>
+              <DemoField label={d.image.format} opts={["PNG", "JPEG", "WEBP"]} active={0} secondary />
+              <DemoField label={d.image.maxSize} opts={d.image.maxSizeOpts} active={0} secondary />
+            </div>
+            <div class="p-foot">
+              <span class="p-btn"><svg viewBox="0 0 24 24" set:html={icon.sparkles} />{d.image.button}</span>
+              <span class="p-kbd">Ctrl + Enter</span>
+            </div>
+          </aside>
+        </div>
+
+        <!-- Clip -->
+        <div class="view" id="demo-view-clip" role="tabpanel" aria-labelledby="demo-tab-clip" hidden>
+          <div class="stage">
+            <div class="st-head">
+              <span class="st-name">{d.clip.file}</span><span class="st-meta">{d.clip.meta}</span>
+              <span class="st-actions" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={icon.trash} /><span class="st-add"><svg viewBox="0 0 24 24" set:html={icon.plus} />{d.addFiles}</span></span>
+            </div>
+            <div class="st-area st-clip">
+              <span class="st-tag" aria-hidden="true">{d.original}</span>
+              <span class="frame"><img src={href("demo/motion-poster.jpg")} width="1280" height="360" alt={d.clip.alt} loading="lazy" decoding="async" /></span>
+              <span class="timeline" aria-hidden="true">
+                <svg class="tl-play" viewBox="0 0 24 24" set:html={icon.play} />
+                <span class="tl-track"><span class="tl-fill"></span><span class="tl-thumb"></span></span>
+                <span class="tl-time">{d.clip.time}</span>
+              </span>
+            </div>
+          </div>
+          <aside class="panel" aria-hidden="true">
+            <div class="p-scroll">
+              <DemoField opts={d.clip.presets} active={1} chips />
+              <DemoField label={d.clip.size} opts={d.clip.sizeOpts} active={0} secondary />
+              <DemoField label={d.clip.enhance} opts={d.clip.enhanceOpts} active={1} />
+              <DemoField label={d.clip.smooth} opts={d.clip.smoothOpts} active={1} hint={d.clip.smoothHint} />
+              <DemoField label={d.clip.blur} opts={d.clip.blurOpts} active={1} secondary />
+              <DemoField label={d.clip.hdr} opts={d.clip.hdrOpts} active={1} aside={d.clip.hdrAside} />
+              <div class="p-section p-secondary p-closed"><svg viewBox="0 0 24 24" set:html={icon.chevronRight} />{d.clip.look}</div>
+              <div class="p-section p-secondary"><svg viewBox="0 0 24 24" set:html={icon.chevron} />{d.output}</div>
+              <DemoField label={d.quality} opts={d.qualityOpts} active={1} secondary />
+            </div>
+            <div class="p-foot">
+              <span class="p-btn"><svg viewBox="0 0 24 24" set:html={icon.sparkles} />{d.clip.button}</span>
+              <span class="p-kbd">Ctrl + Enter</span>
+            </div>
+          </aside>
+        </div>
+
+        <!-- Convert -->
+        <div class="view" id="demo-view-convert" role="tabpanel" aria-labelledby="demo-tab-convert" hidden>
+          <div class="stage">
+            <div class="st-head">
+              <span class="st-name">{d.convert.title}</span>
+              <span class="st-actions" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={icon.trash} /><span class="st-add"><svg viewBox="0 0 24 24" set:html={icon.plus} />{d.addFiles}</span></span>
+            </div>
+            <div class="cv-body">
+              <div class="cv-card">
+                <span class="cv-label">{d.convert.input}</span>
+                <span class="cv-thumb"><img src={href("demo/motion-poster.jpg")} width="1280" height="360" alt="" loading="lazy" decoding="async" /></span>
+                <span class="cv-name">{d.convert.file}</span>
+                <dl class="cv-facts">
+                  {d.convert.facts.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
+                </dl>
+              </div>
+              <svg class="cv-arrow" viewBox="0 0 24 24" aria-hidden="true" set:html={icon.arrow} />
+              <div class="cv-card cv-out">
+                <span class="cv-label">{d.output}</span>
+                <div class="cv-area">
+                  <span class="cv-progress">
+                    <span class="cv-row"><span>{d.convert.converting}</span><span class="cv-pct">42 %</span></span>
+                    <span class="cv-bar"><span></span></span>
+                    <span class="cv-gif">{d.convert.outputFixed}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="panel" aria-hidden="true">
+            <div class="p-scroll">
+              <div class="f-fixed"><span class="f-fixed-label">{d.output}</span><span class="f-fixed-box">{d.convert.outputFixed}</span></div>
+              <DemoField label={d.convert.frameRate} opts={d.convert.fpsOpts} active={3} />
+              <DemoField label={d.convert.width} opts={d.convert.widthOpts} active={2} hint={d.convert.widthHint} />
+              <DemoField label={d.quality} opts={d.qualityOpts} active={1} secondary />
+            </div>
+            <div class="p-foot">
+              <span class="p-btn p-btn-busy"><svg viewBox="0 0 24 24" set:html={icon.convert} />{d.convert.button}</span>
+              <span class="p-kbd">Ctrl + Enter</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption>
+    <span class="demo-hint"><span class="demo-pulse" aria-hidden="true"></span>{d.hint}</span>
+    <span class="muted">{d.note}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .demo { margin: 0; perspective: 1800px; container: demo / inline-size; }
+
+  /* The app's dark theme (src/styles/tokens.css), scoped to the window. */
+  .app {
+    --d-bg: #0a0e15; --d-bg-sunken: #070a10; --d-surface: #0f141c; --d-surface-2: #141a24; --d-surface-3: #1a212c;
+    --d-border: rgb(160 195 235 / 0.07); --d-border-strong: rgb(160 195 235 / 0.12);
+    --d-text: #e9edf3; --d-text-2: #a2abb8; --d-text-3: #6a7484;
+    --d-accent: #3dd6d0; --d-accent-ink: #032321; --d-accent-soft: rgb(61 214 208 / 0.11); --d-accent-line: rgb(61 214 208 / 0.45);
+    --d-success: #52d394;
+    --d-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    display: flex; flex-direction: column;
+    aspect-ratio: 1320 / 840;
+    border-radius: 12px; overflow: hidden;
+    background: var(--d-bg); color: var(--d-text);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(0 0 0 / 0.4);
+    font: 13px/1.45 var(--font); letter-spacing: -0.003em;
+    text-align: left; user-select: none;
+    transform-origin: 50% 0;
+    transition: transform 1.2s var(--ease), box-shadow 0.4s;
+  }
+  .js .demo:not(.in) .app { transform: rotateX(9deg) scale(0.97); }
+  .app:hover { box-shadow: 0 48px 90px -30px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(61 214 208 / 0.18); }
+  .app svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .sb-i, .card, .cc-btn { font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
+
+  /* Title bar */
+  .tb { display: flex; align-items: center; justify-content: space-between; height: 44px; flex: none; padding-left: 16px; border-bottom: 1px solid var(--d-border); }
+  .tb-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--d-text-2); font-size: 13px; font-weight: 500; }
+  .tb-brand svg { color: var(--d-text); }
+  .tb-sep { width: 1px; height: 14px; background: var(--d-border-strong); }
+  .tb-right { display: flex; align-items: center; gap: 10px; height: 100%; color: var(--d-text-3); }
+  .tb-status { display: inline-flex; align-items: center; gap: 7px; color: var(--d-text-3); font-size: 12px; }
+  .tb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--d-success); box-shadow: 0 0 6px var(--d-success); }
+  .tb-line { width: 1px; height: 16px; background: var(--d-border-strong); }
+  .tb-icon { width: 15px; height: 15px; margin: 0 4px; }
+  .tb-win { display: grid; place-items: center; width: 46px; height: 100%; }
+  .tb-win svg { width: 14px; height: 14px; stroke-width: 1.4; }
+
+  .body { position: relative; display: flex; flex: 1; min-height: 0; }
+
+  /* Sidebar */
+  .sb {
+    display: flex; flex-direction: column; width: 200px; flex: none; padding: 12px 10px;
+    border-right: 1px solid var(--d-border);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--d-surface) 60%, transparent), color-mix(in srgb, var(--d-bg) 35%, transparent));
+  }
+  .sb-group { position: relative; display: flex; flex-direction: column; gap: 3px; }
+  .sb-secondary { display: flex; flex-direction: column; gap: 3px; }
+  .sb-div { height: 1px; margin: 12px 10px; background: linear-gradient(90deg, var(--d-border-strong), transparent); }
+  .sb-spacer { flex: 1; }
+  .sb-i {
+    position: relative; z-index: 1; display: flex; align-items: center; gap: 11px; width: 100%; height: 36px; padding: 0 11px;
+    border: 0; border-radius: 8px; background: none; color: var(--d-text-2); font-weight: 500; white-space: nowrap;
+    transition: background-color 0.18s var(--d-ease), color 0.18s var(--d-ease);
+  }
+  button.sb-i:hover:not([aria-selected="true"]) { background: color-mix(in srgb, var(--d-surface-2) 70%, transparent); color: var(--d-text); }
+  button.sb-i:hover:not([aria-selected="true"]) .sb-icon { color: var(--d-text-2); transform: translateX(1px); }
+  .sb-i[aria-selected="true"] { color: color-mix(in srgb, var(--d-accent) 80%, var(--d-text)); }
+  .sb-icon { width: 17px; height: 17px; flex: none; color: var(--d-text-3); transition: color 0.18s var(--d-ease), transform 0.18s var(--d-ease); }
+  .sb-i[aria-selected="true"] .sb-icon { color: var(--d-accent); }
+  .sb-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .sb-badge {
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--d-surface-3);
+    color: var(--d-text-2); font-size: 11px; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums;
+  }
+  .sb-static { cursor: default; }
+  .sb-support { color: var(--d-text-3); font-size: 12.5px; }
+  .sb-version { padding: 6px 11px 0; color: var(--d-text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+  /* One highlight that glides to the selected section, like the app's. Without JS the
+     selected button carries the same look itself. */
+  .sb-hl {
+    position: absolute; left: 0; right: 0; top: 0; height: 36px; border-radius: 8px; opacity: 0; pointer-events: none;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--d-accent) 7%, var(--d-surface-3)), var(--d-surface-2));
+    box-shadow: 0 0 0 1px var(--d-border) inset;
+    transition: transform 0.32s var(--d-ease), height 0.32s var(--d-ease);
+  }
+  .sb-line {
+    position: absolute; left: -10px; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0;
+    background: var(--d-accent); box-shadow: 0 0 10px color-mix(in srgb, var(--d-accent) 55%, transparent);
+  }
+  .app.ready .sb-hl { opacity: 1; }
+  .app:not(.ready) .sb-i[aria-selected="true"] { background: var(--d-surface-3); }
+
+  /* Views: stacked in one cell, the selected one fades and slides in. */
+  .views { position: relative; display: grid; flex: 1; min-width: 0; min-height: 0; }
+  .view { grid-area: 1 / 1; display: flex; min-width: 0; min-height: 0; }
+  .view[hidden] { display: none; }
+  .view.enter { animation: view-in 0.26s var(--d-ease); }
+  @keyframes view-in { from { opacity: 0; transform: translateY(6px); } }
+
+  /* Home */
+  .v-home { position: relative; flex-direction: column; overflow: hidden; }
+  .v-home :global(.demo-night) { position: absolute; inset: 0; --land: 44%; opacity: 0.9; }
+  .home-center { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; }
+  .home-logo { color: var(--d-text); }
+  .home-title { margin: 0 0 6px; font-size: 21px; font-weight: 600; letter-spacing: -0.025em; }
+  .home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 300px)); gap: 12px; }
+  .card, .card-convert {
+    position: relative; overflow: hidden; border-radius: 14px;
+    border: 1px solid rgb(120 180 220 / 0.16);
+    background: linear-gradient(160deg, rgb(21 32 47 / 0.9), rgb(11 16 24 / 0.94));
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset;
+    transition: border-color 0.18s var(--d-ease), transform 0.18s var(--d-ease), box-shadow 0.18s var(--d-ease);
+  }
+  .card { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-height: 212px; padding: 18px 18px 16px; }
+  .card:hover, .card-convert:has(.cc-btn:hover) { border-color: var(--d-accent-line); box-shadow: 0 14px 40px -18px rgb(0 0 0 / 0.7), 0 0 0 1px color-mix(in srgb, var(--d-accent) 10%, transparent); }
+  .card:hover { transform: translateY(-2px); }
+  .card-art { position: absolute; inset: 0 0 0 auto; width: 60%; pointer-events: none; background: radial-gradient(ellipse 50% 30% at 70% 22%, rgb(127 183 255 / 0.18), transparent 70%); }
+  .card[data-go="clip"] .card-art { background: radial-gradient(circle at 80% 20%, rgb(143 179 217 / 0.2), transparent 30%); }
+  .card-icon {
+    position: relative; display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 8px; border-radius: 10px;
+    background: var(--d-accent-soft); border: 1px solid var(--d-accent-line); color: var(--d-accent);
+  }
+  .card-icon svg { width: 20px; height: 20px; stroke-width: 1.7; }
+  .card-title { position: relative; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .card-body { position: relative; color: var(--d-text-2); font-size: 12.5px; line-height: 1.5; }
+  .card-chips { position: relative; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+  .card-chips span { padding: 2px 7px; border-radius: 5px; background: var(--d-surface-2); border: 1px solid var(--d-border-strong); color: var(--d-text-2); font-size: 10.5px; font-weight: 500; }
+  .card-cta { position: relative; display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; color: var(--d-accent); font-weight: 600; font-size: 12.5px; }
+  .card-cta svg { width: 13px; height: 13px; transition: transform 0.18s var(--d-ease); }
+  .card:hover .card-cta svg { transform: translateX(2px); }
+  .card-convert { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; padding: 14px 16px 14px 18px; }
+  .card-convert .card-icon { margin: 0; flex: none; }
+  .cc-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+  .cc-btn {
+    display: inline-flex; align-items: center; gap: 7px; flex: none; height: 32px; padding: 0 12px; border-radius: 8px;
+    background: var(--d-surface-2); border: 1px solid var(--d-border-strong); font-weight: 600; font-size: 12.5px;
+    transition: border-color 0.18s;
+  }
+  .cc-btn:hover { border-color: var(--d-accent-line); }
+  .cc-btn svg { width: 14px; height: 14px; }
+  .home-foot { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; color: var(--d-text-3); font-size: 11.5px; }
+  .home-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--d-text-3); }
+  .home-how { display: inline-flex; align-items: center; gap: 5px; color: var(--d-text-2); }
+  .home-how svg { width: 12px; height: 12px; }
+  .home-sign { position: relative; margin: 0; padding-bottom: 12px; text-align: center; color: var(--d-text-3); font-size: 11px; }
+
+  /* Stage (centre) */
+  .stage { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .st-head { display: flex; align-items: center; gap: 10px; height: 44px; flex: none; padding: 0 16px; border-bottom: 1px solid var(--d-border); }
+  .st-name { font-weight: 600; white-space: nowrap; }
+  .st-meta { color: var(--d-text-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .st-actions { display: inline-flex; align-items: center; gap: 18px; margin-left: auto; color: var(--d-text-2); flex: none; }
+  .st-actions > svg { width: 15px; height: 15px; }
+  .st-add { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .st-add svg { width: 15px; height: 15px; }
+  .st-area { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 48px 28px 64px; background: var(--d-bg-sunken); }
+  .st-tag { position: absolute; left: 18px; top: 16px; font-size: 11.5px; font-weight: 600; }
+  .st-wait { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); white-space: nowrap; font-size: 12.5px; }
+  .st-img { width: min(100%, 560px); height: auto; max-height: 100%; object-fit: contain; }
+  .st-zoom {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 14px; height: 32px; padding: 0 14px; border-radius: 8px;
+    background: var(--d-surface); border: 1px solid var(--d-border-strong); color: var(--d-text-2); font-size: 12px; font-variant-numeric: tabular-nums;
+  }
+  .st-zoom svg { width: 14px; height: 14px; }
+  .st-zsep { width: 1px; height: 16px; background: var(--d-border-strong); }
+  .st-clip { padding-bottom: 72px; }
+  /* motion-poster.jpg holds two 16:9 frames side by side: show the left one. */
+  .frame { display: block; width: min(100%, 600px); aspect-ratio: 16 / 9; overflow: hidden; border-radius: 4px; }
+  .frame img { width: 200%; max-width: none; height: 100%; object-fit: cover; object-position: 0 0; }
+  .timeline {
+    position: absolute; left: 18px; right: 18px; bottom: 16px; display: flex; align-items: center; gap: 12px; height: 34px; padding: 0 12px;
+    border-radius: 8px; background: var(--d-surface); border: 1px solid var(--d-border-strong); color: var(--d-text-2);
+  }
+  .tl-play { width: 13px; height: 13px; fill: currentColor; }
+  .tl-track { position: relative; flex: 1; height: 4px; border-radius: 2px; background: var(--d-surface-3); }
+  .tl-fill { position: absolute; inset: 0 auto 0 0; width: 33%; border-radius: inherit; background: var(--d-accent); }
+  .tl-thumb { position: absolute; left: 33%; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: var(--d-text); }
+  .tl-time { font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+  /* Convert */
+  .cv-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; padding: 24px; background: var(--d-bg-sunken); }
+  .cv-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 12px; background: var(--d-surface); border: 1px solid var(--d-border-strong); }
+  .cv-label { color: var(--d-text-3); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+  .cv-thumb { display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; }
+  .cv-thumb img { width: 200%; max-width: none; height: 100%; object-fit: cover; object-position: 0 0; }
+  .cv-name { font-weight: 600; }
+  .cv-facts { display: grid; gap: 3px; margin: 0; font-size: 12px; }
+  .cv-facts div { display: flex; justify-content: space-between; gap: 10px; }
+  .cv-facts dt { color: var(--d-text-3); }
+  .cv-facts dd { margin: 0; color: var(--d-text-2); font-variant-numeric: tabular-nums; }
+  .cv-arrow { width: 18px; height: 18px; color: var(--d-text-3); }
+  .cv-out { align-self: stretch; }
+  .cv-area { flex: 1; display: grid; place-items: center; border-radius: 8px; border: 1px dashed var(--d-border-strong); min-height: 140px; }
+  .cv-progress { display: grid; gap: 8px; width: 78%; }
+  .cv-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; }
+  .cv-pct { color: var(--d-accent); font-variant-numeric: tabular-nums; }
+  .cv-bar { position: relative; display: block; height: 4px; border-radius: 2px; overflow: hidden; background: var(--d-surface-3); }
+  .cv-bar span { position: absolute; inset: 0 58% 0 0; border-radius: inherit; background: var(--d-accent); }
+  .cv-bar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent); transform: translateX(-100%); animation: sheen 1.8s ease-in-out infinite; }
+  @keyframes sheen { to { transform: translateX(100%); } }
+  .cv-gif { justify-self: center; margin-top: 6px; padding: 3px 9px; border-radius: 5px; background: var(--d-surface-2); color: var(--d-text-2); font-size: 11px; font-weight: 600; }
+
+  /* Right panel */
+  .panel { display: flex; flex-direction: column; width: 300px; flex: none; min-height: 0; border-left: 1px solid var(--d-border); background: var(--d-bg); }
+  .p-scroll {
+    flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 15px; padding: 16px 16px 12px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent); mask-image: linear-gradient(to bottom, #000 88%, transparent);
+  }
+  .p-section { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--d-border); color: var(--d-text-2); font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+  .p-section svg { width: 13px; height: 13px; }
+  .p-closed { color: var(--d-text-3); }
+  .p-closed + .p-section { padding-top: 0; border-top: 0; }
+  .f-fixed { display: grid; gap: 7px; }
+  .f-fixed-label { font-size: 12.5px; font-weight: 500; }
+  .f-fixed-box { padding: 7px 10px; border-radius: 8px; background: var(--d-bg-sunken); border: 1px solid var(--d-border); color: var(--d-text-2); font-size: 12px; }
+  .p-foot { display: grid; gap: 6px; padding: 12px 16px 12px; flex: none; }
+  .p-btn {
+    display: flex; align-items: center; justify-content: center; gap: 9px; height: 44px; border-radius: 10px;
+    background: var(--d-accent); color: var(--d-accent-ink); font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 24px -10px rgb(61 214 208 / 0.6);
+  }
+  .p-btn svg { width: 16px; height: 16px; }
+  .p-btn-busy { opacity: 0.55; box-shadow: none; }
+  .p-kbd { color: var(--d-text-3); font-size: 11px; text-align: center; }
+
+  /* Caption */
+  .demo figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 16px; font-size: 14px; }
+  .demo-hint { display: inline-flex; align-items: center; gap: 10px; color: var(--text); }
+  .demo-pulse { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .demo-pulse::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--accent); opacity: 0; animation: pulse 2.4s var(--ease) infinite; }
+  @keyframes pulse { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }
+
+  /* Medium windows: icons-only sidebar, as the app does under 1180 px. */
+  @container demo (max-width: 980px) {
+    .sb { width: 58px; padding: 12px 9px; }
+    .sb-line { left: -9px; }
+    .sb-i { justify-content: center; padding: 0; }
+    .sb-label, .sb-version { display: none; }
+    .sb-badge { position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; font-size: 9.5px; line-height: 15px; }
+    .panel { width: 250px; }
+    .home-grid { grid-template-columns: repeat(2, minmax(0, 250px)); }
+    .st-meta { display: none; }
+  }
+
+  /* Phones: the window grows with its content. The sidebar keeps the four sections with
+     short labels, the settings panel goes under the preview with its main settings only. */
+  @container demo (max-width: 680px) {
+    .app { aspect-ratio: auto; font-size: 12px; }
+    .tb { height: 38px; padding-left: 12px; }
+    .tb-extra { display: none; }
+    .tb-win { width: 30px; }
+    .tb-win svg { width: 12px; height: 12px; }
+    .sb { width: 64px; padding: 8px 6px; }
+    .sb-line { left: -6px; }
+    .sb-tabs .sb-i { flex-direction: column; gap: 3px; height: 54px; }
+    .sb-tabs .sb-label { display: block; flex: none; width: 100%; font-size: 9.5px; line-height: 1.15; text-align: center; white-space: normal; }
+    .sb-hl { height: 54px; }
+    .sb-secondary, .sb-support, .sb-version, .sb-spacer { display: none; }
+    .views { min-height: 560px; }
+    .view { flex-direction: column; }
+    .panel { width: auto; border-left: 0; border-top: 1px solid var(--d-border); }
+    .p-scroll { mask-image: none; -webkit-mask-image: none; gap: 12px; padding: 12px; }
+    .p-secondary { display: none; }
+    .p-foot { padding: 0 12px 12px; }
+    .p-btn { height: 38px; font-size: 13px; }
+    .p-kbd { display: none; }
+    .st-head { height: 38px; padding: 0 12px; }
+    .st-add { display: none; }
+    .st-area { flex: none; height: 200px; padding: 32px 12px 40px; }
+    .st-clip { padding-bottom: 52px; }
+    .st-wait { display: none; }
+    .st-zoom { bottom: 8px; height: 26px; gap: 10px; }
+    .timeline { left: 10px; right: 10px; bottom: 8px; height: 28px; }
+    .home-center { justify-content: flex-start; padding: 16px 12px; gap: 10px; }
+    .home-title { font-size: 16px; }
+    .home-grid { grid-template-columns: 1fr; gap: 8px; width: 100%; }
+    .card { min-height: 0; padding: 12px; }
+    .card-icon { width: 32px; height: 32px; margin-bottom: 2px; }
+    .card-chips, .home-foot, .home-sign { display: none; }
+    .card-convert { flex-wrap: wrap; gap: 10px; padding: 12px; }
+    .card-convert .card-icon, .cc-text .card-body { display: none; }
+    .cc-btn { width: 100%; justify-content: center; }
+    .cv-body { grid-template-columns: 1fr; padding: 12px; gap: 8px; }
+    .cv-arrow { justify-self: center; transform: rotate(90deg); }
+    .cv-thumb, .cv-facts div:nth-child(n+4) { display: none; }
+    .cv-area { min-height: 80px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .demo:not(.in) .app { transform: none; }
+    .view.enter { animation: none; }
+    .sb-hl { transition: none; }
+    .cv-bar::after, .demo-pulse::after { animation: none; }
+  }
+</style>
+
+<script>
+  // Switches the demo between Home, Image & GIF, Clip and Convert (WAI-ARIA tabs pattern).
+  const demo = document.querySelector<HTMLElement>("[data-demo]");
+  if (demo) {
+    const app = demo.querySelector<HTMLElement>(".app")!;
+    const tabs = [...demo.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const hl = demo.querySelector<HTMLElement>(".sb-hl")!;
+    const current = () => tabs.find((t) => t.getAttribute("aria-selected") === "true") ?? tabs[0];
+    const place = (tab: HTMLButtonElement) => {
+      hl.style.transform = `translateY(${tab.offsetTop}px)`;
+      hl.style.height = `${tab.offsetHeight}px`;
+    };
+
+    const select = (view: string, focus = false) => {
+      const tab = tabs.find((t) => t.dataset.view === view);
+      if (!tab || tab === current()) return;
+      for (const t of tabs) {
+        const on = t === tab;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(t.getAttribute("aria-controls")!)!;
+        panel.hidden = !on;
+        if (on) {
+          panel.classList.remove("enter");
+          void panel.offsetWidth; // restart the animation
+          panel.classList.add("enter");
+        }
+      }
+      place(tab);
+      if (focus) tab.focus();
+    };
+
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => select(t.dataset.view!));
+      t.addEventListener("keydown", (e) => {
+        const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        select(tabs[(i + step + tabs.length) % tabs.length].dataset.view!, true);
+      });
+    });
+    demo.querySelectorAll<HTMLButtonElement>("[data-go]").forEach((b) => b.addEventListener("click", () => select(b.dataset.go!)));
+
+    // Place the highlight without a glide, then let it glide from now on.
+    hl.style.transition = "none";
+    place(current());
+    void hl.offsetWidth;
+    hl.style.transition = "";
+    app.classList.add("ready");
+    new ResizeObserver(() => place(current())).observe(app);
+
+    // Flatten the window once it is on screen.
+    new IntersectionObserver(([e], io) => {
+      if (e.isIntersecting) {
+        demo.classList.add("in");
+        io.disconnect();
+      }
+    }, { threshold: 0.25 }).observe(demo);
+  }
+</script>

@@ -1,0 +1,52 @@
+---
+// Pages are built with the latest release (lib/release.ts). This refresh, in the browser, picks
+// up a release published since the last build: every element marked data-r gets the new value
+// (version, installer link, size, ...). If GitHub cannot be reached, the built values stay.
+//
+//   data-r="version"        text: 1.2.0
+//   data-r="href:asset.url" attribute: the installer link
+//   data-r="html:bodyHtml"  inner HTML: the release notes rendered by GitHub
+import { API_LATEST } from "../lib/site";
+import { ui, type Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+---
+<script is:inline define:vars={{ api: API_LATEST, lang, notesTitle: ui[lang].download.notes("{name}") }}>
+  const fr = lang === "fr";
+  const fmtSize = (b) => {
+    const mb = (b / 1024 / 1024).toFixed(1);
+    return fr ? `${mb.replace(".", ",")} Mo` : `${mb} MB`;
+  };
+  const fmtDate = (iso) =>
+    new Date(iso).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  if (document.querySelector("[data-r]")) {
+    fetch(api, { headers: { Accept: "application/vnd.github.full+json" } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((r) => {
+        const a = r.assets.find((x) => /_x64-setup\.exe$/i.test(x.name));
+        // Only an installer from this repository's own releases is ever linked.
+        if (!a || !a.browser_download_url.startsWith("https://github.com/lololyeye/aoze/releases/download/")) return;
+        const data = {
+          url: r.html_url,
+          "asset.url": a.browser_download_url,
+          version: r.tag_name.replace(/^v/, ""),
+          date: fmtDate(r.published_at),
+          name: a.name,
+          "notes-title": notesTitle.replace("{name}", r.name),
+          size: fmtSize(a.size),
+          hash: a.digest && a.digest.startsWith("sha256:") ? a.digest.slice(7) : null,
+          bodyHtml: r.body_html,
+        };
+        document.querySelectorAll("[data-r]").forEach((el) => {
+          const spec = el.getAttribute("data-r");
+          if (spec.startsWith("href:")) el.href = data[spec.slice(5)];
+          else if (spec.startsWith("html:")) { if (data[spec.slice(5)]) el.innerHTML = data[spec.slice(5)]; }
+          else if (data[spec]) el.textContent = data[spec];
+        });
+        const time = document.querySelector("time[data-r]");
+        if (time) time.setAttribute("datetime", r.published_at);
+      })
+      .catch(() => {});
+  }
+</script>

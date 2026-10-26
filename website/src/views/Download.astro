@@ -4,8 +4,9 @@ import { ui, type Lang } from "../i18n/ui";
 import Logo from "../components/Logo.astro";
 import KofiButton from "../components/KofiButton.astro";
 import DownloadCount from "../components/DownloadCount.astro";
+import ReleaseSync from "../components/ReleaseSync.astro";
 import { latestRelease, version, formatSize, formatDate, sha256 } from "../lib/release";
-import { API_LATEST, GITHUB_URL, RELEASES_URL } from "../lib/site";
+import { GITHUB_URL, RELEASES_URL } from "../lib/site";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -27,6 +28,7 @@ const hash = sha256(release);
           <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" /></svg>
           {t.button}
         </a>
+        <KofiButton lang={lang} short />
         <DownloadCount lang={lang} />
         </div>
         <p class="sub">{t.sub} <span data-r="size">{formatSize(release.asset.size, lang)}</span></p>
@@ -89,43 +91,9 @@ const hash = sha256(release);
   </section>
 </Base>
 
-<script define:vars={{ api: API_LATEST, lang, notesTitle: ui[lang].download.notes("{name}") }}>
-  // The page is built with the latest release; this refresh picks up a newer one
-  // published since the last build. If GitHub cannot be reached, the built values stay.
-  const fr = lang === "fr";
-  const fmtSize = (b) => {
-    const mb = (b / 1024 / 1024).toFixed(1);
-    return fr ? `${mb.replace(".", ",")} Mo` : `${mb} MB`;
-  };
-  const fmtDate = (iso) =>
-    new Date(iso).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-  fetch(api, { headers: { Accept: "application/vnd.github.full+json" } })
-    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((r) => {
-      const a = r.assets.find((x) => /_x64-setup\.exe$/i.test(x.name));
-      if (!a) return;
-      const data = {
-        url: r.html_url,
-        "asset.url": a.browser_download_url,
-        version: r.tag_name.replace(/^v/, ""),
-        date: fmtDate(r.published_at),
-        name: a.name,
-        "notes-title": notesTitle.replace("{name}", r.name),
-        size: fmtSize(a.size),
-        hash: a.digest && a.digest.startsWith("sha256:") ? a.digest.slice(7) : null,
-        bodyHtml: r.body_html,
-      };
-      document.querySelectorAll("[data-r]").forEach((el) => {
-        const spec = el.getAttribute("data-r");
-        if (spec.startsWith("href:")) el.href = data[spec.slice(5)];
-        else if (spec.startsWith("html:")) { if (data[spec.slice(5)]) el.innerHTML = data[spec.slice(5)]; }
-        else if (data[spec]) el.textContent = data[spec];
-      });
-      const time = document.querySelector("time[data-r]");
-      if (time) time.setAttribute("datetime", r.published_at);
-    })
-    .catch(() => {});
+<ReleaseSync lang={lang} />
 
+<script is:inline>
   const copy = document.querySelector("[data-copy]");
   const label = copy?.textContent;
   copy?.addEventListener("click", async () => {

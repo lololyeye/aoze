@@ -1,4 +1,4 @@
-import { Activity, FolderOpen, Play, RotateCcw } from "lucide-react";
+import { Activity, FolderOpen, Play, RefreshCw, RotateCcw } from "lucide-react";
 import { Button, IconButton } from "../../components/ui/Button";
 import { Field, Section } from "../../components/ui/Field";
 import { Page } from "../../components/ui/Page";
@@ -11,10 +11,39 @@ import { playCompletion } from "../../services/sounds";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { useSystemStore } from "../../stores/systemStore";
 import { useUiStore } from "../../stores/uiStore";
+import { useUpdateStore } from "../../stores/updateStore";
 import type { Language, Settings, Theme } from "../../types";
 import { ConflictField, DeviceField, SuffixField, ThreadsField, TileField } from "./fields";
 import { PerformanceFields } from "./PerformanceSection";
 import s from "./SettingsPage.module.css";
+
+/** Installed version, "Check now" and what the last check found. */
+function UpdateRow() {
+  const t = useMessages();
+  const version = useSystemStore((st) => st.status?.appVersion);
+  const phase = useUpdateStore((st) => st.phase);
+  const info = useUpdateStore((st) => st.info);
+  const error = useUpdateStore((st) => st.error);
+  const { check, setOpen } = useUpdateStore.getState();
+  const found = info !== null && phase !== "checking" && phase !== "upToDate" && phase !== "idle";
+  return (
+    <div className={s.row}>
+      <span className={s.installed}>Aoze {version}</span>
+      <span className={s.updateStatus} aria-live="polite">
+        {phase === "checking" ? t.update.checking : phase === "upToDate" ? t.update.upToDate : phase === "error" && !info && error ? t.update.errors[error.kind] : ""}
+      </span>
+      {found ? (
+        <Button size="sm" variant="primary" onClick={() => setOpen(true)}>
+          {t.update.see}
+        </Button>
+      ) : (
+        <Button size="sm" icon={<RefreshCw />} disabled={phase === "checking"} onClick={() => void check(true)}>
+          {t.update.checkNow}
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export function SettingsPage() {
   const t = useMessages();
@@ -55,6 +84,7 @@ export function SettingsPage() {
       clip: { scale: 1, enhance: "off", style: "artworkFast", fps: null, fpsMode: "retime", motionBlur: 0, smooth: "off", hdr: "auto", look: { exposure: 0, contrast: 0, saturation: 0, sharpness: 0 } },
       clipCompress: { level: "balanced", quality: 80, maxSize: null, unit: "mb" },
       videoEncoder: "auto",
+      checkForUpdates: true,
     }));
 
   return (
@@ -124,6 +154,15 @@ export function SettingsPage() {
         <DeviceField />
         <TileField />
         <ThreadsField />
+      </Section>
+
+      <Section title={t.update.settingsTitle}>
+        <Field label={t.update.check} hint={t.update.checkHint} inline>
+          <Toggle label={t.update.check} checked={settings.checkForUpdates} onChange={(checkForUpdates) => patch({ checkForUpdates })} />
+        </Field>
+        <Field label={t.update.installed}>
+          <UpdateRow />
+        </Field>
       </Section>
 
       <Section title={t.settings.advanced}>

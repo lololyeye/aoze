@@ -1,0 +1,28 @@
+{
+  "version": "1.1.0",
+  "date": "2026-10-26",
+  "en": {
+    "summary": "Aoze now keeps itself up to date.",
+    "changes": [
+      "Updates: Aoze tells you when a new version is out and installs it in one click, then reopens.",
+      "What's new: after an update, a short list of the changes, shown once.",
+      "Settings: turn the update check off, or check now. The installed version is shown at the bottom of the sidebar."
+    ],
+    "improvements": [
+      "Every update is checked before it is installed: official GitHub release only, Aoze's signature and SHA-256. Your current version stays untouched until the new one is ready."
+    ],
+    "fixes": []
+  },
+  "fr": {
+    "summary": "Aoze se met désormais à jour tout seul.",
+    "changes": [
+      "Mises à jour : Aoze vous prévient quand une nouvelle version sort et l'installe en un clic, puis se rouvre.",
+      "Nouveautés : après une mise à jour, la liste des changements, affichée une seule fois.",
+      "Paramètres : désactiver la recherche de mises à jour, ou vérifier maintenant. La version installée est indiquée en bas de la barre latérale."
+    ],
+    "improvements": [
+      "Chaque mise à jour est vérifiée avant d'être installée : release GitHub officielle uniquement, signature d'Aoze et SHA-256. Votre version actuelle reste intacte tant que la nouvelle n'est pas prête."
+    ],
+    "fixes": []
+  }
+}

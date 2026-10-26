@@ -22,6 +22,10 @@ export function useMessages(): Messages {
   return catalogs[resolveLocale(lang)];
 }
 
+export function useLocale(): Locale {
+  return resolveLocale(useSettingsStore((s) => s.settings?.language));
+}
+
 export function messagesFor(lang: Language | undefined): Messages {
   return catalogs[resolveLocale(lang)];
 }

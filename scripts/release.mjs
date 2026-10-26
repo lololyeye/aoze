@@ -2,14 +2,17 @@
 //
 //   npm run release
 //
-// 1. Checks that package.json, Cargo.toml and tauri.conf.json agree on the version.
+// 1. Checks the version (package.json, copied to Cargo.toml by `npm version`) and its release
+//    notes (docs/release-notes/v<version>.json).
 // 2. Fetches the bundled engines (pinned versions, SHA-256 checked by fetch-engine.mjs).
 // 3. Builds the installer with local paths (user name, checkout folder, cargo cache)
-//    remapped out of the Rust binary, then checks no such path is left.
-// 4. Writes the release folder: installer, SHA256SUMS.txt, LICENSE, THIRD_PARTY_NOTICES.md
-//    and THIRD_PARTY_LICENSES.txt (full licence texts of every Rust crate and npm package
+//    remapped out of the Rust binary, then checks no such path is left. The installer is
+//    signed with the updater key (TAURI_SIGNING_PRIVATE_KEY, or ~/.tauri/aoze-updater.key).
+// 4. Writes the release folder: installer, latest.json (update manifest read by the app),
+//    RELEASE_NOTES.md, SHA256SUMS.txt, LICENSE, THIRD_PARTY_NOTICES.md and
+//    THIRD_PARTY_LICENSES.txt (full licence texts of every Rust crate and npm package
 //    compiled into the app).
-// Signing is not part of this script: see RELEASE.md.
+// Code signing (Authenticode) is not part of this script: see RELEASE.md.
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -26,15 +29,31 @@ const run = (cmd, args, opts = {}) =>
 const read = (cmd, args, cwd) =>
   execFileSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 1 << 28 });
 
-// 1. Version
+// 1. Version and release notes
+const REPO = "lololyeye/aoze";
 const pkgVersion = JSON.parse(await readFile(join(root, "package.json"), "utf8")).version;
 const confVersion = JSON.parse(await readFile(join(tauri, "tauri.conf.json"), "utf8")).version;
 const cargoVersion = (await readFile(join(tauri, "Cargo.toml"), "utf8")).match(/^version = "([^"]+)"/m)[1];
-if (new Set([pkgVersion, confVersion, cargoVersion]).size !== 1) {
-  throw new Error(`version mismatch: package.json ${pkgVersion}, tauri.conf.json ${confVersion}, Cargo.toml ${cargoVersion}`);
+if (confVersion !== "../package.json") throw new Error(`tauri.conf.json must read its version from package.json, not "${confVersion}"`);
+if (pkgVersion !== cargoVersion) {
+  throw new Error(`version mismatch: package.json ${pkgVersion}, Cargo.toml ${cargoVersion}. Run: npm version ${pkgVersion} --allow-same-version`);
 }
 const version = pkgVersion;
+const notesFile = join(root, "docs", "release-notes", `v${version}.json`);
+if (!existsSync(notesFile)) throw new Error(`missing release notes: ${notesFile}`);
+const notes = JSON.parse(await readFile(notesFile, "utf8"));
+const items = (body) => (body?.changes?.length ?? 0) + (body?.improvements?.length ?? 0) + (body?.fixes?.length ?? 0);
+if (notes.version !== version || !items(notes.en)) throw new Error(`${notesFile}: version must be ${version} and the English notes must list at least one change`);
 console.log(`[release] Aoze ${version}`);
+
+// The updater key signs the installer; the app only installs updates signed with it.
+const keyFile = join(homedir(), ".tauri", "aoze-updater.key");
+const signingEnv = {};
+if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
+  if (!existsSync(keyFile)) throw new Error(`no updater key: set TAURI_SIGNING_PRIVATE_KEY or create ${keyFile} (see RELEASE.md)`);
+  signingEnv.TAURI_SIGNING_PRIVATE_KEY = await readFile(keyFile, "utf8");
+  signingEnv.TAURI_SIGNING_PRIVATE_KEY_PASSWORD = process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD ?? "";
+}
 
 // 2. Engines
 run("node", ["scripts/fetch-engine.mjs"]);
@@ -49,9 +68,9 @@ const remaps = [
 // The encoded form takes flags separated by 0x1f, so paths may contain spaces.
 const rustflags = remaps.map(([from, to]) => `--remap-path-prefix=${from}=${to}`).join("\x1f");
 // npx is a .cmd script on Windows, so it needs a shell; no argument contains spaces.
-run("npx", ["tauri", "build", "--bundles", "nsis"], {
+run("npx", ["tauri", "build", "--bundles", "nsis", "--config", "src-tauri/tauri.updater.conf.json"], {
   shell: process.platform === "win32",
-  env: { ...process.env, RUSTFLAGS: "", CARGO_ENCODED_RUSTFLAGS: rustflags },
+  env: { ...process.env, ...signingEnv, RUSTFLAGS: "", CARGO_ENCODED_RUSTFLAGS: rustflags },
 });
 
 const exeName = `Aoze_${version}_x64-setup.exe`;
@@ -71,8 +90,28 @@ await copyFile(setup, join(out, exeName));
 await copyFile(join(root, "LICENSE"), join(out, "LICENSE.txt"));
 await copyFile(join(root, "THIRD_PARTY_NOTICES.md"), join(out, "THIRD_PARTY_NOTICES.md"));
 await writeFile(join(out, "THIRD_PARTY_LICENSES.txt"), await thirdPartyLicenses());
-const notes = join(root, "docs", "release-notes", `v${version}.md`);
-if (existsSync(notes)) await copyFile(notes, join(out, "RELEASE_NOTES.md"));
+
+const installer = await readFile(join(out, exeName));
+const installerSha = createHash("sha256").update(installer).digest("hex");
+const url = `https://github.com/${REPO}/releases/download/v${version}/${exeName}`;
+// Update manifest, published as a release asset: the app reads it from
+// https://github.com/<repo>/releases/latest/download/latest.json
+const manifest = {
+  version,
+  notes: plainNotes(notes.en),
+  pub_date: new Date().toISOString(),
+  platforms: {
+    "windows-x86_64": {
+      signature: (await readFile(`${setup}.sig`, "utf8")).trim(),
+      url,
+      sha256: installerSha,
+      size: installer.length,
+    },
+  },
+  releaseNotes: notes,
+};
+await writeFile(join(out, "latest.json"), JSON.stringify(manifest, null, 2) + "\n");
+await writeFile(join(out, "RELEASE_NOTES.md"), releaseMarkdown(notes.en, installerSha));
 
 const sums = [];
 for (const name of (await readdir(out)).sort()) {
@@ -82,6 +121,33 @@ for (const name of (await readdir(out)).sort()) {
 await writeFile(join(out, "SHA256SUMS.txt"), sums.join("\n") + "\n");
 console.log(`[release] ${out}`);
 console.log(sums.join("\n"));
+
+function plainNotes(body) {
+  return [...body.changes, ...body.improvements, ...body.fixes].map((l) => `- ${l}`).join("\n");
+}
+
+// The GitHub release notes, from the same JSON as the app's "What's new".
+function releaseMarkdown(body, sha) {
+  const list = (title, lines) => (lines.length ? [`### ${title}`, "", ...lines.map((l) => `- ${l}`), ""] : []);
+  return [
+    `**Aoze ${version}**${body.summary ? `: ${body.summary}` : ""}`,
+    "",
+    ...list("New", body.changes),
+    ...list("Improved", body.improvements),
+    ...list("Fixed", body.fixes),
+    `Download **${exeName}**, run it, done (FFmpeg and every engine are included).`,
+    "Aoze 1.1.0 and later update themselves: they offer the new version when it is out.",
+    "The installer is per-user (no admin rights). It is not code-signed yet, so Windows SmartScreen",
+    'may show "Windows protected your PC": choose "More info", then "Run anyway".',
+    "",
+    `SHA-256 of **${exeName}**: \`${sha}\``,
+    "(all files: `SHA256SUMS.txt`). Third-party licences: `THIRD_PARTY_NOTICES.md` and",
+    "`THIRD_PARTY_LICENSES.txt`.",
+    "",
+    "Made for aoxy, by zero.",
+    "",
+  ].join("\n");
+}
 
 // Full licence texts of everything compiled into aoze.exe and its frontend.
 async function thirdPartyLicenses() {

@@ -6,8 +6,9 @@ How a public release is made, from the source code to the installer people downl
 source code (this repository, a tagged commit)
   -> npm ci                      exact npm dependencies from package-lock.json
   -> npm run release             engines fetched + checked, app built, installer built
-  -> release/v<version>/         installer, SHA256SUMS.txt, licences, release notes
-  -> GitHub Release v<version>   the files above; the website links to the installer
+  -> release/v<version>/         installer, latest.json, SHA256SUMS.txt, licences, release notes
+  -> GitHub Release v<version>   the files above; the website links to the installer,
+                                 installed copies of Aoze read latest.json and update themselves
   -> installer -> Aoze installed in %LOCALAPPDATA%\Aoze (per user, no admin rights)
 ```
 
@@ -21,9 +22,30 @@ source code (this repository, a tagged commit)
 
 ## Steps
 
-1. **Version.** Set the same version in `package.json`, `src-tauri/Cargo.toml` and
-   `src-tauri/tauri.conf.json`. The release script refuses to run if they differ.
-2. **Release notes.** Write `docs/release-notes/v<version>.md`.
+1. **Version.** `package.json` is the only source of the version:
+
+   ```
+   npm version 1.2.0 --no-git-tag-version
+   ```
+
+   `tauri.conf.json` reads it directly; the `version` hook (`scripts/sync-version.mjs`) copies it
+   to `Cargo.toml` / `Cargo.lock` and creates `docs/release-notes/v1.2.0.json`. The app, the
+   installer, the update manifest and the GitHub release all take it from there; the website
+   reads the published GitHub release. The release script refuses to run if anything differs.
+2. **Release notes.** Fill in `docs/release-notes/v<version>.json`:
+
+   ```json
+   {
+     "version": "1.2.0",
+     "date": "2026-11-20",
+     "en": { "summary": "…", "changes": ["New things"], "improvements": ["…"], "fixes": ["…"] },
+     "fr": { "summary": "…", "changes": ["…"], "improvements": ["…"], "fixes": ["…"] }
+   }
+   ```
+
+   Empty lists are left out. This one file becomes the GitHub release notes (`RELEASE_NOTES.md`),
+   the "What's new" the app shows once after updating (bundled), and the notes of the update
+   dialog in older versions (`latest.json`). `fr` is optional (English is used instead).
 3. **Clean checkout.** Commit everything, then from a clean tree:
 
    ```
@@ -37,10 +59,12 @@ source code (this repository, a tagged commit)
    - builds the app in release mode (no devtools, no source maps, symbols stripped, LTO), with
      local paths (your user folder, the checkout folder, the cargo cache) remapped out of the
      binary, and stops if one is still there;
-   - builds the NSIS installer from `src-tauri/windows/installer.nsi`;
-   - fills `release/v<version>/` with the installer, `LICENSE.txt`, `THIRD_PARTY_NOTICES.md`,
-     `THIRD_PARTY_LICENSES.txt` (generated: full licence texts of every Rust crate and npm
-     package compiled into the app), `RELEASE_NOTES.md` and `SHA256SUMS.txt`.
+   - builds the NSIS installer from `src-tauri/windows/installer.nsi` and signs it with the
+     updater key (see *Updates* below);
+   - fills `release/v<version>/` with the installer, `latest.json` (update manifest),
+     `LICENSE.txt`, `THIRD_PARTY_NOTICES.md`, `THIRD_PARTY_LICENSES.txt` (generated: full licence
+     texts of every Rust crate and npm package compiled into the app), `RELEASE_NOTES.md` and
+     `SHA256SUMS.txt`.
 4. **Check before publishing.**
    - Windows Defender: `"%ProgramFiles%\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File <installer>`
    - VirusTotal: look the installer's SHA-256 up on <https://www.virustotal.com>; if it is
@@ -50,13 +74,44 @@ source code (this repository, a tagged commit)
      <https://docs.virustotal.com/docs/false-positive-contacts>) with a link to this repository.
    - Install, launch, process an image, a GIF and a clip, uninstall, ideally on a clean
      Windows (a VM, or Windows Sandbox on Pro/Enterprise).
-5. **Publish.** Create the GitHub Release `v<version>` on the release commit, attach every file
-   of `release/v<version>/`, and paste the SHA-256 of the installer in the notes. The website
-   picks the latest release up by itself; refresh `website/src/data/release-fallback.json`
-   (size, digest, notes) so its offline fallback matches.
+5. **Publish.** Create the GitHub Release `v<version>` (tag `v<version>`) on the release commit,
+   paste `RELEASE_NOTES.md` as its description, and attach every file of `release/v<version>/`,
+   **including `latest.json`**. Publish it as a normal release (not a draft or pre-release):
+   `releases/latest/download/latest.json` only follows the latest full release. From then on,
+   installed copies offer the update at their next launch, and the website rebuilds (its
+   workflow runs on `release: published`) and links the new installer. Refresh
+   `website/src/data/release-fallback.json` (size, digest, notes) so its offline fallback matches.
 
 The installer must keep the Tauri file name `Aoze_<version>_x64-setup.exe`: the website finds
-it by the `_x64-setup.exe` suffix.
+it by the `_x64-setup.exe` suffix, and the app refuses any other name.
+
+## Updates
+
+Aoze 1.1.0 and later check `https://github.com/lololyeye/aoze/releases/latest/download/latest.json`
+at launch (Settings → Updates turns it off). When a newer version is announced:
+
+1. the app shows its notes and asks; nothing is downloaded before "Update now";
+2. the installer is downloaded only from `https://github.com/lololyeye/aoze/releases/download/`
+   (any other URL is refused), then checked: its minisign signature against the public key
+   built into the app (`plugins.updater.pubkey` in `tauri.conf.json`), the version recorded in
+   that signature against the announced one (`requireSignedVersion`: an older signed installer
+   cannot be passed off as a new version), and its SHA-256 and size against `latest.json`;
+3. the verified installer is kept in the app's cache folder (`updates`), so "Later" never means
+   downloading it again; a broken or cancelled download leaves nothing behind;
+4. on install (refused while a file is being processed) the installer runs in passive mode over
+   the current installation, which stays untouched until then, and reopens Aoze. If it fails
+   midway, running the installer again (or the one from the website) repairs the installation.
+
+**The updater key.** `npm run release` signs with `TAURI_SIGNING_PRIVATE_KEY` (and
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`), or else with `~/.tauri/aoze-updater.key`. Keep that file
+safe and backed up, never commit it: without it no update can reach installed copies (a new key
+means users must reinstall by hand once). Its public half is in `tauri.conf.json`.
+`npm run build` does not need it (it builds no update artifacts).
+
+To test the whole flow without publishing, a debug build accepts a local server: run
+`npx tauri dev --config <file>` with `"version"` lower than the release and `plugins.updater`
+pointing to `http://127.0.0.1:<port>/latest.json` (`"dangerousInsecureTransportProtocol": true`).
+Release builds only accept GitHub.
 
 ## Reproducibility
 
@@ -110,8 +165,11 @@ Per-user install, no admin rights:
 
 ## What the app connects to
 
-Aoze has no network code. All processing runs on the PC through the bundled programs, started
-as child processes on the user's files. Network activity comes only from:
+All processing runs on the PC through the bundled programs, started as child processes on the
+user's files. Network activity comes only from:
+
+- the update check at launch (GitHub, see *Updates*; can be turned off), and the installer
+  download when the user accepts an update;
 
 - links the user clicks (GitHub, Ko-fi), opened in the default browser; the app may only open
   `https://github.com/*` and `https://ko-fi.com/*`;

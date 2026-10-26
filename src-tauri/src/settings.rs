@@ -514,6 +514,10 @@ pub struct Settings {
     /// Image & GIF workspace: prepare for a Discord slot (None = off).
     pub discord: Option<DiscordTarget>,
     pub convert: ConvertSettings,
+    /// Look for a new version on GitHub at launch.
+    pub check_for_updates: bool,
+    /// Version whose "What's new" was last shown (None: never, e.g. settings from 1.0.0).
+    pub last_seen_release_notes: Option<String>,
 }
 
 impl Default for Settings {
@@ -542,6 +546,8 @@ impl Default for Settings {
             video_encoder: VideoEncoder::Auto,
             discord: None,
             convert: ConvertSettings::default(),
+            check_for_updates: true,
+            last_seen_release_notes: None,
         }
     }
 }

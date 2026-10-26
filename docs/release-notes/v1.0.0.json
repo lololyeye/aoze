@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "date": "2026-10-25",
+  "en": {
+    "summary": "Fast, simple, local image, GIF and clip enhancement for Windows 10/11 (x64).",
+    "changes": [
+      "Image & GIF: enlarge (waifu2x), clean up, compress, Discord sizes.",
+      "Clip: Clean-up (Real-ESRGAN anime video model / waifu2x), Smooth Motion 60/120 FPS (RIFE, never across scene cuts), motion blur from the motion, HDR (keep / tone map / HDR10), Look.",
+      "Convert: clip ↔ GIF, GIF → video, images → GIF.",
+      "Everything runs on your PC: no upload, no account. Works on NVIDIA, AMD and Intel GPUs (Vulkan), CPU fallback."
+    ],
+    "improvements": [],
+    "fixes": []
+  },
+  "fr": {
+    "summary": "Amélioration d'images, de GIF et de clips, rapide, simple et locale, pour Windows 10/11 (x64).",
+    "changes": [
+      "Image & GIF : agrandir (waifu2x), nettoyer, compresser, tailles Discord.",
+      "Clip : nettoyage (modèle vidéo anime Real-ESRGAN / waifu2x), Smooth Motion 60/120 FPS (RIFE, jamais à travers les changements de plan), flou de mouvement tiré du mouvement, HDR (garder / tone mapping / HDR10), Look.",
+      "Convertir : clip ↔ GIF, GIF → vidéo, images → GIF.",
+      "Tout se passe sur votre PC : pas d'envoi, pas de compte. Fonctionne sur les GPU NVIDIA, AMD et Intel (Vulkan), repli sur le CPU."
+    ],
+    "improvements": [],
+    "fixes": []
+  }
+}

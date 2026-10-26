@@ -146,6 +146,38 @@
   color: #ff5e5b;
 }
 
+.update {
+  margin-top: 3px;
+  color: var(--accent);
+  font-size: 12.5px;
+}
+
+.update .icon,
+.update:hover .icon {
+  color: var(--accent);
+}
+
+/* A soft pulse on the icon: something is waiting, nothing urgent. */
+.update .icon::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.version {
+  padding: 6px 11px 0;
+  color: var(--text-3);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
 /* Narrow windows: icons only. */
 @media (max-width: 1180px) {
   .sidebar {
@@ -159,7 +191,8 @@
     justify-content: center;
     padding: 0;
   }
-  .label {
+  .label,
+  .version {
     display: none;
   }
   .badge {

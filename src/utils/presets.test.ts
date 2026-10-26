@@ -26,6 +26,8 @@ const base: Settings = {
   clip: { scale: 1, enhance: "off", style: "artworkFast", fps: null, fpsMode: "retime", motionBlur: 0, smooth: "off", hdr: "auto", look: { exposure: 0, contrast: 0, saturation: 0, sharpness: 0 } },
   clipCompress: { level: "balanced", quality: 80, maxSize: null, unit: "mb" },
   videoEncoder: "auto",
+  checkForUpdates: true,
+  lastSeenReleaseNotes: null,
 };
 
 describe("presets", () => {

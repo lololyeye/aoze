@@ -15,6 +15,9 @@ import type {
   Settings,
   SystemCheck,
   SystemStatus,
+  UpdateError,
+  UpdateInfo,
+  UpdateProgress,
 } from "../types";
 
 export function isAppError(e: unknown): e is AppError {
@@ -58,6 +61,12 @@ export const api = {
   revealFile: (path: string) => invoke<void>("reveal_file", { path }),
   openLogsDir: () => invoke<void>("open_logs_dir"),
   diagnostics: () => invoke<string>("get_diagnostics"),
+
+  updateCheck: () => invoke<UpdateInfo | null>("update_check"),
+  updateDownload: () => invoke<void>("update_download"),
+  updateCancel: () => invoke<void>("update_cancel"),
+  /** Runs the installer and closes Aoze when it succeeds. */
+  updateInstall: () => invoke<void>("update_install"),
 };
 
 /** URL the webview can load for a local file the backend has allowed. */
@@ -76,6 +85,9 @@ export const events = {
   onBatchFinished: (cb: (b: BatchSummary) => void) =>
     listen<BatchSummary>("queue://batch-finished", (e) => cb(e.payload)),
   onSystem: (cb: (s: SystemStatus) => void) => listen<SystemStatus>("system://updated", (e) => cb(e.payload)),
+  onUpdateProgress: (cb: (p: UpdateProgress) => void) => listen<UpdateProgress>("update://progress", (e) => cb(e.payload)),
+  onUpdateReady: (cb: () => void) => listen("update://ready", () => cb()),
+  onUpdateFailed: (cb: (e: UpdateError) => void) => listen<UpdateError>("update://failed", (e) => cb(e.payload)),
   onDragDrop: ({ onHover, onDrop }: DragDropHandlers): Promise<UnlistenFn> =>
     getCurrentWebview().onDragDropEvent((e) => {
       const p = e.payload;

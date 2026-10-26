@@ -150,6 +150,10 @@ export interface Settings {
   videoEncoder: VideoEncoder;
   discord: DiscordTarget | null;
   convert: ConvertSettings;
+  /** Look for a new version on GitHub at launch. */
+  checkForUpdates: boolean;
+  /** Version whose "What's new" was last shown. */
+  lastSeenReleaseNotes: string | null;
 }
 
 export interface ModelCapabilities {
@@ -384,4 +388,44 @@ export interface Tuning {
 export interface SystemCheck {
   profile: Profile | null;
   tuning: Tuning;
+}
+
+/* ---------- Updates ---------- */
+
+/** One language of docs/release-notes/v<version>.json. */
+export interface ReleaseNotesBody {
+  summary?: string;
+  /** New features. */
+  changes: string[];
+  improvements: string[];
+  fixes: string[];
+}
+
+export interface ReleaseNotes {
+  version: string;
+  date: string;
+  en: ReleaseNotesBody;
+  fr?: ReleaseNotesBody;
+}
+
+export interface UpdateInfo {
+  version: string;
+  currentVersion: string;
+  date: string | null;
+  notes: ReleaseNotes | null;
+  size: number | null;
+  /** Already downloaded and verified. */
+  downloaded: boolean;
+}
+
+export type UpdateErrorKind = "network" | "integrity" | "disk" | "busy" | "other";
+
+export interface UpdateError {
+  kind: UpdateErrorKind;
+  detail: string;
+}
+
+export interface UpdateProgress {
+  received: number;
+  total: number | null;
 }

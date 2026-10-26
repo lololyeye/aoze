@@ -171,3 +171,15 @@
 .volume > :first-child {
   flex: 1;
 }
+
+.updateStatus {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.installed {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}

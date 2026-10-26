@@ -45,7 +45,7 @@ function stepsFor(t: Messages, check: SystemCheck | null, mode: string): Step[] 
  * Launch sequence: logo, a soft light, a quick local system check (no
  * benchmark), then the welcome voice as the app appears. Click to skip.
  */
-export function Splash({ sound }: { sound: boolean }) {
+export function Splash({ sound, onDone }: { sound: boolean; onDone: () => void }) {
   const t = useMessages();
   const volume = useSettingsStore((st) => st.settings?.soundVolume ?? 40);
   const perf = useSettingsStore((st) => st.settings?.performance);
@@ -100,7 +100,7 @@ export function Splash({ sound }: { sound: boolean }) {
   }, [sound]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onDone}>
       {visible && (
         <motion.div
           className={s.splash}

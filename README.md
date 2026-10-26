@@ -7,7 +7,8 @@ Drop a file, pick a size or a preset, click once, done. Aoze hides FFmpeg, codec
 
 *Made for aoxy, by zero.* · Support the project: [ko-fi.com/aoze_support](https://ko-fi.com/aoze_support)
 
-Nothing leaves your computer: no upload, no telemetry, no network access at runtime.
+Nothing leaves your computer: no upload, no telemetry. The only network request is the update check at launch
+(the version manifest of the GitHub releases), which can be turned off in Settings.
 
 ## What it does
 

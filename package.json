@@ -1,7 +1,7 @@
 {
   "name": "aoze",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "fetch-engine": "node scripts/fetch-engine.mjs",
@@ -10,6 +10,7 @@
     "dev": "node scripts/fetch-engine.mjs --if-missing && tauri dev",
     "build": "node scripts/fetch-engine.mjs --if-missing && tauri build",
     "release": "node scripts/release.mjs",
+    "version": "node scripts/sync-version.mjs && git add src-tauri/Cargo.toml src-tauri/Cargo.lock docs/release-notes",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run && cargo test --manifest-path src-tauri/Cargo.toml",

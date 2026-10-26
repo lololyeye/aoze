@@ -683,6 +683,11 @@ impl Core {
         self.emit_snapshot();
     }
 
+    /// A job is running (an update must not stop it).
+    pub fn is_processing(&self) -> bool {
+        self.queue.lock().unwrap().current.is_some()
+    }
+
     pub fn cancel_all(&self) {
         {
             let mut q = self.queue.lock().unwrap();

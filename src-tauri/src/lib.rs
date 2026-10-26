@@ -19,6 +19,7 @@ pub mod settings;
 pub mod esrgan;
 pub mod smooth;
 pub mod tuning;
+pub mod update;
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -150,6 +151,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(update::UpdateState::default())
         .setup(|app| {
             let handle = app.handle().clone();
             let paths = resolve_paths(&handle)?;
@@ -215,6 +218,10 @@ pub fn run() {
             commands::reveal_file,
             commands::open_logs_dir,
             commands::get_diagnostics,
+            update::update_check,
+            update::update_download,
+            update::update_cancel,
+            update::update_install,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Aoze");

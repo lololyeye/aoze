@@ -1,11 +1,13 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ArrowLeftRight, CircleHelp, Coffee, Film, History, House, Images, Settings2 } from "lucide-react";
+import { ArrowDownToLine, ArrowLeftRight, CircleHelp, Coffee, Film, History, House, Images, Settings2 } from "lucide-react";
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { Tooltip } from "../components/ui/Tooltip";
-import { useMessages } from "../i18n";
+import { fmt, useMessages } from "../i18n";
 import { safely } from "../services/actions";
 import { useGroupJobs, useQueueStore, type Group } from "../stores/queueStore";
+import { useSystemStore } from "../stores/systemStore";
+import { useUpdateStore } from "../stores/updateStore";
 import { useUiStore, type Page } from "../stores/uiStore";
 import s from "./Sidebar.module.css";
 
@@ -40,6 +42,35 @@ function CountBadge({ group }: { group: Group }) {
   return <span className={`${s.badge} ${busy ? s.busy : ""}`}>{jobs.length}</span>;
 }
 
+/** The installed version, or the pending update (opens its dialog). */
+function VersionItem() {
+  const t = useMessages();
+  const version = useSystemStore((st) => st.status?.appVersion);
+  const phase = useUpdateStore((st) => st.phase);
+  const info = useUpdateStore((st) => st.info);
+  const progress = useUpdateStore((st) => st.progress);
+  const setOpen = useUpdateStore((st) => st.setOpen);
+  if (info && phase !== "idle" && phase !== "checking" && phase !== "upToDate") {
+    const label =
+      phase === "downloading"
+        ? fmt(t.update.sidebarDownloading, { percent: progress?.total ? Math.round((progress.received / progress.total) * 100) : 0 })
+        : phase === "ready"
+          ? t.update.sidebarReady
+          : fmt(t.update.sidebarAvailable, { version: info.version });
+    return (
+      <Tooltip content={label} side="right">
+        <button type="button" className={`${s.item} ${s.update}`} onClick={() => setOpen(true)}>
+          <span className={s.icon}>
+            <ArrowDownToLine />
+          </span>
+          <span className={s.label}>{label}</span>
+        </button>
+      </Tooltip>
+    );
+  }
+  return version ? <div className={s.version}>Aoze {version}</div> : null;
+}
+
 export function Sidebar() {
   const t = useMessages();
   return (
@@ -65,6 +96,7 @@ export function Sidebar() {
           <span className={s.label}>{t.app.support}</span>
         </button>
       </Tooltip>
+      <VersionItem />
     </nav>
   );
 }

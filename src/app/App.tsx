@@ -10,6 +10,7 @@ import { HelpPage } from "../features/help/HelpPage";
 import { HistoryPage } from "../features/history/HistoryPage";
 import { HomePage } from "../features/home/HomePage";
 import { SettingsPage } from "../features/settings/SettingsPage";
+import { UpdateFlow } from "../features/update/UpdateFlow";
 import { Workspace } from "../features/workspace/Workspace";
 import { playWelcome } from "../services/sounds";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -50,6 +51,7 @@ export function App() {
   const page = useUiStore((st) => st.page);
   // Captured once: toggling the settings later must not replay the launch.
   const [launch, setLaunch] = useState<{ animation: boolean; sound: boolean } | null>(null);
+  const [splashDone, setSplashDone] = useState(false);
   useApplyTheme();
   useAppEvents();
   useRootFlags();
@@ -100,9 +102,10 @@ export function App() {
           <>
             <DiagnosticsSheet />
             <AboutDialog />
+            <UpdateFlow started={launch !== null && (!launch.animation || splashDone)} />
           </>
         )}
-        {launch?.animation && <Splash sound={launch.sound} />}
+        {launch?.animation && <Splash sound={launch.sound} onDone={() => setSplashDone(true)} />}
         <Toaster />
       </TooltipProvider>
     </MotionConfig>

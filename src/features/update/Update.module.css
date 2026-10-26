@@ -1,0 +1,159 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 0 2px;
+}
+
+.lead {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.version {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.muted {
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.whatsNew {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+}
+
+.label,
+.groupTitle {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* The crossbar of the logo as bullet. */
+.list li {
+  position: relative;
+  padding-left: 16px;
+}
+
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 7px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.summary {
+  display: flex;
+  gap: 9px;
+  margin: 0;
+  color: var(--text);
+}
+
+.summary svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stateHead,
+.stateFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stateHead {
+  font-weight: 500;
+}
+
+.pct {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.message {
+  display: flex;
+  gap: 9px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.message svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.ok {
+  color: var(--success);
+}
+
+.error {
+  background: var(--danger-soft);
+}
+
+.error svg {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

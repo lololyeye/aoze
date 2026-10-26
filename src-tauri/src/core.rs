@@ -135,7 +135,11 @@ pub fn engine_for(settings: &Settings, paths: &AppPaths) -> Arc<dyn UpscaleEngin
 
 impl Core {
     pub fn new(paths: AppPaths, hooks: Box<dyn Hooks>) -> Arc<Self> {
-        let settings = Settings::load(&paths.settings_file());
+        let mut settings = Settings::load(&paths.settings_file());
+        // A first install has nothing new to tell: only an update shows "What's new".
+        if !paths.settings_file().exists() {
+            settings.last_seen_release_notes = Some(env!("CARGO_PKG_VERSION").into());
+        }
         let engine = engine_for(&settings, &paths);
         clean_work_dir(&paths.work_dir());
         Arc::new(Self {

@@ -379,7 +379,7 @@ impl Ffmpeg {
         let mut vf = vec!["scale=-2:'min(720,ih)'".to_string()];
         let lut_dir = dest.parent().unwrap_or(Path::new("."));
         let stem = dest.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
-        let plan = ColorPlan { input: transfer, output: Transfer::Sdr, look: Default::default() };
+        let plan = ColorPlan { input: transfer, output: Transfer::Sdr, look: Default::default(), creative: None };
         let color = crate::color::prepare(&plan, lut_dir, &format!("{stem}_preview"), matrix)?;
         vf.extend(color.iter().flatten().cloned());
         if !vf.iter().any(|f| f.starts_with("format=")) {
@@ -482,6 +482,69 @@ impl Ffmpeg {
                 return Err(AppError::cancelled());
             }
             (status, _, _) = async { tokio::join!(child.wait(), read_progress, read_errors) } => status?,
+        };
+        if status.success() {
+            return Ok(());
+        }
+        let tail = errors.lock().unwrap().iter().rev().take(6).rev().cloned().collect::<Vec<_>>().join("\n");
+        Err(media_err(format!("ffmpeg exited with {:?}\n{tail}", status.code())))
+    }
+
+    /// Runs ffmpeg writing raw data to stdout (`pipe:1`) and hands it over in
+    /// chunks of exactly `chunk` bytes (a trailing partial chunk is dropped).
+    pub async fn run_raw(
+        &self,
+        args: &[OsString],
+        chunk: usize,
+        cancel: &CancellationToken,
+        on_chunk: &mut (dyn FnMut(&[u8]) + Send),
+        log: LogSink<'_>,
+    ) -> AppResult<()> {
+        use tokio::io::AsyncReadExt;
+        self.ensure()?;
+        let mut cmd = tokio::process::Command::new(self.dir.join("ffmpeg.exe"));
+        cmd.args(["-hide_banner", "-nostdin", "-y", "-loglevel", "error", "-nostats"])
+            .args(args)
+            .current_dir(&self.dir)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true);
+        #[cfg(windows)]
+        cmd.creation_flags(crate::tuning::process_flags());
+        log(format!("$ ffmpeg {}", args.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ")));
+        let mut child = cmd.spawn().map_err(|e| media_err(format!("could not start ffmpeg: {e}")))?;
+        let mut stdout = child.stdout.take().expect("stdout is piped");
+        let stderr = child.stderr.take().expect("stderr is piped");
+        let errors = Arc::new(Mutex::new(Vec::<String>::new()));
+        let read_data = async {
+            let mut buf = vec![0u8; chunk.max(1)];
+            while stdout.read_exact(&mut buf).await.is_ok() {
+                on_chunk(&buf);
+            }
+        };
+        let read_errors = {
+            let errors = errors.clone();
+            async move {
+                let mut lines = BufReader::new(stderr).lines();
+                while let Ok(Some(line)) = lines.next_line().await {
+                    if !line.trim().is_empty() {
+                        log(line.clone());
+                        let mut e = errors.lock().unwrap();
+                        if e.len() < 200 {
+                            e.push(line);
+                        }
+                    }
+                }
+            }
+        };
+        let status = tokio::select! {
+            biased;
+            _ = cancel.cancelled() => {
+                let _ = child.kill().await;
+                return Err(AppError::cancelled());
+            }
+            (status, _, _) = async { tokio::join!(child.wait(), read_data, read_errors) } => status?,
         };
         if status.success() {
             return Ok(());

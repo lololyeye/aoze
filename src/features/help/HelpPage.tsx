@@ -5,7 +5,7 @@ import type { HelpTopic } from "../../components/ui/HelpTip";
 import { useMessages } from "../../i18n";
 import s from "./HelpPage.module.css";
 
-const TOPICS: HelpTopic[] = ["scale", "noise", "enhance", "compress", "limit", "fps", "smooth", "blur", "hdr", "look", "format", "style", "quality", "gpu"];
+const TOPICS: HelpTopic[] = ["scale", "noise", "enhance", "compress", "limit", "fps", "smooth", "blur", "reframe", "speed", "hdr", "lut", "look", "glow", "beat", "format", "style", "quality", "gpu"];
 
 export function HelpPage() {
   const t = useMessages();

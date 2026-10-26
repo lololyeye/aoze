@@ -45,6 +45,24 @@ pub async fn system_check(core: CoreState<'_>) -> AppResult<SystemCheck> {
     blocking(move || c.system_check()).await
 }
 
+/// Colour looks: the built-in ones and the user's imported `.cube` LUTs.
+#[tauri::command]
+pub async fn lut_list(core: CoreState<'_>) -> AppResult<Vec<crate::looks::LutInfo>> {
+    Ok(crate::looks::list(&crate::looks::dir(&core.paths.config_dir)))
+}
+
+/// Checks a `.cube` file and keeps a copy of it in Aoze's LUT folder.
+#[tauri::command]
+pub async fn lut_import(core: CoreState<'_>, path: PathBuf) -> AppResult<crate::looks::LutInfo> {
+    let dir = crate::looks::dir(&core.paths.config_dir);
+    blocking(move || crate::looks::import(&path, &dir)).await?
+}
+
+#[tauri::command]
+pub async fn lut_remove(core: CoreState<'_>, id: String) -> AppResult<()> {
+    crate::looks::remove(&id, &crate::looks::dir(&core.paths.config_dir))
+}
+
 #[tauri::command]
 pub async fn get_settings(core: CoreState<'_>) -> AppResult<Settings> {
     Ok(core.settings())

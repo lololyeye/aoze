@@ -5,6 +5,7 @@ import { useMessages } from "../../i18n";
 import { fileUrl } from "../../services/api";
 import { useUiStore } from "../../stores/uiStore";
 import { formatClock } from "../../utils/format";
+import { sourceTime } from "../../utils/speed";
 import s from "./ClipViewer.module.css";
 
 interface ClipViewerProps {
@@ -17,6 +18,10 @@ interface ClipViewerProps {
   processing: boolean;
   /** Badge of a single clip (default: "Original"). */
   label?: string;
+  /** Speed changes: [result time, original time] pairs, so both play the same moment. */
+  timing?: [number, number][] | null;
+  /** The result has another shape (Smart Reframe): only side by side makes sense. */
+  reshaped?: boolean;
 }
 
 /**
@@ -28,7 +33,7 @@ interface ClipViewerProps {
  * shown through an overflow-hidden window, and the split position is a CSS
  * variable updated without re-rendering React.
  */
-export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result, processing, label }: ClipViewerProps) {
+export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result, processing, label, timing, reshaped }: ClipViewerProps) {
   const t = useMessages();
   const mode = useUiStore((st) => st.viewerMode);
   const setMode = useUiStore((st) => st.setViewerMode);
@@ -42,7 +47,9 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [failed, setFailed] = useState<string | null>(null);
-  const side = Boolean(result) && mode === "side";
+  const side = Boolean(result) && (mode === "side" || Boolean(reshaped));
+  // Result time -> original time (identical unless the speed changed).
+  const toOriginal = useCallback((t: number) => (timing?.length ? sourceTime(timing, t) : t), [timing]);
 
   // Width of the stage and split position as CSS variables (px).
   const applySplit = useCallback(() => {
@@ -73,7 +80,14 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
     const onTime = () => {
       setTime(m.currentTime);
       const f = follower();
-      if (f && Math.abs(f.currentTime - m.currentTime) > 0.12) f.currentTime = m.currentTime;
+      if (!f) return;
+      const want = toOriginal(m.currentTime);
+      if (Math.abs(f.currentTime - want) > 0.12) f.currentTime = want;
+      if (timing?.length) {
+        // Follow the speed curve between corrections.
+        const rate = (toOriginal(m.currentTime + 0.25) - want) / 0.25;
+        f.playbackRate = Math.min(4, Math.max(0.25, rate || 1));
+      }
     };
     const onMeta = () => setDuration(m.duration || 0);
     const onPlay = () => {
@@ -95,7 +109,7 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
       m.removeEventListener("play", onPlay);
       m.removeEventListener("pause", onPause);
     };
-  }, [master, follower, clipKey, result, original]);
+  }, [master, follower, clipKey, result, original, toOriginal, timing]);
 
   const toggle = () => {
     const m = master();
@@ -109,7 +123,7 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
     if (!m) return;
     m.currentTime = v;
     const f = follower();
-    if (f) f.currentTime = v;
+    if (f) f.currentTime = toOriginal(v);
     setTime(v);
   };
 
@@ -241,10 +255,17 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
         {result && (
           <>
             <span className={s.sep} />
-            <IconButton label={t.viewer.split} size="sm" active={mode === "split"} onClick={() => setMode("split")} tooltipSide="top">
+            <IconButton
+              label={reshaped ? t.viewer.splitReshaped : t.viewer.split}
+              size="sm"
+              active={!side}
+              disabled={reshaped}
+              onClick={() => setMode("split")}
+              tooltipSide="top"
+            >
               <SplitSquareHorizontal />
             </IconButton>
-            <IconButton label={t.viewer.sideBySide} size="sm" active={mode === "side"} onClick={() => setMode("side")} tooltipSide="top">
+            <IconButton label={t.viewer.sideBySide} size="sm" active={side} onClick={() => setMode("side")} tooltipSide="top">
               <Columns2 />
             </IconButton>
           </>

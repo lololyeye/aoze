@@ -137,6 +137,8 @@ async fn to_file(
         engine_ms: 0,
         compression: Some(report),
         media: Some(media),
+        notices: Vec::new(),
+        timing: None,
     })
 }
 
@@ -306,6 +308,8 @@ async fn to_frames(
         engine_ms: 0,
         compression: None,
         media: Some(out_media),
+        notices: Vec::new(),
+        timing: None,
     })
 }
 

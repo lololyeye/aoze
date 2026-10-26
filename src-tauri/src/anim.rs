@@ -16,6 +16,9 @@ use tokio_util::sync::CancellationToken;
 
 use crate::compress::CompressReport;
 use crate::engine::plan::{final_dimensions, plan, Dimensions, EnginePlan};
+use crate::reframe::{self, Plan};
+use crate::timemap::{self, SpeedCurve, TimeWarp};
+use crate::{analysis, beat, looks};
 use crate::engine::{EngineJob, UpscaleEngine};
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::fsutil::{file_size, sibling_temp};
@@ -51,6 +54,8 @@ pub struct AnimSpec<'a> {
     pub esrgan: Option<&'a crate::esrgan::Esrgan>,
     /// VRAM of the processing GPU (0 = unknown), to pick models that fit.
     pub vram_bytes: u64,
+    /// Folder of the user's imported LUTs.
+    pub luts_dir: Option<&'a Path>,
 }
 
 /// How the frames reach the output size.
@@ -60,6 +65,8 @@ pub enum Resize {
     Exact(Dimensions),
     /// Scale to cover this size, then crop the centre.
     Cover(Dimensions),
+    /// Whole picture on a blurred copy of itself, at this size (Smart Reframe).
+    Fill(Dimensions),
 }
 
 impl Resize {
@@ -71,6 +78,7 @@ impl Resize {
                 w = t.width,
                 h = t.height
             ),
+            Resize::Fill(t) => reframe::fill_filter(t.width, t.height),
         }
     }
 }
@@ -212,7 +220,16 @@ pub async fn run(
     let ext = if spec.kind == MediaKind::Gif { "gif" } else { "mp4" };
     let suffix = match spec.target {
         Some((_, slug)) => slug.to_string(),
-        None => anim_suffix(spec.anim.scale, changes_fps(spec.anim, spec.info.fps)),
+        None => {
+            let mut s = anim_suffix(spec.anim.scale, changes_fps(spec.anim, spec.info.fps));
+            // A new shape is part of the name: "clip_aoze_9x16.mp4".
+            if spec.kind == MediaKind::Video {
+                if let Some((w, h)) = spec.anim.format.ratio().filter(|_| reframe::crop_size(spec.info.width, spec.info.height, spec.anim.format).is_some()) {
+                    s.push_str(&format!("_{w}x{h}"));
+                }
+            }
+            s
+        }
     };
     let dest = match destination(spec.source, spec.fallback_output_dir, spec.output, &suffix, ext)? {
         Resolved::Skip(path) => {
@@ -230,10 +247,12 @@ pub async fn run(
     let tmp_dest = sibling_temp(&dest).with_extension(ext);
 
     let result = match spec.kind {
-        MediaKind::Gif => run_gif(engine, ff, &spec, &work.path, &tmp_dest, on_stage, on_progress, on_log, cancel).await,
+        MediaKind::Gif => run_gif(engine, ff, &spec, &work.path, &tmp_dest, on_stage, on_progress, on_log, cancel)
+            .await
+            .map(|(engine_ms, work_mp, report)| ClipDone { engine_ms, work_mp, report, notices: Vec::new(), timing: None }),
         _ => run_clip(engine, ff, &spec, &work.path, &tmp_dest, on_stage, on_progress, on_log, cancel).await,
     };
-    let (engine_ms, work_mp, report) = match result {
+    let ClipDone { engine_ms, work_mp, report, notices, timing } = match result {
         Ok(r) => r,
         Err(e) => {
             let _ = std::fs::remove_file(&tmp_dest);
@@ -266,6 +285,8 @@ pub async fn run(
         engine_ms,
         compression: Some(report),
         media: Some(media),
+        notices,
+        timing,
     })
 }
 
@@ -614,24 +635,18 @@ fn quality_codec(encoder: Option<HwEncoder>, crf: u32) -> Vec<OsString> {
     }
 }
 
-/// How a clip reaches its frame rate and motion blur.
-enum Motion {
-    /// Same rate, or FFmpeg retiming / interpolation / frame mix.
-    Filters,
-    /// RIFE in-between frames (and motion blur sub-frames).
-    Smooth { plan: smooth::RatePlan, choice: smooth::ModelChoice },
-}
-
-/// Motion blur as a virtual shutter: `(sub-frames rendered per output frame,
-/// sub-frames averaged)`. The averaged span is (K-1)/m of a frame interval:
-/// Low ~120°, Medium ~180°, High ~240°.
+/// Motion blur as a virtual shutter: `(sub-frame spacing as 1/m of a frame,
+/// sub-frames averaged k)`. The shutter spans (k-1)/m of a frame interval,
+/// from ~90° (light) to 300° (strong).
 pub fn blur_shutter(strength: u8) -> Option<(u32, u32)> {
-    match strength {
-        0 => None,
-        1..=35 => Some((3, 2)),
-        36..=65 => Some((4, 3)),
-        _ => Some((6, 5)),
+    if strength == 0 {
+        return None;
     }
+    let s = strength.min(100) as f64;
+    let angle = 60.0 + 2.4 * s;
+    let m: u32 = if strength <= 50 { 4 } else { 6 };
+    let k = ((angle / 360.0 * m as f64).round() as u32 + 1).clamp(2, m);
+    Some((m, k))
 }
 
 /// Clean-up engines for clips.
@@ -643,7 +658,7 @@ enum Cleanup {
     Esrgan(u32),
 }
 
-/// Links (or copies) a frame: look-ahead frames stay in place for the next block.
+/// Links (or copies) a frame: frames shared by two blocks stay in place.
 fn link_or_copy(src: &Path, dst: &Path) -> std::io::Result<()> {
     std::fs::hard_link(src, dst).or_else(|_| std::fs::copy(src, dst).map(|_| ()))
 }
@@ -652,8 +667,7 @@ fn link_or_copy(src: &Path, dst: &Path) -> std::io::Result<()> {
 fn copy_as_png(src: &Path, dst: &Path) -> AppResult<()> {
     if src.extension().is_some_and(|e| e.eq_ignore_ascii_case("png")) {
         let _ = std::fs::remove_file(dst);
-        std::fs::copy(src, dst)?;
-        return Ok(());
+        return link_or_copy(src, dst).map_err(Into::into);
     }
     let img = image::open(src).map_err(|e| AppError::new(ErrorCode::DecodeFailed, format!("{}: {e}", src.display())))?;
     img.save(dst).map_err(|e| AppError::new(ErrorCode::EncodeFailed, format!("{}: {e}", dst.display())))
@@ -665,7 +679,7 @@ const CUT_SCORE: f64 = 0.32;
 /// Indices (0-based) of the frames starting a new shot, from FFmpeg's
 /// `metadata=print` output of the scene branch (one score per frame, whose
 /// pts_time is the frame index).
-fn parse_cuts(text: &str) -> std::collections::HashSet<usize> {
+pub(crate) fn parse_cuts(text: &str) -> std::collections::HashSet<usize> {
     let mut cuts = std::collections::HashSet::new();
     let mut frame = None;
     for line in text.lines() {
@@ -689,6 +703,107 @@ fn vulkan_device(gpu: Option<i32>) -> Vec<OsString> {
     os(&["-init_hw_device", &dev, "-filter_hw_device", "vk"])
 }
 
+/// Shape of a processed clip.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ClipGeometry {
+    /// Source pixels kept by Smart Reframe's moving window, None = whole frame.
+    pub crop: Option<(u32, u32)>,
+    /// New shape reached by filling around the whole picture (portrait to landscape).
+    pub fill: bool,
+    /// Size of the frames processed (after the crop).
+    pub work: Dimensions,
+    /// Output size.
+    pub out: Dimensions,
+}
+
+pub fn clip_geometry(info: &MediaInfo, a: &AnimSettings) -> ClipGeometry {
+    clip_geometry_with(info, a, None)
+}
+
+/// Same, once the clip has been analysed (black bars are left out of a new shape).
+pub fn clip_geometry_with(info: &MediaInfo, a: &AnimSettings, analysis: Option<&analysis::Analysis>) -> ClipGeometry {
+    let (w, h) = (info.width, info.height);
+    let even = |d: Dimensions| Dimensions { width: (d.width & !1).max(2), height: (d.height & !1).max(2) };
+    let src = Dimensions { width: w, height: h };
+    if reframe::fills(w, h, a.format) {
+        let (fw, fh) = reframe::fill_size(w, h, a.format);
+        return ClipGeometry { crop: None, fill: true, work: src, out: even(final_dimensions(Dimensions { width: fw, height: fh }, a.scale)) };
+    }
+    match reframe::window(w, h, a.format, analysis).map(|(_, _, cw, ch)| (cw, ch)) {
+        Some((cw, ch)) => {
+            let work = Dimensions { width: cw, height: ch };
+            ClipGeometry { crop: Some((cw, ch)), fill: false, work, out: even(final_dimensions(work, a.scale)) }
+        }
+        None => ClipGeometry { crop: None, fill: false, work: src, out: target_dims(info, a.scale, MediaKind::Video) },
+    }
+}
+
+/// Output rate for a target FPS as ("num/den", value). NTSC sources (x/1001)
+/// go to the matching NTSC rate (23.976 -> 59.94 for "60"), as editors expect.
+fn out_rate(src_rational: &str, src_fps: f64, target: Option<f32>) -> (String, f64) {
+    match target {
+        None => (src_rational.to_string(), src_fps),
+        Some(t) => {
+            let ntsc = smooth::parse_rational(src_rational).is_some_and(|(_, d)| d == 1001);
+            let t = (t as f64).round() as u64;
+            if ntsc {
+                (format!("{}/1001", t * 1000), (t * 1000) as f64 / 1001.0)
+            } else {
+                (format!("{t}/1"), t as f64)
+            }
+        }
+    }
+}
+
+/// `n / d` times `k`, as "num/den".
+fn rate_times(rate: &str, k: u32) -> String {
+    let (n, d) = smooth::parse_rational(rate).unwrap_or((30, 1));
+    format!("{}/{}", n * k as u64, d)
+}
+
+/// Extra time Smooth Motion, Speed, motion blur and Smart Reframe add to a
+/// clip (ms): RIFE costs about 20 ms per rendered megapixel, the analysis
+/// decode about 1.5 ms per frame.
+pub fn timing_estimate_ms(info: &MediaInfo, a: &AnimSettings, rife: bool) -> u64 {
+    let geo = clip_geometry(info, a);
+    let curve = SpeedCurve::from_settings(&a.speed);
+    let target_fps = changes_fps(a, info.fps);
+    let smooth_up = a.smooth != SmoothMotion::Off && target_fps.is_some_and(|f| f as f64 > info.fps + 0.01);
+    let slows = curve.as_ref().is_some_and(|c| c.min() < 0.999);
+    let shutter = blur_shutter(a.motion_blur);
+    let use_rife = rife && (smooth_up || slows || shutter.is_some());
+    let src_dur = info.duration_ms as f64 / 1000.0;
+    let out_dur = curve.map_or(src_dur, |c| TimeWarp::new(c, src_dur.max(0.04)).out_duration());
+    let out_fps = target_fps.map_or(info.fps, |f| f as f64);
+    let mut ms = 0.0;
+    if use_rife {
+        let density = shutter.map_or(1.0, |(m, _)| m as f64);
+        let rendered = out_dur * out_fps * density;
+        let factor = if a.smooth == SmoothMotion::High { 1.6 } else if a.smooth == SmoothMotion::Low { 0.7 } else { 1.0 };
+        ms += rendered * geo.out.megapixels() / (a.scale.max(1.0) as f64).powi(2) * 20.0 * factor + 1500.0;
+    }
+    if use_rife || geo.crop.is_some() {
+        ms += info.frames as f64 * 1.5;
+    }
+    ms as u64
+}
+
+/// Adds a notice for the result card (once).
+fn notice(code: &str, notices: &mut Vec<String>) {
+    if !notices.iter().any(|n| n == code) {
+        notices.push(code.to_string());
+    }
+}
+
+/// What run_clip hands back.
+pub(crate) struct ClipDone {
+    engine_ms: u64,
+    work_mp: f64,
+    report: CompressReport,
+    notices: Vec<String>,
+    timing: Option<Vec<[f64; 2]>>,
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn run_clip(
     engine: &dyn UpscaleEngine,
@@ -700,50 +815,49 @@ async fn run_clip(
     on_progress: ProgressSink<'_>,
     on_log: LogSink<'_>,
     cancel: &CancellationToken,
-) -> AppResult<(u64, f64, CompressReport)> {
+) -> AppResult<ClipDone> {
     let info = spec.info;
     let a = spec.anim;
-    let target = target_dims(info, a.scale, MediaKind::Video);
+    // Shape before the analysis (the exact crop leaves black bars out, below).
+    let geo0 = clip_geometry(info, a);
     let anime = a.style != crate::settings::Style::Photo;
     let mut engine_ms = 0;
     let mut work_mp = 0.0;
+    let mut notices: Vec<String> = Vec::new();
 
-    // Frame rate and motion blur. RIFE makes the frames above the source rate
-    // and the sub-frames motion blur is averaged from.
+    // ---- Timing: frame rate, speed, motion blur ----
+    let curve = SpeedCurve::from_settings(&a.speed);
     let target_fps = changes_fps(a, info.fps);
-    let wants_smooth = a.smooth != SmoothMotion::Off && target_fps.is_some_and(|f| f as f64 > info.fps + 0.01);
-    let shutter = spec.rife.and(blur_shutter(a.motion_blur));
-    let motion = match spec.rife {
-        Some(_) if wants_smooth || shutter.is_some() => {
-            let rife_target = if wants_smooth { target_fps } else { None };
-            match smooth::plan_rate(&info.fps_rational, rife_target, shutter.map(|s| s.0).unwrap_or(1)) {
-                Some(plan) => {
-                    let level = if a.smooth == SmoothMotion::Off { SmoothMotion::Medium } else { a.smooth };
-                    let choice = smooth::choose_model(level, anime, spec.vram_bytes, target.width as u64 * target.height as u64);
-                    Motion::Smooth { plan, choice }
-                }
-                None => Motion::Filters,
-            }
-        }
-        None if wants_smooth => {
-            on_log("Smooth Motion engine missing: using FFmpeg motion interpolation".into());
-            Motion::Filters
-        }
-        _ => Motion::Filters,
-    };
-    let smoothing = matches!(motion, Motion::Smooth { .. });
+    let smooth_up = a.smooth != SmoothMotion::Off && target_fps.is_some_and(|f| f as f64 > info.fps + 0.01);
+    let slows = curve.as_ref().is_some_and(|c| c.min() < 0.999);
+    let shutter = blur_shutter(a.motion_blur);
+    let use_rife = spec.rife.is_some() && (smooth_up || slows || shutter.is_some());
+    if spec.rife.is_none() && (smooth_up || slows) {
+        on_log("Smooth Motion engine unavailable: frames are repeated instead of interpolated".into());
+        notice("smoothUnavailable", &mut notices);
+    }
+    // Speed changes and RIFE renders go through the time map (timemap.rs).
+    let timed = use_rife || curve.is_some();
+    let rife_shutter = if use_rife { shutter } else { None };
+    // Anime on twos: spread the motion between drawings when making new frames.
+    let dedup = use_rife && (smooth_up || slows);
 
-    // Clean-up: Real-ESRGAN's anime video model for anime, waifu2x otherwise.
+    // ---- Clean-up: Real-ESRGAN's anime video model for anime, waifu2x otherwise ----
     let eparams = engine_params(a, spec.params);
     let cleanup = match &eparams {
         Some(_) if anime && spec.esrgan.is_some() => Some(Cleanup::Esrgan(crate::esrgan::native_scale(a.scale))),
         Some(p) => Some(Cleanup::Waifu2x(engine_plan(engine, p)?)),
         None => None,
     };
-    let frames_path = cleanup.is_some() || smoothing;
+    let frames_path = cleanup.is_some() || timed;
 
-    // Dynamic range. Clean-up and Smooth Motion work on 8-bit images, so an HDR
-    // source going through them is tone mapped first.
+    // ---- Smart Reframe ----
+    // Any new shape is analysed: black bars are found even for a still crop.
+    let need_analysis = geo0.crop.is_some() || use_rife;
+
+    // ---- Dynamic range ----
+    // Clean-up and Smooth Motion work on 8-bit images, so an HDR source going
+    // through them is tone mapped first.
     let src_hdr = info.transfer.is_hdr();
     let output_transfer = match a.hdr {
         HdrMode::Off => Transfer::Sdr,
@@ -758,12 +872,49 @@ async fn run_clip(
     let placebo = src_hdr && output_transfer == Transfer::Sdr && ff.libplacebo();
     on_log(format!("colour: {:?} -> {:?}{}", info.transfer, output_transfer, if placebo { " (libplacebo tone mapping)" } else { "" }));
 
+    // ---- Analysis (one low-resolution decode) ----
+    let mut progress_at = 0.0f32;
+    let analysis = if need_analysis {
+        on_stage(Stage::Extracting);
+        let total = info.frames.max(1);
+        let report = |f: usize| on_progress(0.05 * (f as f32 / total as f32).min(1.0), Some(ProgressDetail::Frames { done: f.min(total as usize) as u64, total }));
+        let an = analysis::analyze(ff, spec.source, info, work, cancel, &report, on_log).await?;
+        progress_at = 0.05;
+        Some(an)
+    } else {
+        None
+    };
+
+    let geo = clip_geometry_with(info, a, analysis.as_ref());
+    let target = geo.out;
+    // The moving crop runs on the decoded frames, before any processing (fewer pixels to process).
+    let mut crop_vf: Vec<String> = Vec::new();
+    if let Some(Plan::Crop { w, h, path }) = geo.crop.and_then(|_| reframe::plan(info.width, info.height, info.fps, a.format, a.reframe, a.focus, analysis.as_ref())) {
+        let first = path.first().copied().unwrap_or(((info.width - w) / 2, (info.height - h) / 2));
+        if path.iter().all(|p| *p == first) {
+            crop_vf.push(format!("crop={w}:{h}:{}:{}", first.0, first.1));
+            on_log(format!("Smart Reframe: {w}x{h} window, still at {},{}", first.0, first.1));
+        } else {
+            let cmd = work.join("reframe.cmd");
+            std::fs::write(&cmd, reframe::crop_commands("rf", &path, info.fps))?;
+            let moves = path.windows(2).filter(|p| p[0] != p[1]).count();
+            on_log(format!("Smart Reframe: {w}x{h} window following the content ({moves} moving frames)"));
+            crop_vf.push(format!("sendcmd=f='{}'", color::escape_filter_path(&cmd)));
+            crop_vf.push(reframe::crop_filter("rf", w, h, first));
+        }
+    } else if geo.fill {
+        on_log(format!("Smart Reframe: whole picture on a blurred background, {}x{}", target.width, target.height));
+    }
+
+    let (out_rate_s, out_fps) = out_rate(&info.fps_rational, info.fps, if timed { target_fps } else { None });
+    let mut warp: Option<TimeWarp> = None;
+    let mut out_frames = 0usize;
+
     let final_start;
-    // (video input args, index of the input carrying the original audio, resize still needed, rate after this stage)
-    let (video_input, audio_input, resize_to, stage_fps): (Vec<OsString>, usize, Option<Resize>, f64) = if frames_path {
+    // (video input args, index of the input carrying the audio, resize still needed, rate after this stage)
+    let (mut video_input, audio_input, resize_to, stage_fps): (Vec<OsString>, usize, Option<Resize>, f64) = if frames_path {
         let frames_dir = work.join("frames");
         let done_marker = work.join("frames.done");
-        let cuts_file = work.join("cuts.txt");
         // Resume: frames already extracted by an interrupted run.
         let n = match std::fs::read_to_string(&done_marker).ok().and_then(|t| t.trim().parse::<usize>().ok()) {
             Some(n) => {
@@ -775,34 +926,23 @@ async fn run_clip(
                 std::fs::create_dir_all(&frames_dir)?;
                 on_stage(Stage::Extracting);
                 let mut args: Vec<OsString> = Vec::new();
-                let mut vf = vec![format!("fps={}", info.fps_rational)];
+                // Frame i at i / fps: the crop commands are timed on that.
+                let mut vf = vec![format!("fps={}", info.fps_rational), "setpts=N/FRAME_RATE/TB".to_string()];
                 if src_hdr {
                     if placebo {
                         args.extend(vulkan_device(spec.params.gpu));
                         vf.extend(color::placebo_to_sdr());
                     } else {
-                        let plan = ColorPlan { input: info.transfer, output: Transfer::Sdr, look: Default::default() };
+                        let plan = ColorPlan { input: info.transfer, output: Transfer::Sdr, look: Default::default(), creative: None };
                         vf.extend(color::prepare(&plan, work, "tonemap", &info.color_matrix)?.unwrap_or_default());
                     }
                 }
+                vf.extend(crop_vf.iter().cloned());
                 args.push("-i".into());
                 args.push(spec.source.into());
-                // Scene cuts come from the same decode (pts = frame index).
-                let graph = if smoothing {
-                    format!(
-                        "[0:v]{},split[f][s];[s]setpts=N/TB,scale=160:-2,select='gte(scene\\,0)',metadata=print:key=lavfi.scene_score:file='{}'[c]",
-                        vf.join(","),
-                        color::escape_filter_path(&cuts_file)
-                    )
-                } else {
-                    format!("[0:v]{}[f]", vf.join(","))
-                };
-                args.extend(os(&["-filter_complex", &graph, "-map", "[f]", "-q:v", "2"]));
+                args.extend(os(&["-vf", &vf.join(","), "-q:v", "2"]));
                 args.push(frames_dir.join("%08d.jpg").into());
-                if smoothing {
-                    args.extend(os(&["-map", "[c]", "-f", "null", "-"]));
-                }
-                ff_timed(ff, &args, info.duration_ms, Phase { start: 0.0, span: 0.06 }, on_progress, on_log, cancel).await?;
+                ff_timed(ff, &args, info.duration_ms, Phase { start: progress_at, span: 0.06 }, on_progress, on_log, cancel).await?;
                 let n = count_files(&frames_dir) as usize;
                 if n == 0 {
                     return Err(AppError::new(ErrorCode::DecodeFailed, format!("no frames decoded from {}", spec.source.display())));
@@ -811,43 +951,59 @@ async fn run_clip(
                 n
             }
         };
-        let cuts = std::fs::read_to_string(&cuts_file).map(|t| parse_cuts(&t)).unwrap_or_default();
-        if smoothing {
+        let frame_path = |i: usize| frames_dir.join(format!("{:08}.jpg", i + 1));
+        let body_start = progress_at + 0.06;
+
+        // Distinct pictures, cuts, and where each output sample comes from.
+        let (held, cuts) = match &analysis {
+            Some(an) => {
+                if an.frames != n {
+                    on_log(format!("analysis saw {} frames, extraction {n}", an.frames));
+                }
+                let mut h = an.held.clone();
+                h.resize(n, false);
+                (dedup.then_some(h), an.cuts.clone())
+            }
+            None => (None, Default::default()),
+        };
+        let keys = timemap::Keys::new(n, held.as_deref(), &cuts);
+        if keys.deduplicated(n) {
+            on_log(format!("held drawings: {} distinct pictures in {n} frames, motion spread between them", keys.len()));
+        }
+        if use_rife {
             on_log(format!("{} scene cut(s): no interpolation across them", cuts.len()));
         }
-        let frame_path = |i: usize| frames_dir.join(format!("{:08}.jpg", i + 1));
+        warp = curve.clone().map(|c| TimeWarp::new(c, n as f64 / info.fps));
+        let output = timemap::Output { fps: out_fps, shutter_div: rife_shutter.map_or(1, |s| s.0), subs: rife_shutter.map_or(1, |s| s.1) };
+        let picks: Vec<timemap::Pick> =
+            if timed { timemap::plan_samples(n, info.fps, output, warp.as_ref(), &keys) } else { (0..keys.len()).map(timemap::Pick::Key).collect() };
+        let subs = output.subs.max(1) as usize;
+        out_frames = picks.len() / subs;
 
         let es = match cleanup {
             Some(Cleanup::Esrgan(s)) => s as u64,
             Some(Cleanup::Waifu2x(p)) => p.engine_scale as u64,
             None => 1,
         };
-        let frame_bytes = (info.width as u64 * es) * (info.height as u64 * es) * 4;
+        let (ww, wh) = (geo.work.width as u64, geo.work.height as u64);
+        let frame_bytes = (ww * es) * (wh * es) * 4;
         let block = (crate::tuning::block_bytes() / frame_bytes.max(1)).clamp(8, 240) as usize;
-        let blocks: Vec<smooth::Block> = match &motion {
-            Motion::Smooth { plan, .. } => smooth::plan_blocks(n, plan.ratio, block, plan.sub),
-            Motion::Filters => (0..n)
-                .step_by(block)
-                .map(|start| {
-                    let own = block.min(n - start);
-                    smooth::Block { start, own, inputs: own, padded: own, write: own, keep: own }
-                })
-                .collect(),
-        };
-        let (seg_rate, out_rate, stage_fps) = match &motion {
-            Motion::Smooth { plan, .. } => (plan.rate.clone(), plan.out_rate.clone(), plan.fps),
-            Motion::Filters => (info.fps_rational.clone(), info.fps_rational.clone(), info.fps),
-        };
-        if let Motion::Smooth { plan, choice } = &motion {
+        let blocks = timemap::plan_blocks(&picks, subs, block, (block * 8).max(64), use_rife);
+
+        let level = if a.smooth == SmoothMotion::Off { SmoothMotion::Medium } else { a.smooth };
+        let mut choice = smooth::choose_model(level, anime, spec.vram_bytes, target.width as u64 * target.height as u64);
+        if use_rife {
+            let rendered: usize = blocks.iter().map(|b| b.render).sum();
             on_log(format!(
-                "Smooth Motion: {} ×{}/{} -> {} fps rendered, {} fps out{}",
+                "Smooth Motion: {}{}{} -> {out_frames} frames at {out_rate_s}, {rendered} rendered{}{}",
                 choice.model,
-                plan.ratio.p,
-                plan.ratio.q,
-                plan.rate,
-                plan.out_rate,
-                if plan.sub > 1 { format!(", motion blur from {} sub-frames", plan.sub) } else { String::new() }
+                if choice.tta { " +TTA" } else { "" },
+                if choice.uhd { " (half-resolution flow)" } else { "" },
+                rife_shutter.map(|(m, k)| format!(", motion blur from {k} sub-frames (1/{m} frame apart)")).unwrap_or_default(),
+                warp.as_ref().map(|w| format!(", speed curve: {:.2}s -> {:.2}s", n as f64 / info.fps, w.out_duration())).unwrap_or_default(),
             ));
+        } else if let Some(w) = &warp {
+            on_log(format!("Speed: {:.2}s -> {:.2}s, {out_frames} frames (real frames, no interpolation)", n as f64 / info.fps, w.out_duration()));
         }
         match cleanup {
             Some(Cleanup::Esrgan(s)) => on_log(format!("Clean-up: {} x{s}", crate::esrgan::MODEL)),
@@ -855,34 +1011,25 @@ async fn run_clip(
             None => {}
         }
         on_log(format!("{n} frames, {} block(s)", blocks.len()));
-        let needs_resize = matches!(cleanup, Some(Cleanup::Waifu2x(p)) if p.needs_resize) || target.width != info.width * es as u32 || target.height != info.height * es as u32;
+        let seg_w = (ww * es) as u32;
+        let seg_h = (wh * es) as u32;
+        let needs_resize = !geo.fill && (matches!(cleanup, Some(Cleanup::Waifu2x(p)) if p.needs_resize) || target.width != seg_w || target.height != seg_h);
 
-        // Progress counts source frames per stage; interpolation weighs a little less than Clean-up.
-        let w_engine = if cleanup.is_some() { 1.0 } else { 0.0 };
-        let w_smooth = match &motion {
-            Motion::Smooth { plan, .. } => 0.5 * (plan.ratio.p as f64 / plan.ratio.q as f64 / 2.5).max(1.0),
-            Motion::Filters => 0.0,
-        };
-        let total_units = (n as f64 * (w_engine + w_smooth)).max(1e-9);
+        // Progress: Clean-up per input, RIFE per rendered frame, encoding per sample.
+        let w_clean = if cleanup.is_some() { 1.0 } else { 0.0 };
+        let units = |b: &timemap::Block| b.inputs() as f64 * w_clean + b.render as f64 * 0.3 + b.samples.len() as f64 * 0.03;
+        let total_units = blocks.iter().map(units).sum::<f64>().max(1e-9);
         let units_done = std::sync::Mutex::new(0.0f64);
-        let report = |weight: f64, frames_in_block: f64, src_done: u64| {
-            let u = *units_done.lock().unwrap() + frames_in_block * weight;
-            on_progress(0.06 + 0.74 * (u / total_units).min(1.0) as f32, Some(ProgressDetail::Frames { done: src_done.min(n as u64), total: n as u64 }));
+        let span = 0.8 - body_start;
+        let report = |extra: f64, src_done: u64| {
+            let u = *units_done.lock().unwrap() + extra;
+            on_progress(body_start + span * (u / total_units).min(1.0) as f32, Some(ProgressDetail::Frames { done: src_done.min(n as u64), total: n as u64 }));
         };
 
-        // An interrupted block had moved its frames out: put them back first.
-        if let Ok(entries) = std::fs::read_dir(work.join("block_in")) {
-            for e in entries.flatten() {
-                let name = e.file_name();
-                let index = name.to_string_lossy().split('.').next().and_then(|s| s.parse::<usize>().ok()).unwrap_or(0);
-                let back = frames_dir.join(&name);
-                if (1..=n).contains(&index) && !back.exists() {
-                    std::fs::rename(e.path(), back)?;
-                }
-            }
-        }
         let mut segments = String::new();
         let mut resumed = 0;
+        let mut rife_ok = use_rife;
+        let seg_rate = rate_times(&out_rate_s, subs as u32);
         for (bi, b) in blocks.iter().enumerate() {
             check(cancel)?;
             let seg = work.join(format!("seg_{bi:05}.mkv"));
@@ -890,26 +1037,23 @@ async fn run_clip(
             if seg.is_file() {
                 // Finished by an interrupted run.
                 resumed += 1;
-                *units_done.lock().unwrap() += b.own as f64 * (w_engine + w_smooth);
+                *units_done.lock().unwrap() += units(b);
                 continue;
             }
             if resumed > 0 && bi == resumed {
                 on_log(format!("resuming: {resumed} of {} blocks already done", blocks.len()));
             }
+            let src_at = keys.idx[b.first_key] as u64;
             let in_dir = work.join("block_in");
             let up_dir = work.join("block_up");
             let mid_dir = work.join("block_mid");
-            for d in [&in_dir, &up_dir, &mid_dir] {
+            let sel_dir = work.join("block_sel");
+            for d in [&in_dir, &up_dir, &mid_dir, &sel_dir] {
                 let _ = std::fs::remove_dir_all(d);
             }
             std::fs::create_dir_all(&in_dir)?;
-            for i in b.start..b.start + b.inputs {
-                let (src, dst) = (frame_path(i), in_dir.join(format!("{:08}.jpg", i + 1)));
-                if i < b.start + b.own {
-                    std::fs::rename(&src, &dst)?;
-                } else {
-                    link_or_copy(&src, &dst)?;
-                }
+            for (k, key) in (b.first_key..=b.last_key).enumerate() {
+                link_or_copy(&frame_path(keys.idx[key]), &in_dir.join(format!("{:08}.jpg", k + 1)))?;
             }
             let mut current = in_dir.clone();
             let mut ext = "jpg";
@@ -930,7 +1074,7 @@ async fn run_clip(
                                 tile_size,
                                 tta: params.tta,
                                 threads: params.threads,
-                                expect_outputs: Some(b.inputs),
+                                expect_outputs: Some(b.inputs()),
                             };
                             run_engine(engine, &job, params, on_stage, on_log, cancel).await
                         }
@@ -952,7 +1096,7 @@ async fn run_clip(
                                 tile_size: params.tile_size,
                                 threads: params.threads,
                                 tta: params.tta,
-                                expect_outputs: b.inputs,
+                                expect_outputs: b.inputs(),
                             };
                             spec.esrgan.expect("checked").run(&job, &events, cancel).await?;
                             let ms = started.lock().unwrap().map(|t| t.elapsed().as_millis() as u64).unwrap_or(0);
@@ -960,61 +1104,79 @@ async fn run_clip(
                         }
                     }
                 };
-                engine_ms += with_frame_poll(fut, &up_dir, |w| {
-                    let own = (w as usize).min(b.own) as f64;
-                    report(w_engine, own, b.start as u64 + own as u64);
-                })
-                .await?;
-                *units_done.lock().unwrap() += b.own as f64 * w_engine;
+                engine_ms += with_frame_poll(fut, &up_dir, |w| report(w.min(b.inputs() as u64) as f64 * w_clean, src_at + w)).await?;
+                *units_done.lock().unwrap() += b.inputs() as f64 * w_clean;
                 current = up_dir.clone();
                 ext = "png";
+                if let Some(Cleanup::Waifu2x(ep)) = cleanup {
+                    let p = eparams.as_ref().expect("clean-up has params");
+                    work_mp += b.inputs() as f64 * crate::engine::plan::work_megapixels(geo.work, &ep, p.tta);
+                }
             }
 
-            let (seg_input, seg_start, keep) = match &motion {
-                Motion::Smooth { plan, choice } => {
-                    on_stage(Stage::Interpolating);
-                    // Pad with the last frame so RIFE's grid lines up (see smooth.rs).
-                    let last = current.join(format!("{:08}.{ext}", b.start + b.inputs));
-                    for k in b.inputs..b.padded {
-                        link_or_copy(&last, &current.join(format!("{:08}.{ext}", b.start + k + 1)))?;
-                    }
-                    let rife = spec.rife.expect("checked when planning");
-                    let fut = async {
-                        rife.interpolate(&current, &mid_dir, b.write, *choice, spec.params.gpu, spec.params.threads, on_log, cancel).await?;
-                        Ok(0u64)
-                    };
-                    with_frame_poll(fut, &mid_dir, |w| {
-                        let done = (w as f64 / b.write.max(1) as f64).min(1.0) * b.own as f64;
-                        report(w_smooth, done, b.start as u64 + done as u64);
-                    })
-                    .await?;
-                    // Never morph one shot into the next: repeat the nearest real frame.
-                    for i in 0..b.keep.min(b.write) {
-                        if let Some(src) = smooth::hold_at_cut(i, plan.ratio, b.start, &|f| cuts.contains(&f)) {
-                            copy_as_png(&current.join(format!("{:08}.{ext}", src + 1)), &mid_dir.join(format!("{:08}.png", i + 1)))?;
+            // In-between frames. Out of GPU memory: a lighter setting, then real frames only.
+            let mut sources = b.sources.clone();
+            let mut render = if rife_ok { b.render } else { 0 };
+            if b.render > 0 && render == 0 {
+                sources = timemap::make_block(&picks, b.samples.clone(), b.first_key, b.last_key, false).sources;
+            }
+            while render > 0 {
+                on_stage(Stage::Interpolating);
+                let rife = spec.rife.expect("checked when planning");
+                let fut = async {
+                    rife.interpolate(&current, &mid_dir, render, choice, spec.params.gpu, spec.params.threads, on_log, cancel).await?;
+                    Ok(0u64)
+                };
+                let res = with_frame_poll(fut, &mid_dir, |w| report(w.min(render as u64) as f64 * 0.3, src_at + w * b.inputs() as u64 / render as u64)).await;
+                match res {
+                    Ok(_) => break,
+                    Err(e) if e.is_cancelled() => return Err(e),
+                    Err(e) => {
+                        let _ = std::fs::remove_dir_all(&mid_dir);
+                        if let Some(l) = choice.lighter() {
+                            on_log(format!("Smooth Motion failed ({}): retrying with a lighter setting", e.detail));
+                            notice("smoothLighter", &mut notices);
+                            choice = l;
+                        } else {
+                            on_log(format!("Smooth Motion failed ({}): real frames only from here", e.detail));
+                            notice("smoothFailed", &mut notices);
+                            rife_ok = false;
+                            sources = timemap::make_block(&picks, b.samples.clone(), b.first_key, b.last_key, false).sources;
+                            render = 0;
                         }
                     }
-                    *units_done.lock().unwrap() += b.own as f64 * w_smooth;
-                    (mid_dir.join("%08d.png"), 1u64, b.keep)
                 }
-                Motion::Filters => (current.join(format!("%08d.{ext}")), b.start as u64 + 1, b.own),
-            };
+            }
+            *units_done.lock().unwrap() += b.render as f64 * 0.3;
+
+            // The samples, in order, as one numbered sequence.
+            std::fs::create_dir_all(&sel_dir)?;
+            let sel_ext = if render > 0 { "png" } else { ext };
+            for (i, s) in sources.iter().enumerate() {
+                let dst = sel_dir.join(format!("{:08}.{sel_ext}", i + 1));
+                match *s {
+                    timemap::Source::Input(k) => {
+                        let src = current.join(format!("{:08}.{ext}", k + 1));
+                        if sel_ext == ext {
+                            link_or_copy(&src, &dst)?;
+                        } else {
+                            copy_as_png(&src, &dst)?;
+                        }
+                    }
+                    timemap::Source::Rendered(r) => link_or_copy(&mid_dir.join(format!("{:08}.png", r + 1)), &dst)?,
+                }
+            }
 
             let part = work.join(format!("seg_{bi:05}.part.mkv"));
-            let mut args = os(&["-framerate", &seg_rate, "-start_number", &seg_start.to_string(), "-i"]);
-            args.push(seg_input.into());
+            let mut args = os(&["-framerate", &seg_rate, "-i"]);
+            args.push(sel_dir.join(format!("%08d.{sel_ext}")).into());
             let mut vf = Vec::new();
-            let mut out_frames = keep;
-            if let (Motion::Smooth { plan, .. }, Some((m, k))) = (&motion, shutter) {
-                if plan.sub > 1 {
-                    // Shutter: average k sub-frames, keep one frame per output frame.
-                    let m = plan.sub.min(m);
-                    let k = k.min(m + 1).max(2);
-                    vf.push(format!("tmix=frames={k}:weights='{}'", vec!["1"; k as usize].join(" ")));
-                    vf.push(format!("select='eq(mod(n\\,{m})\\,{})'", k - 1));
-                    vf.push(format!("setpts=N/({out_rate})/TB"));
-                    out_frames = keep / m as usize;
-                }
+            let frames_out = b.samples.len() / subs;
+            if subs > 1 {
+                // Shutter: average the sub-frames of each output frame, keep one.
+                vf.push(format!("tmix=frames={subs}:weights='{}'", vec!["1"; subs].join(" ")));
+                vf.push(format!("select='eq(mod(n\\,{subs})\\,{})'", subs - 1));
+                vf.push(format!("setpts=N/({out_rate_s})/TB"));
             }
             if needs_resize {
                 vf.push(format!("scale={}:{}:flags=lanczos", target.width, target.height));
@@ -1022,18 +1184,22 @@ async fn run_clip(
             // Frames are RGB: convert with the HD matrix and tag it.
             vf.push("scale=out_color_matrix=bt709:out_range=tv".into());
             vf.push("format=yuv420p".into());
-            args.extend(os(&["-vf", &vf.join(","), "-frames:v", &out_frames.to_string(), "-r", &out_rate]));
+            args.extend(os(&["-vf", &vf.join(","), "-frames:v", &frames_out.to_string(), "-r", &out_rate_s]));
             args.extend(os(&["-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"]));
             args.extend(intermediate_codec(spec.encoder));
             args.push(part.clone().into());
             ff.run(&args, cancel, &|_| {}, on_log).await?;
             std::fs::rename(&part, &seg)?;
-            for d in [&in_dir, &up_dir, &mid_dir] {
+            *units_done.lock().unwrap() += b.samples.len() as f64 * 0.03;
+            for d in [&in_dir, &up_dir, &mid_dir, &sel_dir] {
                 let _ = std::fs::remove_dir_all(d);
             }
-        }
-        if let (Some(Cleanup::Waifu2x(ep)), Some(p)) = (cleanup, &eparams) {
-            work_mp = n as f64 * crate::engine::plan::work_megapixels(Dimensions { width: info.width, height: info.height }, &ep, p.tta);
+            // Source frames no later block needs.
+            if let Some(next) = blocks.get(bi + 1) {
+                for f in keys.idx[b.first_key]..keys.idx[next.first_key] {
+                    let _ = std::fs::remove_file(frame_path(f));
+                }
+            }
         }
         let list = work.join("segments.txt");
         std::fs::write(&list, segments)?;
@@ -1048,32 +1214,72 @@ async fn run_clip(
         input.push(joined.into());
         input.push("-i".into());
         input.push(spec.source.into());
-        (input, 1, None, stage_fps)
+        let resize = geo.fill.then_some(Resize::Fill(target));
+        (input, 1, resize, if timed { out_fps } else { info.fps })
     } else {
-        final_start = 0.0;
+        final_start = progress_at;
         let mut input = Vec::new();
         if placebo {
             input.extend(vulkan_device(spec.params.gpu));
         }
         input.push("-i".into());
         input.push(spec.source.into());
-        let same = target.width == info.width && target.height == info.height;
-        (input, 0, (!same).then_some(Resize::Exact(target)), info.fps)
+        let resize = if geo.fill {
+            Some(Resize::Fill(target))
+        } else {
+            (geo.work != target).then_some(Resize::Exact(target))
+        };
+        (input, 0, resize, info.fps)
     };
 
+    // ---- Audio follows the speed (pitch kept) ----
+    let src_duration_s = info.duration_ms as f64 / 1000.0;
+    let mut audio_index = info.has_audio.then_some(audio_input);
+    let mut audio_codec = info.audio_codec.as_deref();
+    if let (Some(w), true) = (&warp, info.has_audio) {
+        let cmd = work.join("speed_audio.cmd");
+        std::fs::write(&cmd, w.audio_commands())?;
+        let wav = work.join("speed_audio.wav");
+        let first = w.speed_at_source(0.0);
+        let mut args = os(&["-i"]);
+        args.push(spec.source.into());
+        let af = format!("asendcmd=f='{}',rubberband@rb=tempo={first:.4}", color::escape_filter_path(&cmd));
+        args.extend(os(&["-vn", "-t", &format!("{src_duration_s:.3}"), "-af", &af, "-c:a", "pcm_s16le"]));
+        args.push(wav.clone().into());
+        match ff.run(&args, cancel, &|_| {}, on_log).await {
+            Ok(()) => {
+                video_input.push("-i".into());
+                video_input.push(wav.into());
+                audio_index = Some(if frames_path { 2 } else { 1 });
+                audio_codec = None;
+            }
+            Err(e) if e.is_cancelled() => return Err(e),
+            Err(e) => {
+                on_log(format!("audio could not follow the speed ({}): no audio", e.detail));
+                notice("speedNoAudio", &mut notices);
+                audio_index = None;
+            }
+        }
+    }
+
     on_stage(Stage::Encoding);
-    let sub_blur = matches!(&motion, Motion::Smooth { plan, .. } if plan.sub > 1);
+    let sub_blur = rife_shutter.is_some();
     let after = AnimSettings {
-        // The rate is already reached by RIFE: no FFmpeg retiming on top.
-        fps: if smoothing && wants_smooth { None } else { a.fps },
-        fps_mode: if !smoothing && wants_smooth { FpsMode::Interpolate } else { FpsMode::Retime },
+        // The rate is already reached by the time map: no FFmpeg retiming on top.
+        fps: if timed { None } else { a.fps },
+        fps_mode: if !timed && smooth_up { FpsMode::Interpolate } else { FpsMode::Retime },
         // Motion blur already rendered from sub-frames.
         motion_blur: if sub_blur { 0 } else { a.motion_blur },
         ..a.clone()
     };
+    let mut filters: Vec<String> = Vec::new();
+    if !frames_path && !crop_vf.is_empty() {
+        filters.push(format!("fps={}", info.fps_rational));
+        filters.push("setpts=N/FRAME_RATE/TB".into());
+        filters.extend(crop_vf.iter().cloned());
+    }
     // Temporal stabilisation after Clean-up: settles shimmering detail where
     // nothing moves (measured -38 % flicker on anime, docs/VIDEO_ENGINE.md).
-    let mut filters: Vec<String> = Vec::new();
     if cleanup.is_some() {
         let per_src = (stage_fps / info.fps).round().max(1.0) as u32;
         let window = (5 * per_src).min(15) | 1;
@@ -1081,12 +1287,51 @@ async fn run_clip(
         filters.push(format!("atadenoise=0a={ta}:0b={tb}:1a={ta}:1b={tb}:2a={ta}:2b={tb}:s={window}"));
     }
     filters.extend(post_filters(&after, stage_fps, resize_to));
+    let final_fps = if timed { out_fps } else { after.fps.filter(|f| (*f as f64 - info.fps).abs() > 0.01).map_or(info.fps, |f| f as f64) };
+    let out_duration_s = if timed { out_frames as f64 / out_fps } else { src_duration_s };
+
+    // ---- Beat Sync ----
+    if a.beat.on && (a.beat.zoom || a.beat.shake) {
+        if !info.has_audio {
+            on_log("Beat Sync: the clip has no audio".into());
+            notice("beatNoAudio", &mut notices);
+        } else {
+            match beat::detect(ff, spec.source, cancel, on_log).await? {
+                Some(b) => {
+                    let times: Vec<f64> = b.times.iter().map(|&t| warp.as_ref().map_or(t, |w| w.to_output(t))).collect();
+                    let frames = (out_duration_s * final_fps).ceil() as usize + 1;
+                    let (script, crop) = beat::effect_filters(&times, &b.strength, frames, final_fps, target.width, target.height, a.beat.zoom, a.beat.shake);
+                    let cmd = work.join("beat.cmd");
+                    std::fs::write(&cmd, script)?;
+                    if frames_path || crop_vf.is_empty() {
+                        filters.insert(0, "setpts=PTS-STARTPTS".into());
+                    }
+                    filters.push(format!("sendcmd=f='{}'", color::escape_filter_path(&cmd)));
+                    filters.extend(crop);
+                    notices.push(format!("beat:{:.0}", b.bpm));
+                }
+                None => notice("beatNotFound", &mut notices),
+            }
+        }
+    }
+
+    // ---- Glow, colour, LUT ----
     let input_transfer = if frames_path || placebo { Transfer::Sdr } else { info.transfer };
     if placebo && !frames_path {
         filters.extend(color::placebo_to_sdr());
     }
+    if a.look.glow > 0 {
+        filters.push(glow_filter(a.look.glow, target, input_transfer.is_hdr()));
+    }
+    let creative = match a.lut.as_deref() {
+        Some(id) => looks::resolve(id, a.lut_strength, spec.luts_dir.unwrap_or(Path::new("")))?,
+        None => None,
+    };
+    if creative.is_some() {
+        on_log(format!("look: {} at {} %", a.lut.as_deref().unwrap_or_default(), a.lut_strength));
+    }
     let matrix = if frames_path || placebo { "bt709" } else { info.color_matrix.as_str() };
-    let plan = ColorPlan { input: input_transfer, output: output_transfer, look: a.look };
+    let plan = ColorPlan { input: input_transfer, output: output_transfer, look: a.look, creative };
     match color::prepare(&plan, work, "color", matrix)? {
         Some(f) => filters.extend(f),
         None if output_transfer.is_hdr() => {
@@ -1097,10 +1342,10 @@ async fn run_clip(
     }
     let mp4 = Mp4Encode {
         input: &video_input,
-        audio_input: info.has_audio.then_some(audio_input),
-        audio_codec: info.audio_codec.as_deref(),
+        audio_input: audio_index,
+        audio_codec,
         vf: &filters.join(","),
-        duration_ms: info.duration_ms,
+        duration_ms: (out_duration_s * 1000.0).round() as u64,
         compress: spec.compress,
         encoder: spec.encoder,
         work,
@@ -1108,7 +1353,28 @@ async fn run_clip(
         hdr: output_transfer.is_hdr().then_some(output_transfer),
     };
     let report = encode_mp4(ff, &mp4, final_start, on_progress, on_log, cancel).await?;
-    Ok((engine_ms, work_mp, report))
+    // Output time -> source time, for the Before / After viewer.
+    let timing = warp.as_ref().map(|w| {
+        let steps = (w.out_duration() / 0.1).ceil() as usize;
+        (0..=steps).map(|i| {
+            let t = (i as f64 * 0.1).min(w.out_duration());
+            [t, w.to_source(t)]
+        }).collect()
+    });
+    Ok(ClipDone { engine_ms, work_mp, report, notices, timing })
+}
+
+/// Soft bloom: bright areas, blurred, screened over the picture.
+fn glow_filter(strength: u8, size: Dimensions, hdr: bool) -> String {
+    let (w, h) = (size.width, size.height);
+    let (sw, sh) = ((w / 4).max(2) & !1, (h / 4).max(2) & !1);
+    let sigma = (sw.max(sh) as f64 / 60.0).max(2.0);
+    let opacity = strength.min(100) as f64 / 100.0 * 0.75;
+    let fmt = if hdr { "gbrp16le" } else { "gbrp" };
+    let key = "clip((val-maxval*0.6)*2.5\\,0\\,maxval)";
+    format!(
+        "format={fmt},split[gla][glb];[glb]scale={sw}:{sh}:flags=area,lutrgb=r='{key}':g='{key}':b='{key}',gblur=sigma={sigma:.1},scale={w}:{h}:flags=bicubic[glh];[gla][glh]blend=all_mode=screen:all_opacity={opacity:.3}"
+    )
 }
 
 fn hdr_trc(t: Transfer) -> &'static str {

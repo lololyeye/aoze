@@ -89,11 +89,15 @@ pub struct JobOutcome {
     pub compression: Option<CompressReport>,
     /// Output facts for GIFs and clips.
     pub media: Option<MediaInfo>,
+    /// Things the user should know about the result (codes the UI translates).
+    pub notices: Vec<String>,
+    /// Clips with a speed change: (output time, source time) pairs, seconds.
+    pub timing: Option<Vec<[f64; 2]>>,
 }
 
 impl JobOutcome {
     pub fn skipped(path: PathBuf) -> Self {
-        Self { output_path: path, output_info: None, skipped: true, work_mp: 0.0, engine_ms: 0, compression: None, media: None }
+        Self { output_path: path, output_info: None, skipped: true, work_mp: 0.0, engine_ms: 0, compression: None, media: None, notices: Vec::new(), timing: None }
     }
 }
 
@@ -331,6 +335,8 @@ pub async fn run(
         engine_ms,
         compression,
         media: None,
+        notices: Vec::new(),
+        timing: None,
     })
 }
 

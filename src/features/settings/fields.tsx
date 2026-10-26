@@ -1,7 +1,8 @@
 // Setting controls bound to the settings store. Used both by the workspace
 // panels and by the Settings page, so each option has a single implementation.
-import { FolderOpen, RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { FolderOpen, RotateCcw, Trash2 } from "lucide-react";
+import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Button, IconButton } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { Segmented, type SegmentOption } from "../../components/ui/Segmented";
@@ -9,13 +10,14 @@ import { Select } from "../../components/ui/Select";
 import { Slider } from "../../components/ui/Slider";
 import { Toggle } from "../../components/ui/Toggle";
 import { fmt, useMessages } from "../../i18n";
-import { api } from "../../services/api";
+import { api, toAppError } from "../../services/api";
 import { pickFolder } from "../../services/actions";
 import { compressOf, useSettingsStore, type AnimKey, type CompressKey } from "../../stores/settingsStore";
 import { modelFor, useSystemStore } from "../../stores/systemStore";
-import type { CompressLevel, CompressReport, ConflictPolicy, DiscordTarget, Enhance, HdrMode, ImageAction, Job, Look, MediaInfo, OutputFormat, Settings, SizeUnit, Style } from "../../types";
+import type { BeatSync, CompressLevel, CompressReport, ConflictPolicy, DiscordTarget, Enhance, Focus, FrameFormat, HdrMode, ImageAction, Job, Look, LutInfo, MediaInfo, OutputFormat, Settings, SizeUnit, SpeedPreset, Style } from "../../types";
 import { comboUnavailable, formatUnavailable, NOISE_LEVELS, SCALES } from "../../utils/capabilities";
 import { formatBytes, formatScale, renderSuffix } from "../../utils/format";
+import { outputSeconds, slowest, speedAt, speedPoints } from "../../utils/speed";
 import s from "./fields.module.css";
 
 function useSettings(): Settings {
@@ -765,8 +767,8 @@ export function LookFields() {
   const look = useSettings().clip.look;
   const setAnim = useSettingsStore((st) => st.setAnim);
   const set = (p: Partial<Look>) => setAnim("clip", { look: { ...look, ...p } });
-  const neutral = !look.exposure && !look.contrast && !look.saturation && !look.sharpness;
-  const rows: [keyof Look, string, number][] = [
+  const neutral = !look.exposure && !look.contrast && !look.saturation && !look.sharpness && !look.glow;
+  const rows: [Exclude<keyof Look, "glow">, string, number][] = [
     ["exposure", t.controls.lookExposure, -100],
     ["contrast", t.controls.lookContrast, -100],
     ["saturation", t.controls.lookSaturation, -100],
@@ -780,7 +782,7 @@ export function LookFields() {
         </Field>
       ))}
       {!neutral && (
-        <Button size="sm" variant="ghost" icon={<RotateCcw />} onClick={() => set({ exposure: 0, contrast: 0, saturation: 0, sharpness: 0 })}>
+        <Button size="sm" variant="ghost" icon={<RotateCcw />} onClick={() => set({ exposure: 0, contrast: 0, saturation: 0, sharpness: 0, glow: 0 })}>
           {t.controls.lookReset}
         </Button>
       )}
@@ -837,32 +839,35 @@ export function SmoothMotionField({ sourceFps }: { sourceFps?: number }) {
   );
 }
 
-/** Advanced: Auto (light model, all GPUs) or Quality (heavier model when it fits). */
+/** Weak hardware (startup check): heavy options are offered but not suggested. */
+function useLowGpu(): boolean {
+  const tier = useSystemStore((st) => st.check?.profile?.gpu ?? null);
+  return tier === "low";
+}
+
+/** Smooth Motion quality: Fast (half-resolution motion), Balanced, High quality (heavier model / second pass). */
 export function SmoothQualityField() {
   const t = useMessages();
   const a = useSettings().clip;
   const setAnim = useSettingsStore((st) => st.setAnim);
-  const available = useSmoothAvailable();
-  if (!available) return null;
-  const value = a.smooth === "high" ? "high" : "medium";
+  const low = useLowGpu();
+  const value = a.smooth === "off" ? "medium" : a.smooth;
   return (
-    <Field label={t.controls.smoothQuality} help="smoothQuality" hint={t.controls.smoothQualityHints[value]}>
-      <Segmented<"medium" | "high">
+    <Field label={t.controls.quality} help="smoothQuality" hint={low && value === "high" ? t.controls.lowGpuHint : t.controls.smoothQualityHints[value]}>
+      <Segmented<"low" | "medium" | "high">
         ariaLabel={t.controls.smoothQuality}
         size="sm"
         value={value}
         options={[
-          { value: "medium", label: t.controls.smoothAuto },
-          { value: "high", label: t.controls.smoothBest },
+          { value: "low", label: t.controls.qualityFast },
+          { value: "medium", label: t.controls.qualityBalanced },
+          { value: "high", label: t.controls.qualityHigh },
         ]}
-        // Only the level: Smooth Motion stays on or off as chosen above.
-        onChange={(v) => setAnim("clip", { smooth: a.smooth === "off" ? "off" : v })}
+        onChange={(smooth) => setAnim("clip", { smooth })}
       />
     </Field>
   );
 }
-
-const BLUR_LEVELS = [0, 25, 50, 75] as const;
 
 /** Clips: motion blur as a virtual shutter (from the motion, when RIFE is there). */
 export function ClipBlurField() {
@@ -870,17 +875,306 @@ export function ClipBlurField() {
   const a = useSettings().clip;
   const setAnim = useSettingsStore((st) => st.setAnim);
   const available = useSmoothAvailable();
-  const value = BLUR_LEVELS.reduce((best, v) => (Math.abs(v - a.motionBlur) < Math.abs(best - a.motionBlur) ? v : best), 0);
-  const names = [t.controls.blurOff, t.controls.blurLow, t.controls.blurMedium, t.controls.blurHigh];
+  const on = a.motionBlur > 0;
   return (
-    <Field label={t.controls.motionBlur} help="blur" hint={value === 0 ? undefined : available ? t.controls.blurFromMotion : t.controls.blurFallback}>
-      <Segmented<number>
-        ariaLabel={t.controls.motionBlur}
-        size="sm"
-        value={value}
-        options={BLUR_LEVELS.map((v, i) => ({ value: v, label: names[i] }))}
-        onChange={(motionBlur) => setAnim("clip", { motionBlur })}
-      />
+    <>
+      <Field label={t.controls.motionBlur} help="blur" inline>
+        <Toggle label={t.controls.motionBlur} checked={on} onChange={(v) => setAnim("clip", { motionBlur: v ? 40 : 0 })} />
+      </Field>
+      {on && (
+        <Field label={t.controls.intensity} hint={available ? t.controls.blurFromMotion : t.controls.blurFallback}>
+          <Slider
+            label={t.controls.intensity}
+            min={5}
+            max={100}
+            step={5}
+            value={a.motionBlur}
+            format={(v) => `${v}%`}
+            onChange={(motionBlur) => setAnim("clip", { motionBlur })}
+          />
+        </Field>
+      )}
+    </>
+  );
+}
+
+/* ---------- Clips: shape (Smart Reframe) ---------- */
+
+const FORMATS: FrameFormat[] = ["original", "landscape", "portrait", "square", "feed"];
+const FORMAT_RATIO: Record<FrameFormat, number | null> = { original: null, landscape: 16 / 9, portrait: 9 / 16, square: 1, feed: 4 / 5 };
+
+/** What the backend does for this shape: nothing, a moving crop, or a fill (reframe.rs). */
+export function reframeMode(format: FrameFormat, source?: { w: number; h: number }): "none" | "crop" | "fill" {
+  const target = FORMAT_RATIO[format];
+  if (target === null) return "none";
+  if (!source) return "crop";
+  const src = source.w / source.h;
+  if (Math.abs(src / target - 1) < 0.01) return "none";
+  const kept = src > target ? target / src : src / target;
+  return target > src && kept < 0.45 ? "fill" : "crop";
+}
+
+export function ClipFormatField({ source }: { source?: { w: number; h: number } }) {
+  const t = useMessages();
+  const a = useSettings().clip;
+  const setAnim = useSettingsStore((st) => st.setAnim);
+  const mode = reframeMode(a.format, source);
+  const names: Record<FrameFormat, string> = {
+    original: t.controls.formatOriginal,
+    landscape: t.controls.formatLandscape,
+    portrait: t.controls.formatPortrait,
+    square: t.controls.formatSquare,
+    feed: t.controls.formatFeed,
+  };
+  const focusNames: Record<Focus, string> = {
+    auto: t.controls.focusAuto,
+    subject: t.controls.focusSubject,
+    screen: t.controls.focusScreen,
+    center: t.controls.focusCenter,
+  };
+  const hint = mode === "none" && a.format !== "original" ? t.controls.formatSame : mode === "fill" ? t.controls.formatFill : undefined;
+  return (
+    <>
+      <Field label={t.controls.frameFormat} help="reframe" hint={hint}>
+        <Select ariaLabel={t.controls.frameFormat} value={a.format} options={FORMATS.map((f) => ({ value: f, label: names[f] }))} onChange={(v) => setAnim("clip", { format: v as FrameFormat })} />
+      </Field>
+      {mode === "crop" && (
+        <>
+          <Field label={t.controls.smartReframe} inline>
+            <Toggle label={t.controls.smartReframe} checked={a.reframe} onChange={(reframe) => setAnim("clip", { reframe })} />
+          </Field>
+          {a.reframe ? (
+            <Field label={t.controls.focus} hint={t.controls.focusHints[a.focus]}>
+              <Select
+                ariaLabel={t.controls.focus}
+                value={a.focus}
+                options={(["auto", "subject", "screen", "center"] as Focus[]).map((f) => ({ value: f, label: focusNames[f] }))}
+                onChange={(v) => setAnim("clip", { focus: v as Focus })}
+              />
+            </Field>
+          ) : (
+            <p className={s.note}>{t.controls.reframeOff}</p>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+/* ---------- Clips: speed ---------- */
+
+const SPEED_PRESETS: SpeedPreset[] = ["normal", "slow", "fast", "ramp", "custom"];
+
+export function SpeedField({ media }: { media?: MediaInfo }) {
+  const t = useMessages();
+  const a = useSettings().clip;
+  const setAnim = useSettingsStore((st) => st.setAnim);
+  const available = useSmoothAvailable();
+  const names: Record<SpeedPreset, string> = {
+    normal: t.controls.speedNormal,
+    slow: t.controls.speedSlow,
+    fast: t.controls.speedFast,
+    ramp: t.controls.speedRamp,
+    custom: t.controls.smoothCustom,
+  };
+  const src = media ? media.durationMs / 1000 : null;
+  const out = src !== null ? outputSeconds(a.speed, src) : null;
+  const aside = src !== null && out !== null && a.speed.preset !== "normal" ? `${src.toFixed(1)} s → ${out.toFixed(1)} s` : undefined;
+  const slows = slowest(a.speed) < 0.999;
+  const hint = a.speed.preset === "normal" ? undefined : slows ? (available ? t.controls.speedSlowSmooth : t.controls.speedSlowRepeat) : t.controls.speedAudio;
+  return (
+    <>
+      <Field label={t.controls.speed} help="speed" aside={aside} hint={hint}>
+        <Select
+          ariaLabel={t.controls.speed}
+          value={a.speed.preset}
+          options={SPEED_PRESETS.map((p) => ({ value: p, label: names[p], description: t.controls.speedHints[p] }))}
+          onChange={(preset) => setAnim("clip", { speed: { ...a.speed, preset: preset as SpeedPreset } })}
+        />
+      </Field>
+      {a.speed.preset === "custom" && <SpeedCurveEditor />}
+    </>
+  );
+}
+
+const CURVE_STEPS = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4];
+
+/** Five speed points over the clip; drag a point up or down. Eased between points. */
+export function SpeedCurveEditor() {
+  const t = useMessages();
+  const a = useSettings().clip;
+  const setAnim = useSettingsStore((st) => st.setAnim);
+  const curve = a.speed.curve;
+  const W = 260;
+  const H = 84;
+  const pad = 10;
+  const yOf = (v: number) => pad + (1 - (Math.log2(v) + 2) / 4) * (H - 2 * pad);
+  const vOf = (y: number) => {
+    const raw = 2 ** ((1 - (y - pad) / (H - 2 * pad)) * 4 - 2);
+    return CURVE_STEPS.reduce((best, c) => (Math.abs(Math.log2(c) - Math.log2(raw)) < Math.abs(Math.log2(best) - Math.log2(raw)) ? c : best), 1);
+  };
+  const xOf = (i: number) => pad + (i / (curve.length - 1)) * (W - 2 * pad);
+  const set = (i: number, v: number) => {
+    // Read the latest curve: a drag fires many updates before React re-renders.
+    const st = useSettingsStore.getState().settings;
+    const cur = st ? st.clip.speed : a.speed;
+    setAnim("clip", { speed: { ...cur, curve: cur.curve.map((c, k) => (k === i ? v : c)) } });
+  };
+  const pts = speedPoints({ preset: "custom", curve }) ?? curve.map((c, i) => [i / (curve.length - 1), c] as [number, number]);
+  const path = Array.from({ length: 61 }, (_, i) => {
+    const p = i / 60;
+    return `${i ? "L" : "M"}${(pad + p * (W - 2 * pad)).toFixed(1)},${yOf(speedAt(pts, p)).toFixed(1)}`;
+  }).join(" ");
+  const drag = (i: number) => (e: ReactPointerEvent<SVGCircleElement>) => {
+    const svg = e.currentTarget.ownerSVGElement;
+    if (!svg) return;
+    const move = (ev: PointerEvent) => {
+      const r = svg.getBoundingClientRect();
+      set(i, vOf(((ev.clientY - r.top) / r.height) * H));
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+  return (
+    <div className={s.curve}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={t.controls.speedCurve}>
+        <line x1={pad} x2={W - pad} y1={yOf(1)} y2={yOf(1)} className={s.curveMid} />
+        <path d={path} className={s.curveLine} />
+        {curve.map((v, i) => (
+          <circle
+            key={i}
+            cx={xOf(i)}
+            cy={yOf(v)}
+            r={6}
+            className={s.curvePoint}
+            tabIndex={0}
+            role="slider"
+            aria-label={`${t.controls.speed} ${i * 25}%`}
+            aria-valuenow={v}
+            aria-valuemin={0.25}
+            aria-valuemax={4}
+            onPointerDown={drag(i)}
+            onKeyDown={(e) => {
+              const k = CURVE_STEPS.indexOf(v);
+              if (e.key === "ArrowUp") set(i, CURVE_STEPS[Math.min(CURVE_STEPS.length - 1, k + 1)] ?? 1);
+              if (e.key === "ArrowDown") set(i, CURVE_STEPS[Math.max(0, k - 1)] ?? 1);
+            }}
+          />
+        ))}
+      </svg>
+      <div className={s.curveLabels}>
+        {curve.map((v, i) => (
+          <span key={i}>{`${v}×`}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Clips: colour (LUT) ---------- */
+
+const IMPORT_LUT = "__import__";
+
+export function LutField() {
+  const t = useMessages();
+  const a = useSettings().clip;
+  const setAnim = useSettingsStore((st) => st.setAnim);
+  const [luts, setLuts] = useState<LutInfo[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    api.lutList().then(setLuts).catch(() => setLuts([]));
+  }, []);
+  const builtinNames: Record<string, string> = t.controls.lutBuiltins;
+  const options = [
+    { value: "none", label: t.controls.lutNone },
+    ...luts.map((l) => ({ value: l.id, label: l.builtin ? (builtinNames[l.name] ?? l.name) : l.name })),
+    { value: IMPORT_LUT, label: t.controls.lutImport },
+  ];
+  const pick = async (v: string) => {
+    setError(null);
+    if (v === IMPORT_LUT) {
+      const path = await open({ multiple: false, directory: false, filters: [{ name: "LUT", extensions: ["cube"] }] });
+      if (typeof path !== "string") return;
+      try {
+        const info = await api.lutImport(path);
+        setLuts(await api.lutList());
+        setAnim("clip", { lut: info.id });
+      } catch (e) {
+        setError(fmt(t.controls.lutInvalid, { detail: toAppError(e).detail }));
+      }
+      return;
+    }
+    setAnim("clip", { lut: v === "none" ? null : v });
+  };
+  const selected = luts.find((l) => l.id === a.lut);
+  const remove = async () => {
+    if (!selected || selected.builtin) return;
+    await api.lutRemove(selected.id).catch(() => undefined);
+    setLuts(await api.lutList());
+    setAnim("clip", { lut: null });
+  };
+  return (
+    <>
+      <Field label={t.controls.lut} help="lut" hint={error ?? undefined}>
+        <div className={s.folder}>
+          <div className={s.grow}>
+            <Select ariaLabel={t.controls.lut} value={a.lut ?? "none"} options={options} onChange={(v) => void pick(v)} />
+          </div>
+          {selected && !selected.builtin && (
+            <IconButton label={t.controls.lutRemove} size="sm" onClick={() => void remove()}>
+              <Trash2 size={14} />
+            </IconButton>
+          )}
+        </div>
+      </Field>
+      {a.lut && (
+        <Field label={t.controls.intensity}>
+          <Slider label={t.controls.intensity} min={5} max={100} step={5} value={a.lutStrength} format={(v) => `${v}%`} onChange={(lutStrength) => setAnim("clip", { lutStrength })} />
+        </Field>
+      )}
+    </>
+  );
+}
+
+/* ---------- Clips: effects ---------- */
+
+export function BeatSyncField({ media }: { media?: MediaInfo }) {
+  const t = useMessages();
+  const a = useSettings().clip;
+  const setAnim = useSettingsStore((st) => st.setAnim);
+  const set = (p: Partial<BeatSync>) => setAnim("clip", { beat: { ...a.beat, ...p } });
+  const noAudio = media !== undefined && !media.hasAudio;
+  return (
+    <>
+      <Field label={t.controls.beatSync} help="beat" inline>
+        <Toggle label={t.controls.beatSync} checked={a.beat.on} onChange={(on) => set({ on })} />
+      </Field>
+      {a.beat.on && (
+        <>
+          <p className={noAudio ? s.warn : s.note}>{noAudio ? t.controls.beatNoAudio : t.controls.beatHint}</p>
+          <Field label={t.controls.beatZoom} inline>
+            <Toggle label={t.controls.beatZoom} checked={a.beat.zoom} onChange={(zoom) => set({ zoom })} />
+          </Field>
+          <Field label={t.controls.beatShake} inline>
+            <Toggle label={t.controls.beatShake} checked={a.beat.shake} onChange={(shake) => set({ shake })} />
+          </Field>
+        </>
+      )}
+    </>
+  );
+}
+
+export function GlowField() {
+  const t = useMessages();
+  const look = useSettings().clip.look;
+  const setAnim = useSettingsStore((st) => st.setAnim);
+  return (
+    <Field label={t.controls.glow} help="glow">
+      <Slider label={t.controls.glow} min={0} max={100} step={5} value={look.glow} format={(v) => (v === 0 ? t.controls.off : `${v}%`)} onChange={(glow) => setAnim("clip", { look: { ...look, glow } })} />
     </Field>
   );
 }

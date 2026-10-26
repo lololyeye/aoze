@@ -217,7 +217,7 @@ pub enum HdrMode {
     Enhanced,
 }
 
-/// Clips: simple colour adjustments, -100..100 (sharpness 0..100). All 0 = untouched.
+/// Clips: simple colour adjustments, -100..100 (sharpness and glow 0..100). All 0 = untouched.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Look {
@@ -225,10 +225,12 @@ pub struct Look {
     pub contrast: i8,
     pub saturation: i8,
     pub sharpness: u8,
+    /// Soft bloom around bright areas.
+    pub glow: u8,
 }
 
 impl Look {
-    /// No colour change (sharpness is a separate filter).
+    /// No colour change (sharpness and glow are separate filters).
     pub fn is_neutral(&self) -> bool {
         self.exposure == 0 && self.contrast == 0 && self.saturation == 0
     }
@@ -239,7 +241,104 @@ impl Look {
             contrast: self.contrast.clamp(-100, 100),
             saturation: self.saturation.clamp(-100, 100),
             sharpness: self.sharpness.min(100),
+            glow: self.glow.min(100),
         }
+    }
+}
+
+/// Clips: output frame shape.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum FrameFormat {
+    #[default]
+    Original,
+    /// 16:9 (YouTube).
+    Landscape,
+    /// 9:16 (TikTok, Shorts, Reels).
+    Portrait,
+    /// 1:1.
+    Square,
+    /// 4:5 (Instagram feed).
+    Feed,
+}
+
+impl FrameFormat {
+    /// Width / height as a fraction, None = keep the source shape.
+    pub fn ratio(self) -> Option<(u32, u32)> {
+        match self {
+            FrameFormat::Original => None,
+            FrameFormat::Landscape => Some((16, 9)),
+            FrameFormat::Portrait => Some((9, 16)),
+            FrameFormat::Square => Some((1, 1)),
+            FrameFormat::Feed => Some((4, 5)),
+        }
+    }
+}
+
+/// Smart Reframe: what the moving frame follows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum Focus {
+    /// Subject for footage, Screen for screen recordings (detected per shot).
+    #[default]
+    Auto,
+    /// What moves and stands out.
+    Subject,
+    /// Where things happen on a screen recording (cursor, changing panels, text).
+    Screen,
+    /// Fixed centre.
+    Center,
+}
+
+/// Clips: playback speed over the clip.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum SpeedPreset {
+    #[default]
+    Normal,
+    /// Whole clip at half speed.
+    Slow,
+    /// Whole clip at double speed.
+    Fast,
+    /// Normal, slows down on the middle, speeds up, back to normal.
+    Ramp,
+    /// The five points of `SpeedSettings::curve`.
+    Custom,
+}
+
+/// Speed points of a custom ramp, evenly spread over the clip.
+pub const SPEED_POINTS: usize = 5;
+pub const SPEED_MIN: f32 = 0.25;
+pub const SPEED_MAX: f32 = 4.0;
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct SpeedSettings {
+    pub preset: SpeedPreset,
+    /// Custom: speed at 0 %, 25 %, 50 %, 75 % and 100 % of the clip.
+    pub curve: [f32; SPEED_POINTS],
+}
+
+impl Default for SpeedSettings {
+    fn default() -> Self {
+        Self { preset: SpeedPreset::Normal, curve: [1.0, 1.0, 0.5, 1.5, 1.0] }
+    }
+}
+
+/// Clips: effects synchronised with the beat of the clip's music.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct BeatSync {
+    pub on: bool,
+    /// Short zoom punch on each beat.
+    pub zoom: bool,
+    /// Short camera shake on strong beats.
+    pub shake: bool,
+}
+
+impl Default for BeatSync {
+    fn default() -> Self {
+        Self { on: false, zoom: true, shake: false }
     }
 }
 
@@ -263,6 +362,19 @@ pub struct AnimSettings {
     pub hdr: HdrMode,
     /// Clips only.
     pub look: Look,
+    /// Clips: output shape.
+    pub format: FrameFormat,
+    /// Clips: follow the content when the shape changes (off = centred crop).
+    pub reframe: bool,
+    pub focus: Focus,
+    /// Clips: speed changes.
+    pub speed: SpeedSettings,
+    /// Clips: colour LUT ("builtin:<id>" or "user:<file name>"), None = no LUT.
+    pub lut: Option<String>,
+    /// LUT strength, 0..=100.
+    pub lut_strength: u8,
+    /// Clips: effects on the beat.
+    pub beat: BeatSync,
 }
 
 impl Default for AnimSettings {
@@ -277,6 +389,13 @@ impl Default for AnimSettings {
             smooth: SmoothMotion::Off,
             hdr: HdrMode::Auto,
             look: Look::default(),
+            format: FrameFormat::Original,
+            reframe: true,
+            focus: Focus::Auto,
+            speed: SpeedSettings::default(),
+            lut: None,
+            lut_strength: 100,
+            beat: BeatSync::default(),
         }
     }
 }
@@ -586,6 +705,13 @@ impl Settings {
             }
             anim.motion_blur = anim.motion_blur.min(100);
             anim.look = anim.look.sanitized();
+            anim.lut_strength = anim.lut_strength.min(100);
+            if anim.lut.as_deref().is_some_and(|l| !crate::looks::valid_id(l)) {
+                anim.lut = None;
+            }
+            for v in anim.speed.curve.iter_mut() {
+                *v = if v.is_finite() { v.clamp(SPEED_MIN, SPEED_MAX) } else { 1.0 };
+            }
         }
         // Clips used FFmpeg's motion interpolation before Smooth Motion existed.
         if self.clip.fps_mode == FpsMode::Interpolate {

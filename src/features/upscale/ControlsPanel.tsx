@@ -8,9 +8,14 @@ import type { PresetKind } from "../../utils/presets";
 import {
   ActionField,
   AnimScaleField,
+  BeatSyncField,
   CleanupStyleField,
   ClipEnhanceField,
   ClipBlurField,
+  ClipFormatField,
+  GlowField,
+  LutField,
+  SpeedField,
   DiscordField,
   EncoderField,
   EstimateRow,
@@ -91,36 +96,84 @@ function ImageControls({ job }: { job: Job | null }) {
   );
 }
 
-function AnimControls({ which, job }: { which: "gif" | "clip"; job: Job | null }) {
+function GifControls({ job }: { job: Job | null }) {
   const t = useMessages();
-  const discord = useSettingsStore((st) => (which === "gif" ? st.settings?.discord : null));
+  const discord = useSettingsStore((st) => st.settings?.discord);
   const media = job?.source.media ?? undefined;
   const src = job ? { w: job.source.info.width, h: job.source.info.height } : undefined;
-  const compress = which === "gif" ? "gifCompress" : "clipCompress";
   return (
     <>
       <div className={s.main}>
-        {!discord && <AnimScaleField which={which} source={src} />}
-        {which === "gif" ? <GifEnhanceField /> : <ClipEnhanceField />}
-        {which === "gif" ? <FpsField which={which} sourceFps={media?.fps} /> : <SmoothMotionField sourceFps={media?.fps} />}
-        {which === "gif" ? <MotionBlurField which={which} /> : <ClipBlurField />}
-        {which === "clip" && <HdrField media={media} />}
-        {which === "gif" && <DiscordField source={src} />}
+        {!discord && <AnimScaleField which="gif" source={src} />}
+        <GifEnhanceField />
+        <FpsField which="gif" sourceFps={media?.fps} />
+        <MotionBlurField which="gif" />
+        <DiscordField source={src} />
       </div>
-      {which === "clip" && (
-        <Collapsible title={t.controls.look}>
-          <LookFields />
-        </Collapsible>
-      )}
       <Collapsible title={t.controls.output} defaultOpen>
-        <QualityField which={compress} />
-        <MaxSizeField which={compress} allowGb={which === "clip"} />
+        <QualityField which="gifCompress" />
+        <MaxSizeField which="gifCompress" />
         <FolderField />
       </Collapsible>
       <Collapsible title={t.controls.advanced}>
-        {which === "clip" && <SmoothQualityField />}
-        {which === "clip" && <EncoderField />}
-        <CleanupStyleField which={which} />
+        <CleanupStyleField which="gif" />
+      </Collapsible>
+    </>
+  );
+}
+
+/** A titled group of the main clip options (Motion, Color): always visible. */
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className={s.group}>
+      <h3 className={s.groupTitle}>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Clips: the main choices stay visible in a few groups (Enhancement, Format,
+ * Motion, Color); effects, fine colour and output details are folded away.
+ */
+function ClipControls({ job }: { job: Job | null }) {
+  const t = useMessages();
+  const clip = useSettingsStore((st) => st.settings!.clip);
+  const media = job?.source.media ?? undefined;
+  const src = job ? { w: job.source.info.width, h: job.source.info.height } : undefined;
+  const smoothOn = clip.smooth !== "off" && clip.fps !== null;
+  return (
+    <>
+      <div className={s.main}>
+        <AnimScaleField which="clip" source={src} />
+        <ClipEnhanceField />
+        <ClipFormatField source={src} />
+      </div>
+      <Group title={t.controls.groupMotion}>
+        <SmoothMotionField sourceFps={media?.fps} />
+        {smoothOn && <SmoothQualityField />}
+        <ClipBlurField />
+        <SpeedField media={media} />
+      </Group>
+      <Group title={t.controls.groupColor}>
+        <HdrField media={media} />
+        <LutField />
+      </Group>
+      <Collapsible title={t.controls.groupEffects}>
+        <BeatSyncField media={media} />
+        <GlowField />
+      </Collapsible>
+      <Collapsible title={t.controls.look}>
+        <LookFields />
+      </Collapsible>
+      <Collapsible title={t.controls.output} defaultOpen>
+        <QualityField which="clipCompress" />
+        <MaxSizeField which="clipCompress" allowGb />
+        <FolderField />
+      </Collapsible>
+      <Collapsible title={t.controls.advanced}>
+        <EncoderField />
+        <CleanupStyleField which="clip" />
       </Collapsible>
     </>
   );
@@ -137,7 +190,7 @@ export function ControlsPanel({ group }: { group: Group }) {
         <div className={s.presets}>
           <PresetBar kind={kind} />
         </div>
-        {kind === "image" ? <ImageControls job={job} /> : <AnimControls which={kind} job={job} />}
+        {kind === "image" ? <ImageControls job={job} /> : kind === "gif" ? <GifControls job={job} /> : <ClipControls job={job} />}
       </div>
       <ProcessButton group={group} />
     </aside>

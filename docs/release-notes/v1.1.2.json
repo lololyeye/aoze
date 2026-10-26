@@ -1,0 +1,42 @@
+{
+  "version": "1.1.2",
+  "date": "2026-10-27",
+  "en": {
+    "summary": "Clip gets the tools edits need, without getting complicated.",
+    "changes": [
+      "Smart Reframe: turn a clip into 16:9, 9:16, 1:1 or 4:5. The frame follows what matters (the moving subject, or the cursor and changing panels on a screen recording) and moves smoothly, instead of always cutting the centre.",
+      "Speed: Slow, Fast, a ready-made Ramp, or your own curve. Changes are eased, slow parts get new in-between frames, and the sound follows at the same pitch.",
+      "Color: LUTs, with six built-in looks or your own .cube files, and an intensity slider. They also work with HDR output.",
+      "Beat Sync: a zoom punch or a short shake on the beat of the clip's music. If there is no clear beat, nothing is added and Aoze says so.",
+      "Glow: a soft light around bright areas.",
+      "Clip presets: Anime Smooth, TikTok Smooth, Cinematic and Clean. Hover a preset to see exactly what it turns on."
+    ],
+    "improvements": [
+      "Smooth Motion on anime: drawings held for two or three frames are now interpolated between, so the motion is fluid on every frame instead of stop-and-go.",
+      "Smooth Motion has a Fast / Balanced / High quality choice. If the graphics card runs out of memory, it switches to a lighter setting instead of failing.",
+      "Motion blur has an intensity slider, and follows speed changes: faster parts get a longer smear.",
+      "The Clip panel is grouped into Motion and Color, with effects and fine settings folded away.",
+      "Before / After stays in sync when the speed changes, and switches to side by side when the shape changes."
+    ],
+    "fixes": []
+  },
+  "fr": {
+    "summary": "Clip reçoit les outils dont les edits ont besoin, sans devenir compliqué.",
+    "changes": [
+      "Recadrage intelligent : passez un clip en 16:9, 9:16, 1:1 ou 4:5. Le cadre suit ce qui compte (le sujet en mouvement, ou le curseur et les panneaux qui changent sur une capture d'écran) et bouge en douceur, au lieu de toujours couper au centre.",
+      "Vitesse : Lente, Rapide, une Rampe toute prête ou votre propre courbe. Les changements sont progressifs, les passages ralentis reçoivent de nouvelles images, et le son suit sans changer de hauteur.",
+      "Couleur : des LUT, avec six looks intégrés ou vos propres fichiers .cube, et un réglage d'intensité. Elles fonctionnent aussi en sortie HDR.",
+      "Beat Sync : un zoom ou une courte secousse sur le rythme de la musique du clip. S'il n'y a pas de rythme net, rien n'est ajouté et Aoze le signale.",
+      "Lueur : une lumière douce autour des zones claires.",
+      "Préréglages Clip : Anime Smooth, TikTok Smooth, Cinéma et Net. Survolez un préréglage pour voir exactement ce qu'il active."
+    ],
+    "improvements": [
+      "Smooth Motion sur l'anime : les dessins tenus deux ou trois images sont maintenant interpolés entre eux, le mouvement est fluide à chaque image au lieu d'avancer par à-coups.",
+      "Smooth Motion propose Rapide / Équilibré / Haute qualité. Si la carte graphique manque de mémoire, il passe à un réglage plus léger au lieu d'échouer.",
+      "Le flou de mouvement a un réglage d'intensité et suit les changements de vitesse : les passages rapides ont une traînée plus longue.",
+      "Le panneau Clip est regroupé en Mouvement et Couleur, les effets et réglages fins sont repliés.",
+      "Avant / Après reste synchronisé quand la vitesse change, et passe en côte à côte quand le format change."
+    ],
+    "fixes": []
+  }
+}

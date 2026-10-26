@@ -185,9 +185,16 @@ const initial = "image";
               <DemoField opts={d.clip.presets} active={1} chips />
               <DemoField label={d.clip.size} opts={d.clip.sizeOpts} active={0} secondary />
               <DemoField label={d.clip.enhance} opts={d.clip.enhanceOpts} active={1} />
+              <DemoField label={d.clip.format} opts={[d.clip.formatValue]} active={0} select secondary />
+              <div class="p-section p-group">{d.clip.motion}</div>
               <DemoField label={d.clip.smooth} opts={d.clip.smoothOpts} active={1} hint={d.clip.smoothHint} />
-              <DemoField label={d.clip.blur} opts={d.clip.blurOpts} active={1} secondary />
-              <DemoField label={d.clip.hdr} opts={d.clip.hdrOpts} active={1} aside={d.clip.hdrAside} />
+              <DemoField label={d.clip.quality} opts={d.clip.qualityOpts} active={1} secondary />
+              <DemoField label={d.clip.blur} opts={[]} active={1} toggle />
+              <DemoField label={d.clip.speed} opts={[d.clip.speedValue]} active={0} select secondary />
+              <div class="p-section p-group p-secondary">{d.clip.color}</div>
+              <DemoField label={d.clip.hdr} opts={d.clip.hdrOpts} active={1} aside={d.clip.hdrAside} secondary />
+              <DemoField label={d.clip.lut} opts={[d.clip.lutValue]} active={0} select secondary />
+              <div class="p-section p-secondary p-closed"><svg viewBox="0 0 24 24" set:html={icon.chevronRight} />{d.clip.effects}</div>
               <div class="p-section p-secondary p-closed"><svg viewBox="0 0 24 24" set:html={icon.chevronRight} />{d.clip.look}</div>
               <div class="p-section p-secondary"><svg viewBox="0 0 24 24" set:html={icon.chevron} />{d.output}</div>
               <DemoField label={d.quality} opts={d.qualityOpts} active={1} secondary />

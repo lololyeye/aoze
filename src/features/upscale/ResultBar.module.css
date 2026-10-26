@@ -105,3 +105,7 @@
 .missed {
   color: var(--warning);
 }
+
+.noted {
+  color: var(--warning);
+}

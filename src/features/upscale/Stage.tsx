@@ -90,6 +90,8 @@ export function Stage({ group }: { group: Group }) {
             // HDR / HEVC results play through their tone-mapped preview copy.
             result={result ? (result.media?.playable === false && result.preview ? result.preview : result.outputPath) : null}
             processing={processing}
+            timing={result?.timing ?? null}
+            reshaped={Boolean(result && Math.abs(result.info.width / result.info.height - src.info.width / src.info.height) > 0.01)}
           />
         ) : (
           <BeforeAfterViewer

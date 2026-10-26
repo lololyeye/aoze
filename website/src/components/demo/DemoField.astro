@@ -1,5 +1,6 @@
 ---
-// One setting of the demo's right panel, drawn like the app's Field + Segmented (or chips).
+// One setting of the demo's right panel, drawn like the app's Field + Segmented (or chips,
+// a dropdown showing its value, or an on/off switch).
 // Purely visual: the options are spans, not buttons, so nothing pretends to be clickable.
 interface Props {
   label?: string;
@@ -8,27 +9,36 @@ interface Props {
   aside?: string;
   hint?: string;
   chips?: boolean;
+  /** A dropdown showing `opts[active]`. */
+  select?: boolean;
+  /** An on/off switch next to the label (`active` 1 = on); `opts` is unused. */
+  toggle?: boolean;
   /** Left out on phones, where the panel only keeps the main settings. */
   secondary?: boolean;
 }
-const { label, opts, active, aside, hint, chips = false, secondary = false } = Astro.props;
+const { label, opts, active, aside, hint, chips = false, select = false, toggle = false, secondary = false } = Astro.props;
 ---
 <div class:list={["f", secondary && "f-secondary"]}>
   {label && (
     <div class="f-head">
       <span class="f-label">{label}<span class="f-q" aria-hidden="true">?</span></span>
       {aside && <span class="f-aside">{aside}</span>}
+      {toggle && <span class:list={["sw", active === 1 && "on"]}><span></span></span>}
     </div>
   )}
-  <div class={chips ? "chips" : "seg"}>
-    {opts.map((o, i) => <span class:list={[chips ? "chip" : "seg-i", i === active && "on"]}>{o}</span>)}
-  </div>
+  {select ? (
+    <div class="sel"><span>{opts[active]}</span><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></div>
+  ) : !toggle && (
+    <div class={chips ? "chips" : "seg"}>
+      {opts.map((o, i) => <span class:list={[chips ? "chip" : "seg-i", i === active && "on"]}>{o}</span>)}
+    </div>
+  )}
   {hint && <p class="f-hint">{hint}</p>}
 </div>
 
 <style>
   .f { display: grid; gap: 7px; }
-  .f-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .f-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .f-label { display: inline-flex; align-items: center; gap: 6px; color: var(--d-text); font-weight: 500; font-size: 12.5px; }
   .f-q {
     display: inline-grid; place-items: center; width: 13px; height: 13px; border-radius: 50%;
@@ -47,6 +57,17 @@ const { label, opts, active, aside, hint, chips = false, secondary = false } = A
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .seg-i.on { background: var(--d-surface-3); color: var(--d-text); font-weight: 600; box-shadow: inset 0 0 0 1px var(--d-border-strong); }
+
+  .sel {
+    display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-radius: 8px;
+    background: var(--d-bg-sunken); border: 1px solid var(--d-border); color: var(--d-text); font-size: 12.5px;
+  }
+  .sel svg { width: 14px; height: 14px; fill: none; stroke: var(--d-text-3); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .sw { position: relative; width: 30px; height: 17px; border-radius: 999px; background: var(--d-surface-3); flex: none; }
+  .sw span { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--d-text-2); }
+  .sw.on { background: var(--d-accent); }
+  .sw.on span { left: 15px; background: var(--d-bg-sunken); }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {

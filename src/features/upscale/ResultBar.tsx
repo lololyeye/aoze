@@ -8,7 +8,7 @@ import { copyPath, pickFiles, safely } from "../../services/actions";
 import type { Group } from "../../stores/queueStore";
 import type { Job } from "../../types";
 import { formatBytes, formatDims, formatDuration } from "../../utils/format";
-import { ResultDetails } from "./ResultDetails";
+import { noticeText, ResultDetails } from "./ResultDetails";
 import s from "./ResultBar.module.css";
 
 export function ResultBar({ job, group }: { job: Job; group: Group }) {
@@ -27,6 +27,8 @@ export function ResultBar({ job, group }: { job: Job; group: Group }) {
           .filter(Boolean)
           .join(" · ")
       : null;
+  // Notes the user should see (Beat Sync found nothing, a lighter Smooth Motion...).
+  const notes = (r.notices ?? []).filter((n) => !n.startsWith("beat:")).map((n) => noticeText(t, n));
   const fpsChanged = job.task?.anim?.fps != null && r.media && job.source.media && Math.abs(r.media.fps - job.source.media.fps) > 0.5;
   const fps = fpsChanged && r.media && job.source.media ? `${Math.round(job.source.media.fps * 100) / 100} → ${Math.round(r.media.fps * 100) / 100} FPS` : null;
   return (
@@ -48,8 +50,8 @@ export function ResultBar({ job, group }: { job: Job; group: Group }) {
         {fps && <div className={`${s.stat} ${s.time}`}>{fps}</div>}
         <div className={`${s.stat} ${s.time}`}>{formatDuration(r.durationMs)}</div>
       </div>
-      <span className={s.path} title={r.outputPath}>
-        {limitNote ?? r.outputPath}
+      <span className={`${s.path} ${notes.length ? s.noted : ""}`} title={notes.length ? notes.join(" ") : r.outputPath}>
+        {notes.length ? notes.join(" ") : (limitNote ?? r.outputPath)}
       </span>
       <div className={s.actions}>
         <ResultDetails job={job} />

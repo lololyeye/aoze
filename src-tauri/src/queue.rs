@@ -65,6 +65,12 @@ pub struct JobResult {
     pub preview: Option<PathBuf>,
     pub compression: Option<CompressReport>,
     pub media: Option<MediaInfo>,
+    /// Notes on the result (e.g. "beatNotFound"), translated by the UI.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub notices: Vec<String>,
+    /// Speed changes: (result time, original time) pairs for the comparison viewer.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timing: Option<Vec<[f64; 2]>>,
 }
 
 /// Which section a file was added from.
@@ -565,16 +571,10 @@ impl Core {
                     }
                     None => UpscaleParams { style: anim.style, scale: anim.scale, noise: -1, ..base },
                 };
-                let target = anim::target_dims(media, anim.scale, kind);
-                // Smooth Motion and motion blur sub-frames: RIFE costs about 20 ms per rendered megapixel.
+                let target = if kind == MediaKind::Video { anim::clip_geometry(media, &anim).out } else { anim::target_dims(media, anim.scale, kind) };
+                // Smooth Motion, Speed, motion blur sub-frames and the reframe analysis.
                 if kind == MediaKind::Video {
-                    let target_fps = anim.fps.filter(|f| anim.smooth != crate::settings::SmoothMotion::Off && *f as f64 > media.fps + 0.01);
-                    let sub = anim::blur_shutter(anim.motion_blur).map(|s| s.0).unwrap_or(1);
-                    if let Some(plan) = crate::smooth::plan_rate(&media.fps_rational, target_fps, sub) {
-                        let factor = if anim.smooth == crate::settings::SmoothMotion::High { 1.6 } else { 1.0 };
-                        let rendered = media.frames as f64 * plan.ratio.p as f64 / plan.ratio.q as f64;
-                        estimate += (rendered * target.megapixels() * 20.0 * factor) as u64 + INIT_ESTIMATE_MS;
-                    }
+                    estimate += anim::timing_estimate_ms(media, &anim, self.rife.found());
                 }
                 if kind == MediaKind::Gif {
                     imaging::check_output_limits(crate::settings::OutputFormat::Png, target)?;
@@ -897,6 +897,7 @@ impl Core {
         }
         let fallback = self.paths.fallback_output_dir.clone();
         let work_dir = self.paths.work_dir();
+        let luts_dir = crate::looks::dir(&self.paths.config_dir);
         let discord_target = task.discord.map(|d| (d.spec(), d.slug()));
         let result = match (&source.kind, &task.anim, &source.media) {
             _ if task.convert.is_some() => {
@@ -947,6 +948,7 @@ impl Core {
                     rife: self.rife.found().then_some(&self.rife),
                     esrgan: self.esrgan.found().then_some(&self.esrgan),
                     vram_bytes: self.profile.read().unwrap().as_ref().map(|p| p.hardware.vram_bytes).unwrap_or(0),
+                    luts_dir: Some(&luts_dir),
                 };
                 anim::run(engine.as_ref(), &self.ffmpeg, spec, &on_stage, &on_progress, &on_log, &cancel).await
             }
@@ -1035,6 +1037,8 @@ impl Core {
                         preview,
                         compression: outcome.compression,
                         media: outcome.media,
+                        notices: outcome.notices,
+                        timing: outcome.timing,
                     });
                     job.progress = 1.0;
                     JobStatus::Completed

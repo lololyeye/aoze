@@ -12,7 +12,7 @@ import { useSettingsStore } from "../../stores/settingsStore";
 import { useSystemStore } from "../../stores/systemStore";
 import { useUiStore } from "../../stores/uiStore";
 import { useUpdateStore } from "../../stores/updateStore";
-import type { Language, Settings, Theme } from "../../types";
+import type { AnimSettings, Language, Settings, Theme } from "../../types";
 import { ConflictField, DeviceField, SuffixField, ThreadsField, TileField } from "./fields";
 import { PerformanceFields } from "./PerformanceSection";
 import s from "./SettingsPage.module.css";
@@ -44,6 +44,26 @@ function UpdateRow() {
     </div>
   );
 }
+
+/** Same as AnimSettings::default() in the backend. */
+const ANIM_DEFAULTS: AnimSettings = {
+  scale: 1,
+  enhance: "off",
+  style: "artworkFast",
+  fps: null,
+  fpsMode: "retime",
+  motionBlur: 0,
+  smooth: "off",
+  hdr: "auto",
+  look: { exposure: 0, contrast: 0, saturation: 0, sharpness: 0, glow: 0 },
+  format: "original",
+  reframe: true,
+  focus: "auto",
+  speed: { preset: "normal", curve: [1, 1, 0.5, 1.5, 1] },
+  lut: null,
+  lutStrength: 100,
+  beat: { on: false, zoom: true, shake: false },
+};
 
 export function SettingsPage() {
   const t = useMessages();
@@ -79,9 +99,9 @@ export function SettingsPage() {
       upscale: { style: "artwork", scale: 2, noise: 1, gpu: null, tileSize: 0, tta: false, threads: { load: 1, proc: 2, save: 2 } },
       output: { format: "png", quality: 92, webpLossless: false, directory: null, suffix: "_{style}_{scale}x_noise{noise}", conflict: "rename" },
       imageCompress: { level: "balanced", quality: 80, maxSize: null, unit: "mb" },
-      gif: { scale: 1, enhance: "off", style: "artworkFast", fps: null, fpsMode: "retime", motionBlur: 0, smooth: "off", hdr: "auto", look: { exposure: 0, contrast: 0, saturation: 0, sharpness: 0 } },
+      gif: { ...ANIM_DEFAULTS },
       gifCompress: { level: "best", quality: 80, maxSize: null, unit: "mb" },
-      clip: { scale: 1, enhance: "off", style: "artworkFast", fps: null, fpsMode: "retime", motionBlur: 0, smooth: "off", hdr: "auto", look: { exposure: 0, contrast: 0, saturation: 0, sharpness: 0 } },
+      clip: { ...ANIM_DEFAULTS },
       clipCompress: { level: "balanced", quality: 80, maxSize: null, unit: "mb" },
       videoEncoder: "auto",
       checkForUpdates: true,

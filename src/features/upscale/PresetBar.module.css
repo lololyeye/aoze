@@ -38,3 +38,12 @@
   background: var(--accent-soft);
   color: var(--accent);
 }
+
+.tip ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+}
+
+.tip li {
+  margin: 1px 0;
+}

@@ -2,11 +2,20 @@ import * as RP from "@radix-ui/react-popover";
 import { ListChecks } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { fmt, useMessages } from "../../i18n";
+import type { Messages } from "../../i18n/en";
 import type { Job, MediaInfo } from "../../types";
+import { clipSummary } from "../../utils/presets";
 import { formatBytes, formatDims, formatScale } from "../../utils/format";
 import s from "./ResultDetails.module.css";
 
 const MODEL: Record<string, string> = { artwork: "CUnet", artworkFast: "UpConv7 anime", photo: "UpConv7 photo" };
+
+/** A result notice code ("beatNotFound", "beat:128") in words. */
+export function noticeText(t: Messages, code: string): string {
+  const [key, value] = code.split(":");
+  if (key === "beat" && value) return fmt(t.details.notices.beat ?? "", { bpm: value });
+  return t.details.notices[key ?? ""] ?? code;
+}
 
 /**
  * Objective before/after facts. No "quality score": there is no reliable
@@ -26,12 +35,17 @@ export function ResultDetails({ job }: { job: Job }) {
     steps.push({ clipToGif: t.convert.clipToGif, gifToMp4: t.convert.gifToVideo, gifToFrames: t.convert.gifToFrames, imagesToGif: t.convert.imagesToGif }[task.convert.conversion]);
   } else if (task?.anim) {
     const a = task.anim;
-    if (a.scale !== 1) steps.push(formatScale(a.scale));
-    if (a.enhance === "sharpen") steps.push(t.controls.enhanceSharpen);
-    const smoothName = { off: null, low: t.controls.smoothLow, medium: t.controls.smoothMedium, high: t.controls.smoothHigh }[a.smooth];
-    if (smoothName && job.source.media && a.fps && a.fps > job.source.media.fps + 0.5) steps.push(`${t.controls.smooth} · ${smoothName}`);
-    if (a.motionBlur) steps.push(`${t.controls.motionBlur} ${a.motionBlur}%`);
-    if (a.look.exposure || a.look.contrast || a.look.saturation || a.look.sharpness) steps.push(t.controls.look);
+    if (job.source.kind === "video") {
+      steps.push(...clipSummary(t, a));
+      const formatName = { original: null, landscape: t.controls.formatLandscape, portrait: t.controls.formatPortrait, square: t.controls.formatSquare, feed: t.controls.formatFeed }[a.format];
+      const reshaped = Math.abs(r.info.width / r.info.height - src.width / src.height) > 0.01;
+      if (formatName && reshaped) steps.push(a.reframe ? `${formatName} · ${t.controls.smartReframe}` : formatName);
+      const speedName = { normal: null, slow: t.controls.speedSlow, fast: t.controls.speedFast, ramp: t.controls.speedRamp, custom: t.controls.speedCurve }[a.speed.preset];
+      if (speedName) steps.push(`${t.controls.speed} · ${speedName}`);
+    } else {
+      if (a.scale !== 1) steps.push(formatScale(a.scale));
+      if (a.motionBlur) steps.push(`${t.controls.motionBlur} ${a.motionBlur}%`);
+    }
     if (job.params && job.params.noise >= 0) steps.push(fmt(t.details.noise, { level: noiseNames[job.params.noise] ?? "" }), fmt(t.details.model, { model: MODEL[a.style] ?? a.style }));
   } else if (job.params && task?.action !== "compress") {
     steps.push(formatScale(job.params.scale));
@@ -54,6 +68,7 @@ export function ResultDetails({ job }: { job: Job }) {
     [t.details.format, `${src.format} → ${r.info.format}`],
   ];
   if (steps.length) rows.push([t.details.processing, steps.join(" · ")]);
+  if (r.notices?.length) rows.push([t.details.notes, r.notices.map((n) => noticeText(t, n)).join(" ")]);
   if (compression) rows.push([t.details.compression, compression]);
   if (job.source.media && r.media) {
     rows.push([t.details.frames, `${job.source.media.frames} → ${r.media.frames}`]);

@@ -43,6 +43,23 @@ pub struct ModelChoice {
     pub model: &'static str,
     /// Spatial TTA (a mirrored second pass, averaged). Not used with v4.25.
     pub tta: bool,
+    /// Optical flow at half resolution (`-u`): faster, less VRAM.
+    pub uhd: bool,
+}
+
+impl ModelChoice {
+    /// The next lighter setting after running out of GPU memory, if any.
+    pub fn lighter(self) -> Option<Self> {
+        if self.model != MODEL {
+            Some(ModelChoice { model: MODEL, tta: false, uhd: false })
+        } else if self.tta {
+            Some(ModelChoice { tta: false, ..self })
+        } else if !self.uhd {
+            Some(ModelChoice { uhd: true, ..self })
+        } else {
+            None
+        }
+    }
 }
 
 /// Picks the model from the level, the content and the hardware. Never the
@@ -51,9 +68,11 @@ pub fn choose_model(level: SmoothMotion, anime: bool, vram_bytes: u64, out_pixel
     const GB: u64 = 1024 * 1024 * 1024;
     let roomy = vram_bytes >= 4 * GB && out_pixels <= 1920 * 1088;
     match level {
-        SmoothMotion::High if anime && roomy => ModelChoice { model: MODEL_ANIME, tta: false },
-        SmoothMotion::High => ModelChoice { model: MODEL, tta: vram_bytes >= 3 * GB || vram_bytes == 0 },
-        _ => ModelChoice { model: MODEL, tta: false },
+        SmoothMotion::High if anime && roomy => ModelChoice { model: MODEL_ANIME, tta: false, uhd: false },
+        SmoothMotion::High => ModelChoice { model: MODEL, tta: vram_bytes >= 3 * GB || vram_bytes == 0, uhd: false },
+        // Fast: flow at half resolution; also what a 4K output gets on a small GPU.
+        SmoothMotion::Low => ModelChoice { model: MODEL, tta: false, uhd: true },
+        _ => ModelChoice { model: MODEL, tta: false, uhd: out_pixels > 2560 * 1440 && vram_bytes > 0 && vram_bytes < 3 * GB },
     }
 }
 
@@ -86,7 +105,7 @@ fn gcd(a: u64, b: u64) -> u64 {
     }
 }
 
-fn parse_rational(r: &str) -> Option<(u64, u64)> {
+pub(crate) fn parse_rational(r: &str) -> Option<(u64, u64)> {
     let (n, d) = r.split_once('/').unwrap_or((r, "1"));
     let (n, d) = (n.trim().parse::<u64>().ok()?, d.trim().parse::<u64>().ok()?);
     (n > 0 && d > 0).then_some((n, d))
@@ -242,6 +261,9 @@ impl Rife {
         }
         if choice.tta {
             a.push("-x".into());
+        }
+        if choice.uhd {
+            a.push("-u".into());
         }
         a
     }

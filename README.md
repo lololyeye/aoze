@@ -23,7 +23,7 @@ Nothing leaves your computer: no upload, no telemetry. The only network request 
 | Output | PNG, JPEG, WebP | GIF (transparency and per-frame timing kept) | MP4 H.264 + original audio |
 
 - **Home**: “What do you want to process?” → *Image / GIF* or *Clip / Video*. Files dropped anywhere go to the right workspace.
-- **Presets**: Anime, TikTok edit (clips), High quality, Small file. They change real settings; *Custom* lights up when you change anything.
+- **Presets**: images and GIFs: Anime, High quality, Small file. Clips: Anime Smooth, TikTok Smooth, Cinematic, Clean (hover one to see exactly what it turns on). They change real settings; *Custom* lights up when you change anything.
 - **Contextual options**: only what makes sense for the selected file. Technical settings are under *Advanced*.
 - **Help**: a “?” next to each option, and a *How Aoze works* page.
 - **Preview**: images and GIFs have zoom / pan / split / side by side / 100 % / fit, and GIFs can be paused. Clips have play, pause, a timeline, sound and a synced split or side-by-side compare.
@@ -35,20 +35,28 @@ Nothing leaves your computer: no upload, no telemetry. The only network request 
 - **Startup**: logo, a soft light, then a quick local system check (graphics card, memory, processor; no benchmark) and *Ready*, in about two seconds. The welcome voice ("Welcome to Aoze… Made for aoxy, by zero.") plays as the app appears. Settings → Sounds turns it off; a `startup-sound.mp3`, `.ogg` or `.wav` in `%APPDATA%\app.aoze` replaces the voice. A missing or unplayable file never blocks the launch.
 - **Completion sound**: one soft sound per run (never one per file), with its own switch and a volume slider.
 
-### Clips: Smooth Motion, HDR, Look
+### Clips: Smooth Motion, Speed, Smart Reframe, Color
 
 The video engine and the measurements behind its choices (models, flicker, VRAM, pipeline order, licences) are in [docs/VIDEO_ENGINE.md](docs/VIDEO_ENGINE.md).
 
 - **Clean-up**: anime goes through realesr-animevideov3 (Real-ESRGAN's video model), live action through waifu2x photo, then a temporal stabilisation (`atadenoise`) settles shimmering detail where nothing moves.
-- **Scene cuts** are detected while decoding: Smooth Motion never blends two shots.
-- **Motion blur** is a virtual shutter: RIFE renders sub-frames and Aoze averages the ones inside the shutter (Low ~120°, Medium ~180°, High ~240°).
+- The Clip panel keeps the main choices visible, grouped: *Enhancement* (size, clean-up, format), *Motion* (Smooth Motion, motion blur, speed), *Color* (HDR, LUT). *Effects* (Beat Sync, glow), *Look* and *Advanced* are folded away. Every option has a “?”.
+- **Scene cuts** are found by a quick low-resolution analysis before processing: Smooth Motion never blends two shots.
+- **Held drawings**: anime drawn on twos or threes repeats each drawing over 2–3 frames. With Smooth Motion, Aoze spreads the motion between the drawings, so it moves on every output frame instead of stop-and-go (long pauses stay still).
+- **Motion blur** is a virtual shutter: RIFE renders sub-frames and Aoze averages the ones inside the shutter (intensity slider, ~90° to ~300°). It follows Speed: fast parts get a longer smear.
+- **Speed**: Normal, Slow (0.5×), Fast (2×), Ramp (normal → slow → fast → normal), or a custom five-point curve. Changes are eased (no jumps); slow parts get RIFE in-between frames when the engine is there (repeated frames otherwise, and the panel says so); the sound follows the speed at the same pitch (FFmpeg's Rubber Band filter).
+- **Smart Reframe**: 16:9, 9:16, 1:1 or 4:5. A per-frame saliency map (motion against the rest of the frame, detail, a light centre bias; on screen recordings, recent activity: cursor, changing panels, text) picks the window, and a virtual camera follows it shot by shot: still while the subject stays in a dead zone, otherwise eased (critically damped) moves. Black bars of letterboxed films are left out. Portrait to landscape keeps the whole picture over a blurred copy of itself. *Focus*: Auto, Subject, Screen recording, Centre; switch Smart Reframe off for a still centred crop.
+- **LUTs**: six built-in looks (computed by Aoze) or your own 3D `.cube` files (checked, then copied to Aoze's settings folder), with an intensity. They are folded into the clip's single colour LUT and applied to SDR values, so HDR sources are graded after tone mapping and HDR output is expanded after.
+- **Beat Sync**: finds the beat of the clip's own music (spectral-flux onsets, tempo by autocorrelation, beats by dynamic programming after D. Ellis, 2007) and adds a short zoom punch and/or a shake on accents. If there is no clear, steady beat (speech, ambient, orchestral), nothing is added and the result says so.
+- **Adapts to the hardware**: Smooth Motion *Fast* estimates motion at half resolution; on GPUs under 2–3 GB the heavy options are not suggested and 4K uses half-resolution motion; if the GPU runs out of memory mid-clip, Aoze retries with a lighter setting, then finishes with real frames only, and tells you.
+- **Before / After** stays in sync when the speed changes (the original follows the speed curve) and switches to side by side when the shape changes.
 - **Resume**: an interrupted clip keeps its finished segments; retrying continues from there (kept 3 days).
 - **HDR → SDR** uses libplacebo on the GPU (BT.2390, per-scene peak detection) when Vulkan works, a LUT otherwise.
 
-- **Smooth Motion** creates real in-between frames with [RIFE](https://github.com/hzwer/ECCV2022-RIFE) (rife-ncnn-vulkan, v4.6 model, optical flow on the GPU), so 24 FPS becomes a fluid 60 or 120 FPS. Levels are different processing, not labels: *Low* estimates motion at a lower resolution (fastest), *Medium* at full resolution, *High* adds a mirrored second pass averaged in (cleanest, about twice as slow). Rates above the source are only offered when Smooth Motion can make them (RIFE and a Vulkan GPU present, at most 8× the source). NTSC sources stay NTSC (23.976 → 59.94). Clips are processed in blocks with a few frames of look-ahead, so long clips never fill the memory and the cadence stays exact across blocks. Motion blur can be added on top (applied to the interpolated frames).
+- **Smooth Motion** creates real in-between frames with [RIFE](https://github.com/hzwer/ECCV2022-RIFE) (rife-ncnn-vulkan, v4.6 model, optical flow on the GPU), so 24 FPS becomes a fluid 60 or 120 FPS. Quality levels are different processing, not labels: *Fast* estimates motion at half resolution, *Balanced* at full resolution, *High quality* uses v4.25 on anime when the GPU has the memory, a mirrored second pass otherwise (about twice as slow). Rates above the source are only offered when Smooth Motion can make them (RIFE and a Vulkan GPU present, at most 8× the source). NTSC sources stay NTSC (23.976 → 59.94). Clips are processed in blocks with a few frames of look-ahead, so long clips never fill the memory and the cadence stays exact across blocks. Motion blur can be added on top (applied to the interpolated frames).
 - **HDR**: *Off* always writes SDR (HDR sources are tone mapped properly), *Auto* keeps an HDR source in HDR (HEVC Main 10, PQ or HLG, BT.2020 tags and HDR10 metadata), *Enhanced* also rebuilds SDR clips as HDR10 by inverse tone mapping: mid tones stay at the BT.2408 reference white (203 nits), highlights expand smoothly up to 1000 nits. Clean-up and Smooth Motion work on 8-bit images, so an HDR source going through them is tone mapped first (the panel says so). HDR results get a tone-mapped preview copy for the comparison, which is also used for HDR files you import.
 - **Look**: exposure, contrast, saturation (applied in linear light, in the same 3D LUT as the HDR conversion) and sharpness (CAS). At 0 nothing changes.
-- **Edit** preset: sharper, real 60 FPS with Smooth Motion, 20 % motion blur, a touch of contrast and saturation.
+- **Clip presets**: *Anime Smooth* (Sharpen, 60 FPS, blur 30 %), *TikTok Smooth* (Sharpen, 60 FPS, blur 50 %, a touch of contrast and saturation), *Cinematic* (Teal & Orange LUT at 60 %, contrast, glow), *Clean* (light Clean-up, a little sharpness). They leave the format, speed and Beat Sync alone.
 
 ### Honest by design
 

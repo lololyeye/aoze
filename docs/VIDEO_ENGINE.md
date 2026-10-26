@@ -159,3 +159,106 @@ the upscale and before colour.
 
 Nothing is copied from GPL projects (Flowframes / OpenFlowFrames); they were read as
 references only.
+
+## 10. Advanced clip tools (1.1.2)
+
+What was studied, what was kept, and why. Everything runs locally; no account, key or
+cloud service is involved.
+
+### 10.1 Frame interpolation, again
+
+| Project | Licence | Runs on | Verdict |
+|---|---|---|---|
+| RIFE via rife-ncnn-vulkan (TNTwise fork) | MIT | any Vulkan GPU, CPU fallback | **kept** (already bundled) |
+| GMFSS / GMFSS_Fortuna (anime-specific, GMFlow) | no licence stated for the weights; PyTorch/CUDA | NVIDIA | rejected: no redistributable Vulkan build, licence unclear, several GB of VRAM |
+| FILM (Google) | Apache-2.0 | TensorFlow | rejected: far slower than RIFE, no portable runtime |
+| IFRNet, AMT, EMA-VFI | MIT / Apache | PyTorch | rejected: no ncnn/Vulkan build, CUDA only in practice |
+| Flowframes / SVFI | GPL-3 / commercial | — | references only (both run RIFE themselves) |
+
+The real gap was not the model but **anime drawn on twos/threes**: the One Piece test
+clip has 181 frames but only 53 distinct drawings (also counted by FFmpeg's
+`mpdecimate`). Interpolating frame by frame leaves the picture still for 2-3 output
+frames, then moves it: stop-and-go. Aoze now finds held frames in the analysis pass (8×8
+blocks at 320 px wide: no block changes by more than 7 levels, under 2 % above 2.5) and
+places the in-between frames between the *drawings* (timemap.rs); a run longer than four
+frames is a real pause and stays still until the next drawing. Measured on a synthetic
+"on twos" clip (integration test `held_drawings_are_interpolated_between`): the subject
+moves on every output frame.
+
+Speed, frame rate, motion blur and held drawings all go through one time map: each output
+sample has a source position; RIFE renders a uniform grid between the keys of a block
+(exact when the positions are uniform, otherwise dense enough that the nearest grid frame
+is within a quarter of the spacing between samples). Scene cuts still hold the nearest
+real frame.
+
+### 10.2 Motion blur
+
+Unchanged principle (sub-frames averaged inside a virtual shutter), now with a continuous
+intensity (shutter ~90° to ~300°) and through the time map: in a speed ramp the sub-frames
+are spaced in *output* time, so fast parts are smeared more, like a real camera.
+
+### 10.3 Smart Reframe
+
+| Option | Licence | Verdict |
+|---|---|---|
+| Google AutoFlip (MediaPipe) | Apache-2.0 | approach kept, code not: Linux/Bazel build, face/object models, no maintained Windows build |
+| autocrop-vertical and similar scripts | MIT | Python + YOLO/OpenCV, too heavy to ship |
+| Face detectors (YuNet, SeetaFace) | Apache / BSD | not used: anime faces are not detected, ONNX/OpenCV runtime needed |
+
+Aoze's version (reframe.rs) uses the analysis maps: motion against the frame's median
+(a camera pan moves everything, a subject moves more), detail (line art, faces, text) and
+a light centre bias. Screen recordings (most pixels identical between frames) follow
+recent activity instead. Per shot, the best window is chosen on saliency smoothed over
+±0.4 s, and a critically damped virtual camera follows it with a dead zone (still when
+possible) and a lead of 2/ω so a steadily moving subject stays centred. Letterbox bars are
+detected and left out. Portrait to landscape (under 45 % of the picture would remain) uses
+the whole picture over a blurred copy instead of a crop. The crop happens at decode, so
+Clean-up and RIFE process fewer pixels.
+
+### 10.4 Speed
+
+Speed curves are eased in log space (slowing from 2× to 0.5× takes as long as the reverse).
+The audio follows with FFmpeg's `rubberband` filter driven by `asendcmd` (tempo changes
+every 40 ms, pitch kept); Rubber Band is GPL-2.0+ and already part of the bundled GPL
+FFmpeg build.
+
+### 10.5 Beat Sync
+
+| Library | Licence | Verdict |
+|---|---|---|
+| aubio | GPL-3.0 | rejected (would make Aoze GPL) |
+| BTrack | GPL-3.0 | rejected |
+| Essentia | AGPL-3.0 | rejected |
+| madmom | BSD code, CC BY-NC-SA models | rejected (non-commercial models) |
+| librosa | ISC | Python only |
+
+Aoze's tracker (beat.rs) follows the published method: spectral-flux onsets, tempo by
+autocorrelation with a prior around 120 BPM, beats by dynamic programming (Ellis 2007).
+Reliability first: a beat is used only when the onsets are real attacks (relative flux
+≥ 0.03: a steady tone measures 0.002), the tempo stands out (autocorrelation peak ≥ 0.3
+and ≥ 2.2× the average lag) and the beats sit on strong onsets. Measured: clicks at 90 /
+128 / 150 BPM found within 2 BPM and 1 ms; a drum & bass track (Ars Niemo, CC BY 3.0,
+test only) found at 85 BPM (half tempo); an orchestral trailer, a live-action clip, the
+anime extract, a pure tone and noise are all rejected. "Cuts on the beat" was not added:
+it needs several clips to cut between, and Aoze processes one.
+
+### 10.6 Colour
+
+LUTs: FFmpeg's `lut3d` could apply a `.cube` directly, but Aoze already builds one 3D LUT
+per clip (HDR conversion + Look). The creative look is folded into it (applied to SDR
+values: after tone mapping for HDR sources, before the expansion for HDR output), so a LUT
+costs nothing extra and works with HDR. Six looks are computed by Aoze (no third-party
+files); imported `.cube` files are parsed and checked (3D only, 2-65 points, finite values)
+before being copied.
+
+### 10.7 Not added
+
+- **Motion tracking** (attach text/effects to a subject): would need a tracker (OpenCV
+  CSRT / KCF, Apache-2.0, ~20 MB of OpenCV DLLs) *and* a layer system for text and
+  graphics that Aoze does not have. Not stable enough for the effort; not shipped.
+- **Smart Mask** (segment a subject, apply an effect to it): needs a segmentation model
+  (SAM / MobileSAM, Apache-2.0, 40 MB+; anime-segmentation, Apache-2.0, 170 MB) and
+  ONNX Runtime with DirectML. Per-frame masks flicker without temporal tracking, and a
+  1080p clip would take minutes on a 4 GB GPU. Not shipped.
+- **Shake / chromatic aberration as standalone effects**: Shake exists only on the beat;
+  more effect sliders would turn the panel into a list of buttons.

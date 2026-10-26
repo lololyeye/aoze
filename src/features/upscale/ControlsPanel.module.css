@@ -27,6 +27,23 @@
   padding: 16px 0 20px;
 }
 
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 14px 0 20px;
+  border-top: 1px solid var(--border);
+}
+
+.groupTitle {
+  margin: 0 0 -2px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .note {
   margin: -8px 0 0;
   color: var(--warning);

@@ -8,7 +8,7 @@ official releases and checks their SHA-256 before bundling.
 | Component | Author | Licence | Used for |
 |---|---|---|---|
 | [waifu2x-ncnn-vulkan](https://github.com/nihui/waifu2x-ncnn-vulkan) and waifu2x models | nihui, nagadomi | MIT | image enlargement and noise reduction |
-| [FFmpeg](https://ffmpeg.org) ([BtbN GPL build](https://github.com/BtbN/FFmpeg-Builds), with libplacebo LGPL-2.1) | FFmpeg developers | GPL-3.0 | GIF and video decoding, filters, encoding, HDR tone mapping |
+| [FFmpeg](https://ffmpeg.org) ([BtbN GPL build](https://github.com/BtbN/FFmpeg-Builds), with libplacebo LGPL-2.1 and Rubber Band GPL-2.0+) | FFmpeg developers; Chris Cannam / Particular Programs (Rubber Band) | GPL-3.0 | GIF and video decoding, filters, encoding, HDR tone mapping, audio time-stretching for Speed |
 | [rife-ncnn-vulkan](https://github.com/TNTwise/rife-ncnn-vulkan) (fork of [nihui/rife-ncnn-vulkan](https://github.com/nihui/rife-ncnn-vulkan)) | TNTwise, nihui | MIT | Smooth Motion runtime |
 | [RIFE](https://github.com/hzwer/Practical-RIFE) v4.6 / v4.25 weights | hzwer | MIT | frame interpolation |
 | [realesrgan-ncnn-vulkan](https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan) | xinntao | MIT | anime clip clean-up runtime |
@@ -18,6 +18,13 @@ official releases and checks their SHA-256 before bundling.
 
 Each bundled component's licence file is installed next to it (`engine/LICENSE`,
 `ffmpeg/LICENSE.txt`, `rife/LICENSE`, `realesrgan/LICENSE.txt`).
+
+Aoze's own clip tools (Smart Reframe, Speed, Beat Sync, built-in colour looks, LUT
+reading) are written for Aoze and use no third-party code or model. The beat tracker
+follows the method published by D. Ellis ("Beat Tracking by Dynamic Programming",
+Journal of New Music Research, 2007); the reframing approach follows the idea of
+Google's AutoFlip (per-shot saliency, still camera when possible). No code was taken
+from either.
 
 The Microsoft OpenMP runtime `vcomp140.dll` shipped with the ncnn programs comes from
 their official release archives (Visual C++ redistributable).

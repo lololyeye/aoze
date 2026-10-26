@@ -17,7 +17,7 @@ use aoze_lib::color::Transfer;
 use aoze_lib::esrgan::Esrgan;
 use aoze_lib::smooth::Rife;
 use aoze_lib::settings::{
-    AnimSettings, CompressLevel, CompressSettings, Enhance, FpsMode, ImageAction, OutputFormat, OutputOptions, SizeUnit, Style, UpscaleParams, HdrMode, Look, SmoothMotion};
+    AnimSettings, CompressLevel, CompressSettings, Enhance, FpsMode, ImageAction, OutputFormat, OutputOptions, SizeUnit, Style, UpscaleParams, HdrMode, Look, SmoothMotion, SpeedPreset, SpeedSettings, FrameFormat, BeatSync};
 use image::{DynamicImage, Rgb, RgbImage};
 use tokio_util::sync::CancellationToken;
 
@@ -98,6 +98,7 @@ async fn run_anim(engine: &Waifu2xEngine, ff: &Ffmpeg, src: &Path, kind: MediaKi
     let encoder = if kind == MediaKind::Video { ff.detect_encoders().first().copied() } else { None };
     let rife = Rife::new(resources().join("rife"));
     let esrgan = Esrgan::new(resources().join("realesrgan"));
+    let luts = LUTS.lock().unwrap().clone();
     let spec = AnimSpec {
         kind,
         source: src,
@@ -114,6 +115,7 @@ async fn run_anim(engine: &Waifu2xEngine, ff: &Ffmpeg, src: &Path, kind: MediaKi
         rife: rife.found().then_some(&rife),
         esrgan: esrgan.found().then_some(&esrgan),
         vram_bytes: 0,
+        luts_dir: luts.as_deref(),
     };
     let logs = std::sync::Mutex::new(Vec::<String>::new());
     let r = anim::run(engine, ff, spec, &|_| {}, &|_, _| {}, &|l| {
@@ -124,6 +126,9 @@ async fn run_anim(engine: &Waifu2xEngine, ff: &Ffmpeg, src: &Path, kind: MediaKi
     *LAST_LOG.lock().unwrap() = logs.into_inner().unwrap();
     r
 }
+
+/// Imported LUT folder for `run_anim`.
+static LUTS: Mutex<Option<PathBuf>> = Mutex::new(None);
 
 /// Log of the last `run_anim` (tests that read it hold the GPU lock).
 static LAST_LOG: Mutex<Vec<String>> = Mutex::new(Vec::new());
@@ -401,6 +406,7 @@ async fn discord_banner_from_small_image_and_gif() {
         rife: None,
         esrgan: None,
         vram_bytes: 0,
+        luts_dir: None,
     };
     let r = anim::run(&engine, &ff, spec, &|_| {}, &|_, _| {}, &|_| {}, &CancellationToken::new()).await.unwrap();
     let m = r.media.unwrap();
@@ -582,7 +588,7 @@ async fn look_changes_colours() {
     let clip = tmp.path().join("look.mp4");
     lavfi(&ff, &["-f", "lavfi", "-i", "testsrc2=s=320x180:r=24:d=1", "-vf", "eq=saturation=0.4", "-c:v", "libx264", "-pix_fmt", "yuv420p"], &clip);
     let base = mean_saturation(&ff, &clip, tmp.path());
-    let anim = AnimSettings { look: Look { saturation: 60, contrast: 20, exposure: 0, sharpness: 40 }, ..AnimSettings::default() };
+    let anim = AnimSettings { look: Look { saturation: 60, contrast: 20, exposure: 0, sharpness: 40, glow: 0 }, ..AnimSettings::default() };
     let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
     let after = mean_saturation(&ff, &out.output_path, tmp.path());
     assert!(after > base * 1.1, "saturation {base:.1} -> {after:.1}");
@@ -689,7 +695,7 @@ async fn motion_blur_from_sub_frames() {
     std::fs::remove_file(&sharp.output_path).unwrap();
     let anim = AnimSettings { motion_blur: 50, ..AnimSettings::default() };
     let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
-    assert!(last_log_has("motion blur from 4 sub-frames"), "{:?}", LAST_LOG.lock().unwrap());
+    assert!(last_log_has("motion blur from 3 sub-frames"), "{:?}", LAST_LOG.lock().unwrap());
     let m = out.media.unwrap();
     assert!((m.fps - 24.0).abs() < 0.1 && (m.frames as i64 - 24).abs() <= 1, "rate kept: {m:?}");
     // The moving bar is smeared along its motion: fewer hard edges.
@@ -733,4 +739,271 @@ async fn anime_cleanup_uses_realesrgan_and_hdr_uses_libplacebo() {
         let m = out.media.unwrap();
         assert!(m.transfer == Transfer::Sdr && m.playable, "{m:?}");
     }
+}
+
+// ---------- Advanced clip tools ----------
+
+fn gpu_lock() -> std::sync::MutexGuard<'static, ()> {
+    GPU.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Per frame (16x9 grey thumbnails): mean luma.
+fn frame_luma(ff: &Ffmpeg, path: &Path) -> Vec<f64> {
+    let out = std::process::Command::new(ff.dir().join("ffmpeg.exe"))
+        .args(["-hide_banner", "-loglevel", "error", "-i"])
+        .arg(path)
+        .args(["-vf", "scale=16:9,format=gray", "-f", "rawvideo", "-"])
+        .output()
+        .unwrap();
+    out.stdout.chunks(16 * 9).map(|f| f.iter().map(|&v| v as f64).sum::<f64>() / f.len() as f64).collect()
+}
+
+#[tokio::test]
+async fn speed_presets_change_duration_and_keep_audio() {
+    let (engine, ff) = tools_or_skip!();
+    let _gpu = gpu_lock();
+    let tmp = tempfile::tempdir().unwrap();
+    let clip = make_clip(&ff, tmp.path(), "speed.mp4", "2");
+    for (preset, want_s) in [(SpeedPreset::Slow, 4.0), (SpeedPreset::Fast, 1.0)] {
+        let anim = AnimSettings { speed: SpeedSettings { preset, ..SpeedSettings::default() }, ..AnimSettings::default() };
+        let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+        let m = out.media.unwrap();
+        assert!((m.duration_ms as f64 / 1000.0 - want_s).abs() < 0.15, "{preset:?}: {m:?}");
+        assert!(m.has_audio, "{preset:?}: audio kept");
+        assert!((m.fps - 24.0).abs() < 0.1, "{preset:?}: rate kept {m:?}");
+        assert!(out.timing.is_some());
+        std::fs::remove_file(&out.output_path).unwrap();
+    }
+    // A ramp: total length from the curve, audio follows.
+    let anim = AnimSettings { speed: SpeedSettings { preset: SpeedPreset::Ramp, ..SpeedSettings::default() }, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    let total = out.timing.unwrap().last().unwrap()[0];
+    let m = out.media.unwrap();
+    assert!((m.duration_ms as f64 / 1000.0 - total).abs() < 0.15, "{m:?} vs {total}");
+    assert!(m.has_audio);
+}
+
+#[tokio::test]
+async fn smart_reframe_follows_the_subject_and_fills_portrait() {
+    let (engine, ff) = tools_or_skip!();
+    let _gpu = gpu_lock();
+    let tmp = tempfile::tempdir().unwrap();
+    // A white square crossing a dark 16:9 frame from left to right over 3 s.
+    let clip = tmp.path().join("pan.mp4");
+    lavfi(
+        &ff,
+        &[
+            "-f", "lavfi", "-i", "color=c=0x202020:s=640x360:r=30:d=3", "-f", "lavfi", "-i", "color=c=white:s=60x60:r=30:d=3",
+            "-filter_complex", "[0][1]overlay=x='20+t*180':y=150", "-pix_fmt", "yuv420p", "-c:v", "libx264",
+        ],
+        &clip,
+    );
+    let anim = AnimSettings { format: FrameFormat::Portrait, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    assert!(last_log_has("following the content"), "{:?}", LAST_LOG.lock().unwrap());
+    assert!(out.output_path.to_string_lossy().contains("_9x16"));
+    let m = out.media.unwrap();
+    assert_eq!((m.width, m.height), (202, 360));
+    // The square stays in the frame (a centred crop loses it at both ends).
+    let frames = frame_luma(&ff, &out.output_path);
+    let lost = frames.iter().filter(|&&mean| mean < 37.0).count();
+    assert!(lost <= 3, "square out of frame in {lost} of {} frames", frames.len());
+    std::fs::remove_file(&out.output_path).unwrap();
+
+    // Off: a still centred crop.
+    let anim = AnimSettings { format: FrameFormat::Portrait, reframe: false, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    assert!(last_log_has("still at 219,0"), "{:?}", LAST_LOG.lock().unwrap());
+    let lost = frame_luma(&ff, &out.output_path).iter().filter(|&&mean| mean < 37.0).count();
+    assert!(lost > 20, "a centred crop misses the square at both ends ({lost})");
+    std::fs::remove_file(&out.output_path).unwrap();
+
+    // Portrait to landscape: the whole picture on a blurred background.
+    let tall = tmp.path().join("tall.mp4");
+    lavfi(&ff, &["-f", "lavfi", "-i", "testsrc2=s=360x640:r=24:d=1", "-c:v", "libx264", "-pix_fmt", "yuv420p"], &tall);
+    let anim = AnimSettings { format: FrameFormat::Landscape, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &tall, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    let m = out.media.unwrap();
+    assert_eq!((m.width, m.height), (640, 360), "{m:?}");
+}
+
+#[tokio::test]
+async fn held_drawings_are_interpolated_between() {
+    let (engine, ff) = tools_or_skip!();
+    if !Rife::new(resources().join("rife")).found() {
+        return;
+    }
+    let _gpu = gpu_lock();
+    let tmp = tempfile::tempdir().unwrap();
+    // "On twos": the square moves every other frame.
+    let clip = tmp.path().join("twos.mp4");
+    lavfi(
+        &ff,
+        &[
+            "-f", "lavfi", "-i", "color=c=0x303030:s=320x180:r=24:d=2", "-f", "lavfi", "-i", "color=c=white:s=30x30:r=24:d=2",
+            "-filter_complex", "[0][1]overlay=x='10+floor(n/2)*10':y=70", "-pix_fmt", "yuv420p", "-c:v", "libx264", "-qp", "0",
+        ],
+        &clip,
+    );
+    let anim = AnimSettings { fps: Some(48.0), smooth: SmoothMotion::Medium, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    assert!(last_log_has("held drawings:"), "{:?}", LAST_LOG.lock().unwrap());
+    // The square moves on every output frame (no stop-and-go).
+    let raw = std::process::Command::new(ff.dir().join("ffmpeg.exe"))
+        .args(["-hide_banner", "-loglevel", "error", "-i"])
+        .arg(&out.output_path)
+        .args(["-vf", "crop=320:30:0:70,scale=320:1,format=gray", "-f", "rawvideo", "-"])
+        .output()
+        .unwrap()
+        .stdout;
+    let centre = |row: &[u8]| {
+        let (s, w) = row.iter().enumerate().fold((0.0, 0.0), |(s, w), (x, &v)| if v > 128 { (s + x as f64, w + 1.0) } else { (s, w) });
+        s / f64::max(w, 1.0)
+    };
+    let xs: Vec<f64> = raw.chunks(320).map(centre).collect();
+    let steps: Vec<f64> = xs.windows(2).skip(4).take(60).map(|p| p[1] - p[0]).collect();
+    let still = steps.iter().filter(|d| d.abs() < 1.0).count();
+    assert!(still <= 3, "{still} still frames: {steps:?}");
+}
+
+#[tokio::test]
+async fn beat_sync_finds_the_beat_or_says_so() {
+    let (engine, ff) = tools_or_skip!();
+    let _gpu = gpu_lock();
+    let tmp = tempfile::tempdir().unwrap();
+    // 120 BPM clicks over a test pattern.
+    let clip = tmp.path().join("beat.mp4");
+    lavfi(
+        &ff,
+        &[
+            "-f", "lavfi", "-i", "testsrc2=s=320x180:r=30:d=8",
+            "-f", "lavfi", "-i", "aevalsrc=0.8*sin(2*PI*900*t)*lt(mod(t\\,0.5)\\,0.03):s=44100:d=8",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest",
+        ],
+        &clip,
+    );
+    let anim = AnimSettings { beat: BeatSync { on: true, zoom: true, shake: true }, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim.clone(), CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    assert!(out.notices.iter().any(|n| n == "beat:120"), "{:?} {:?}", out.notices, LAST_LOG.lock().unwrap());
+    let m = out.media.unwrap();
+    assert_eq!((m.width, m.height), (320, 180));
+    std::fs::remove_file(&out.output_path).unwrap();
+    // A plain tone has no beat: nothing added, and the result says so.
+    let tone = make_clip(&ff, tmp.path(), "tone.mp4", "6");
+    let out = run_anim(&engine, &ff, &tone, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    assert_eq!(out.notices, vec!["beatNotFound".to_string()]);
+}
+
+#[tokio::test]
+async fn luts_and_glow() {
+    let (engine, ff) = tools_or_skip!();
+    let _gpu = gpu_lock();
+    let tmp = tempfile::tempdir().unwrap();
+    let clip = make_clip(&ff, tmp.path(), "lut.mp4", "1");
+    // Built-in black & white look.
+    let anim = AnimSettings { lut: Some("builtin:mono".into()), lut_strength: 100, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    assert!(mean_saturation(&ff, &out.output_path, tmp.path()) < 6.0);
+    std::fs::remove_file(&out.output_path).unwrap();
+    // An imported .cube that swaps red and blue.
+    let luts = tmp.path().join("luts");
+    let mut cube = String::from("LUT_3D_SIZE 2\n");
+    for b in 0..2 {
+        for g in 0..2 {
+            for r in 0..2 {
+                cube.push_str(&format!("{b} {g} {r}\n"));
+            }
+        }
+    }
+    let src = tmp.path().join("swap.cube");
+    std::fs::write(&src, cube).unwrap();
+    let info = aoze_lib::looks::import(&src, &luts).unwrap();
+    *LUTS.lock().unwrap() = Some(luts.clone());
+    let red = tmp.path().join("red.mp4");
+    lavfi(&ff, &["-f", "lavfi", "-i", "color=c=red:s=160x90:r=24:d=1", "-c:v", "libx264", "-pix_fmt", "yuv420p"], &red);
+    let anim = AnimSettings { lut: Some(info.id.clone()), lut_strength: 100, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &red, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    *LUTS.lock().unwrap() = None;
+    let c = frame_colours(&ff, &out.output_path)[5];
+    assert!(c[2] > 150.0 && c[0] < 80.0, "red became blue: {c:?}");
+    std::fs::remove_file(&out.output_path).unwrap();
+    // Glow brightens around bright areas.
+    let base: f64 = frame_luma(&ff, &clip).iter().sum();
+    let anim = AnimSettings { look: Look { glow: 80, ..Look::default() }, ..AnimSettings::default() };
+    let out = run_anim(&engine, &ff, &clip, MediaKind::Video, anim, CompressSettings::default(), tmp.path(), &CancellationToken::new()).await.unwrap();
+    let glow: f64 = frame_luma(&ff, &out.output_path).iter().sum();
+    assert!(glow > base * 1.03, "luma {base:.0} -> {glow:.0}");
+}
+
+#[tokio::test]
+#[ignore]
+async fn real_clips() {
+    // AOZE_REAL=<folder with anime.mp4, film_action.mp4, ...>: runs each scenario,
+    // writes the results and a 12-frame contact sheet to <folder>/out, prints a summary.
+    let Ok(dir) = std::env::var("AOZE_REAL") else { return };
+    let (engine, ff) = tools_or_skip!();
+    let _gpu = gpu_lock();
+    let dir = PathBuf::from(dir);
+    let out_dir = dir.join("out");
+    std::fs::create_dir_all(&out_dir).unwrap();
+    let only = std::env::var("AOZE_REAL_ONLY").ok();
+    let d = AnimSettings::default;
+    let smooth60 = || AnimSettings { fps: Some(60.0), smooth: SmoothMotion::Medium, ..d() };
+    let ramp = SpeedSettings { preset: SpeedPreset::Ramp, ..SpeedSettings::default() };
+    let scenarios: Vec<(&str, &str, AnimSettings)> = vec![
+        ("anime.mp4", "smooth60", smooth60()),
+        ("anime.mp4", "tiktok_ramp_blur", AnimSettings { motion_blur: 50, speed: ramp, ..smooth60() }),
+        ("anime.mp4", "blur_only", AnimSettings { motion_blur: 50, ..d() }),
+        ("film_action.mp4", "smooth60_blur", AnimSettings { motion_blur: 40, ..smooth60() }),
+        ("film_action.mp4", "portrait_reframe", AnimSettings { format: FrameFormat::Portrait, ..d() }),
+        ("film_action.mp4", "cinematic_lut_glow", AnimSettings { lut: Some("builtin:teal-orange".into()), lut_strength: 60, look: Look { contrast: 15, saturation: -5, glow: 20, ..Look::default() }, ..d() }),
+        ("film_dark.mp4", "smooth60", smooth60()),
+        ("film_dark.mp4", "hdr_enhanced_lut", AnimSettings { hdr: HdrMode::Enhanced, lut: Some("builtin:warm".into()), lut_strength: 80, ..d() }),
+        ("fast60.mp4", "smooth120", AnimSettings { fps: Some(120.0), smooth: SmoothMotion::Medium, ..d() }),
+        ("fast60.mp4", "slow_blur", AnimSettings { motion_blur: 40, speed: SpeedSettings { preset: SpeedPreset::Slow, ..SpeedSettings::default() }, ..d() }),
+        ("live30.mp4", "smooth60", smooth60()),
+        ("live30.mp4", "square_reframe", AnimSettings { format: FrameFormat::Square, ..d() }),
+        ("lowres240.mp4", "smooth60_x2_cleanup", AnimSettings { scale: 2.0, enhance: Enhance::Light, style: Style::Photo, ..smooth60() }),
+        ("screen.mp4", "portrait_reframe", AnimSettings { format: FrameFormat::Portrait, ..d() }),
+        ("music_edit.mp4", "beat_zoom_shake", AnimSettings { beat: BeatSync { on: true, zoom: true, shake: true }, ..d() }),
+        ("music_edit.mp4", "fast_beat", AnimSettings { beat: BeatSync { on: true, zoom: true, shake: false }, speed: SpeedSettings { preset: SpeedPreset::Fast, ..SpeedSettings::default() }, ..d() }),
+    ];
+    let mut summary = Vec::new();
+    for (clip, name, anim) in scenarios {
+        if only.as_deref().is_some_and(|o| !name.contains(o) && !clip.contains(o)) {
+            continue;
+        }
+        let src = dir.join(clip);
+        let work = tempfile::tempdir().unwrap();
+        let started = std::time::Instant::now();
+        let res = run_anim(&engine, &ff, &src, MediaKind::Video, anim, CompressSettings::default(), work.path(), &CancellationToken::new()).await;
+        let secs = started.elapsed().as_secs_f64();
+        let line = match res {
+            Ok(out) => {
+                let m = out.media.clone().unwrap();
+                let dest = out_dir.join(format!("{}_{name}.mp4", clip.trim_end_matches(".mp4")));
+                std::fs::copy(&out.output_path, &dest).unwrap();
+                let sheet = out_dir.join(format!("{}_{name}.png", clip.trim_end_matches(".mp4")));
+                let mid = (m.duration_ms as f64 / 2000.0).to_string();
+                let _ = std::process::Command::new(ff.dir().join("ffmpeg.exe"))
+                    .args(["-v", "error", "-y", "-ss", &mid, "-i"])
+                    .arg(&dest)
+                    .args(["-vf", "select='lt(n,12)',scale=240:-2,tile=6x2", "-frames:v", "1"])
+                    .arg(&sheet)
+                    .status();
+                format!(
+                    "{clip:16} {name:22} OK {secs:6.1}s  {}x{} {:.2}fps {} frames {:.2}s audio={} notices={:?}",
+                    m.width, m.height, m.fps, m.frames, m.duration_ms as f64 / 1000.0, m.has_audio, out.notices
+                )
+            }
+            Err(e) => format!("{clip:16} {name:22} FAILED {secs:6.1}s {:?}: {}", e.code, e.detail),
+        };
+        eprintln!("RESULT {line}");
+        let log = LAST_LOG.lock().unwrap().iter().filter(|l| !l.starts_with('$') && !l.starts_with("[0 ")).cloned().collect::<Vec<_>>().join("
+    ");
+        summary.push(format!("{line}
+    {log}"));
+    }
+    std::fs::write(out_dir.join("summary.txt"), summary.join("
+")).unwrap();
 }

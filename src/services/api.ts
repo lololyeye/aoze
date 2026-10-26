@@ -10,6 +10,7 @@ import type {
   CompressReport,
   Purpose,
   HistoryEntry,
+  LutInfo,
   ProgressEvent,
   QueueSnapshot,
   Settings,
@@ -35,6 +36,9 @@ export const api = {
   systemCheck: () => invoke<SystemCheck>("system_check"),
 
   getSettings: () => invoke<Settings>("get_settings"),
+  lutList: () => invoke<LutInfo[]>("lut_list"),
+  lutImport: (path: string) => invoke<LutInfo>("lut_import", { path }),
+  lutRemove: (id: string) => invoke<void>("lut_remove", { id }),
   saveSettings: (settings: Settings) => invoke<Settings>("save_settings", { settings }),
 
   addFiles: (paths: string[], purpose: Purpose = "process") => invoke<AddResult>("add_files", { paths, purpose }),

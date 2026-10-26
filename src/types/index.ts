@@ -32,12 +32,38 @@ export type SmoothMotion = "off" | "low" | "medium" | "high";
 export type HdrMode = "off" | "auto" | "enhanced";
 export type Transfer = "sdr" | "pq" | "hlg";
 
-/** Clip colour adjustments: -100..100, sharpness 0..100. */
+/** Clip colour adjustments: -100..100, sharpness and glow 0..100. */
 export interface Look {
   exposure: number;
   contrast: number;
   saturation: number;
   sharpness: number;
+  glow: number;
+}
+
+/** Output shape of a clip. */
+export type FrameFormat = "original" | "landscape" | "portrait" | "square" | "feed";
+/** What Smart Reframe follows. */
+export type Focus = "auto" | "subject" | "screen" | "center";
+export type SpeedPreset = "normal" | "slow" | "fast" | "ramp" | "custom";
+
+export interface SpeedSettings {
+  preset: SpeedPreset;
+  /** Custom: speed at 0, 25, 50, 75 and 100 % of the clip (0.25..4). */
+  curve: number[];
+}
+
+export interface BeatSync {
+  on: boolean;
+  zoom: boolean;
+  shake: boolean;
+}
+
+/** A colour look: built-in, or a .cube LUT the user imported. */
+export interface LutInfo {
+  id: string;
+  name: string;
+  builtin: boolean;
 }
 
 export interface AnimSettings {
@@ -54,6 +80,15 @@ export interface AnimSettings {
   smooth: SmoothMotion;
   hdr: HdrMode;
   look: Look;
+  format: FrameFormat;
+  /** Follow the content when the shape changes (off = centred crop). */
+  reframe: boolean;
+  focus: Focus;
+  speed: SpeedSettings;
+  /** "builtin:<id>" or "user:<file>", null = none. */
+  lut: string | null;
+  lutStrength: number;
+  beat: BeatSync;
 }
 
 export interface CompressSettings {
@@ -264,6 +299,10 @@ export interface JobResult {
   preview: string | null;
   compression: CompressReport | null;
   media: MediaInfo | null;
+  /** Notes on the result ("beatNotFound", "beat:128", ...). */
+  notices?: string[];
+  /** Speed changes: [result time, original time] pairs (seconds). */
+  timing?: [number, number][];
 }
 
 export interface CompressPlan {

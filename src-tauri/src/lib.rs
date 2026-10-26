@@ -1,4 +1,6 @@
+pub mod analysis;
 pub mod anim;
+pub mod beat;
 pub mod color;
 pub mod commands;
 pub mod compress;
@@ -10,14 +12,17 @@ pub mod fsutil;
 pub mod gpu;
 pub mod history;
 pub mod imaging;
+pub mod looks;
 pub mod media;
 pub mod output;
 pub mod perf;
 pub mod pipeline;
 pub mod queue;
+pub mod reframe;
 pub mod settings;
 pub mod esrgan;
 pub mod smooth;
+pub mod timemap;
 pub mod tuning;
 pub mod update;
 
@@ -196,6 +201,9 @@ pub fn run() {
             commands::refresh_system_status,
             commands::system_check,
             commands::get_settings,
+            commands::lut_list,
+            commands::lut_import,
+            commands::lut_remove,
             commands::save_settings,
             commands::add_files,
             commands::add_pasted_image,

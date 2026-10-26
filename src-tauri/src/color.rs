@@ -128,21 +128,39 @@ fn luma(c: Rgb, w: Rgb) -> f64 {
 // --- the plan -----------------------------------------------------------------
 
 /// What happens to the colours of one clip.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ColorPlan {
     pub input: Transfer,
     pub output: Transfer,
     pub look: Look,
+    /// Creative look / LUT, applied to SDR signal values (looks.rs).
+    pub creative: Option<crate::looks::Creative>,
 }
 
 impl ColorPlan {
     /// Nothing to do: no LUT, no conversion.
     pub fn is_identity(&self) -> bool {
-        self.input == self.output && self.look.is_neutral()
+        self.input == self.output && self.look.is_neutral() && self.creative.is_none()
     }
 
     /// One LUT entry: input signal (R'G'B', 0..1) -> output signal.
     fn map(&self, rgb: Rgb) -> Rgb {
+        let Some(creative) = &self.creative else { return self.map_signal(rgb) };
+        // Looks are made for SDR: grade the SDR signal, then expand if the output is HDR.
+        let sdr = if self.input == Transfer::Sdr && self.look.is_neutral() {
+            rgb
+        } else {
+            ColorPlan { output: Transfer::Sdr, creative: None, ..self.clone() }.map_signal(rgb)
+        };
+        let graded = creative.apply(sdr);
+        if self.output == Transfer::Sdr {
+            graded
+        } else {
+            ColorPlan { input: Transfer::Sdr, output: self.output, look: Look::default(), creative: None }.map_signal(graded)
+        }
+    }
+
+    fn map_signal(&self, rgb: Rgb) -> Rgb {
         // 1. Decode to linear light in nits, in the input primaries.
         let (lin, wide) = match self.input {
             Transfer::Sdr => (rgb.map(|v| v.clamp(0.0, 1.0).powf(2.4) * SDR_WHITE_NITS), false),
@@ -314,7 +332,7 @@ mod tests {
     use super::*;
 
     fn plan(input: Transfer, output: Transfer) -> ColorPlan {
-        ColorPlan { input, output, look: Look::default() }
+        ColorPlan { input, output, look: Look::default(), creative: None }
     }
 
     #[test]
@@ -373,12 +391,12 @@ mod tests {
     #[test]
     fn look_moves_in_the_right_direction() {
         let base = plan(Transfer::Sdr, Transfer::Sdr);
-        let bright = ColorPlan { look: Look { exposure: 50, ..Look::default() }, ..base };
+        let bright = ColorPlan { look: Look { exposure: 50, ..Look::default() }, ..base.clone() };
         assert!(bright.map([0.4, 0.4, 0.4])[0] > 0.45);
-        let sat = ColorPlan { look: Look { saturation: 60, ..Look::default() }, ..base };
+        let sat = ColorPlan { look: Look { saturation: 60, ..Look::default() }, ..base.clone() };
         let c = sat.map([0.6, 0.4, 0.3]);
         assert!(c[0] - c[2] > 0.3, "{c:?}");
-        let flat = ColorPlan { look: Look { contrast: -80, ..Look::default() }, ..base };
+        let flat = ColorPlan { look: Look { contrast: -80, ..Look::default() }, ..base.clone() };
         assert!(flat.map([0.9, 0.9, 0.9])[0] < 0.9 && flat.map([0.15, 0.15, 0.15])[0] > 0.15);
     }
 

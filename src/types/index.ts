@@ -189,6 +189,8 @@ export interface Settings {
   checkForUpdates: boolean;
   /** Version whose "What's new" was last shown. */
   lastSeenReleaseNotes: string | null;
+  /** The first-launch tour was finished or skipped. */
+  tutorialDone: boolean;
 }
 
 export interface ModelCapabilities {

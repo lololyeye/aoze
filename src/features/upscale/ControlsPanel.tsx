@@ -123,9 +123,9 @@ function GifControls({ job }: { job: Job | null }) {
 }
 
 /** A titled group of the main clip options (Motion, Color): always visible. */
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({ title, tour, children }: { title: string; tour?: string; children: React.ReactNode }) {
   return (
-    <div className={s.group}>
+    <div className={s.group} data-tour={tour}>
       <h3 className={s.groupTitle}>{title}</h3>
       {children}
     </div>
@@ -147,15 +147,17 @@ function ClipControls({ job }: { job: Job | null }) {
       <div className={s.main}>
         <AnimScaleField which="clip" source={src} />
         <ClipEnhanceField />
-        <ClipFormatField source={src} />
+        <div data-tour="clip-format">
+          <ClipFormatField source={src} />
+        </div>
       </div>
-      <Group title={t.controls.groupMotion}>
+      <Group title={t.controls.groupMotion} tour="clip-motion">
         <SmoothMotionField sourceFps={media?.fps} />
         {smoothOn && <SmoothQualityField />}
         <ClipBlurField />
         <SpeedField media={media} />
       </Group>
-      <Group title={t.controls.groupColor}>
+      <Group title={t.controls.groupColor} tour="clip-color">
         <HdrField media={media} />
         <LutField />
       </Group>
@@ -185,9 +187,9 @@ export function ControlsPanel({ group }: { group: Group }) {
   if (!settings) return <aside className={s.panel} />;
   const kind = kindFor(group, job);
   return (
-    <aside className={s.panel}>
+    <aside className={s.panel} data-tour="controls">
       <div className={s.scroll}>
-        <div className={s.presets}>
+        <div className={s.presets} data-tour="presets">
           <PresetBar kind={kind} />
         </div>
         {kind === "image" ? <ImageControls job={job} /> : kind === "gif" ? <GifControls job={job} /> : <ClipControls job={job} />}

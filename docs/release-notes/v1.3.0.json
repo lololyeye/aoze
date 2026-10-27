@@ -1,0 +1,24 @@
+{
+  "version": "1.3.0",
+  "date": "2026-10-27",
+  "en": {
+    "summary": "A guided tour of Aoze, shown once.",
+    "changes": [
+      "Tutorial: a short guided tour of every section (home, images & GIFs, clips, convert, history, settings, help). The element being explained is highlighted with an arrow and a short note; click it to go on. Nothing opens or changes during the tour.",
+      "Each chapter is announced by the welcome voice. It follows the startup voice setting.",
+      "Skip it anytime (Esc). Once finished or skipped, it never comes back on its own; Help → Replay the tutorial shows it again."
+    ],
+    "improvements": [],
+    "fixes": []
+  },
+  "fr": {
+    "summary": "Une visite guidée d'Aoze, affichée une seule fois.",
+    "changes": [
+      "Tutoriel : une courte visite guidée de chaque section (accueil, images & GIF, clips, convertir, historique, réglages, aide). L'élément expliqué est mis en surbrillance avec une flèche et une petite note ; cliquez dessus pour avancer. Rien ne s'ouvre et rien ne change pendant la visite.",
+      "Chaque chapitre est annoncé par la voix d'accueil. Elle suit le réglage de la voix au démarrage.",
+      "Passez-le quand vous voulez (Échap). Une fois terminé ou passé, il ne revient plus tout seul ; Aide → Revoir le tutoriel le relance."
+    ],
+    "improvements": [],
+    "fixes": []
+  }
+}

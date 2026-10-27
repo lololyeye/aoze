@@ -13,7 +13,7 @@ official releases and checks their SHA-256 before bundling.
 | [RIFE](https://github.com/hzwer/Practical-RIFE) v4.6 / v4.25 weights | hzwer | MIT | frame interpolation |
 | [realesrgan-ncnn-vulkan](https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan) | xinntao | MIT | anime clip clean-up runtime |
 | [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) realesr-animevideov3 weights | xinntao | BSD-3-Clause | anime clip clean-up |
-| Welcome voice: [Piper](https://github.com/rhasspy/piper), en_US *hfc_female* voice | rhasspy; Hi-Fi TTS data (NVIDIA) | CC BY 4.0 (voice) | startup voice (`public/sounds/welcome.ogg`) |
+| Welcome voice: [Piper](https://github.com/rhasspy/piper), en_US *hfc_female* voice | rhasspy; Hi-Fi TTS data (NVIDIA) | CC BY 4.0 (voice) | startup voice and tutorial announcements (`public/sounds/welcome.ogg`, `public/sounds/tour/*.ogg`) |
 | Tauri, React, Zustand, Radix UI, Motion, Lucide, Inter | their authors | MIT / ISC / OFL-1.1 | application framework and UI |
 
 Each bundled component's licence file is installed next to it (`engine/LICENSE`,

@@ -33,6 +33,7 @@ Nothing leaves your computer: no upload, no telemetry. The only network request 
 - **Finish**: the output folder opens when processing ends (Settings → *Open output folder when finished*, on by default).
 - **Queue**: processing with real per-frame or per-second progress, time left, pause, cancel (the process is killed, no partial file), retry, history.
 - **Startup**: logo, a soft light, then a quick local system check (graphics card, memory, processor; no benchmark) and *Ready*, in about two seconds. The welcome voice ("Welcome to Aoze… Made for aoxy, by zero.") plays as the app appears. Settings → Sounds turns it off; a `startup-sound.mp3`, `.ogg` or `.wav` in `%APPDATA%\app.aoze` replaces the voice. A missing or unplayable file never blocks the launch.
+- **Tutorial**: on the first launch (and once after updating to the version that brought it), a guided tour of every section: the highlighted element, an arrow and a short explanation in English or French; clicking the highlighted element moves on (nothing opens or changes meanwhile). Each chapter is announced by the welcome voice ("Tutorial of clips"…; it follows the startup voice setting). It can be skipped (Esc) and never comes back on its own once finished or skipped; Help → *Replay the tutorial* shows it again. It is remembered in the settings, so an uninstall that deletes the app data shows it again on the next install.
 - **Completion sound**: one soft sound per run (never one per file), with its own switch and a volume slider.
 
 ### Clips: Smooth Motion, Speed, Smart Reframe, Color
@@ -178,5 +179,5 @@ Aoze is built on the work of others, whose licences ship with the app:
 - **[FFmpeg](https://ffmpeg.org)** (GPL build by [BtbN](https://github.com/BtbN/FFmpeg-Builds), `ffmpeg/LICENSE.txt`): GIF and video processing.
 - **[RIFE](https://github.com/hzwer/Practical-RIFE)** by hzwer (MIT, v4.6 and v4.25 weights) run by **[rife-ncnn-vulkan](https://github.com/TNTwise/rife-ncnn-vulkan)** (TNTwise's maintained fork of nihui's, MIT, `rife/LICENSE`): Smooth Motion and motion blur.
 - **[Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN)** by xinntao (BSD-3-Clause, realesr-animevideov3 weights) and realesrgan-ncnn-vulkan (MIT), `realesrgan/LICENSE.txt`: anime clip clean-up.
-- Welcome voice made with [Piper](https://github.com/rhasspy/piper) (en_US *hfc_female* voice, trained on the Hi-Fi TTS dataset, CC BY 4.0), mixed with FFmpeg.
+- Welcome voice and tutorial announcements made with [Piper](https://github.com/rhasspy/piper) (en_US *hfc_female* voice, trained on the Hi-Fi TTS dataset, CC BY 4.0), mixed with FFmpeg.
 - Tauri 2, React 19, TypeScript, Zustand, Radix UI, Motion, Lucide.

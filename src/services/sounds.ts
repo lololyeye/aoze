@@ -141,3 +141,26 @@ export async function playWelcome(volume: number, leadS = 0): Promise<void> {
     if (end > 0) setTimeout(resolve, Math.max(0, (end - leadS - el.currentTime) * 1000));
   });
 }
+
+let tourVoice: HTMLAudioElement | null = null;
+
+/**
+ * The tutorial's chapter announcement ("Tutorial of clips"…), same voice as the
+ * welcome. Replaces one still playing.
+ */
+export function playTourVoice(chapter: string, volume: number) {
+  try {
+    tourVoice?.pause();
+    const el = new Audio(`/sounds/tour/${chapter}.ogg`);
+    el.volume = Math.min(1, gainOf(volume) * 1.6);
+    tourVoice = el;
+    void el.play().catch(() => undefined);
+  } catch {
+    /* no audio device */
+  }
+}
+
+export function stopTourVoice() {
+  tourVoice?.pause();
+  tourVoice = null;
+}

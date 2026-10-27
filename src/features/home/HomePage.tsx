@@ -97,7 +97,7 @@ function Card({ group, index, icon, art }: { group: Group; index: number; icon: 
   const formats = (clip ? t.home.formatsClip : t.home.formatsImage).split("·").map((f) => f.trim());
   return (
     <motion.div className={s.cardWrap} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 + index * 0.06, ease: EASE }}>
-      <button type="button" className={s.card} onClick={safely(() => pickFiles(group))}>
+      <button type="button" data-tour={`home-${group}`} className={s.card} onClick={safely(() => pickFiles(group))}>
         {art}
         <span className={s.icon}>{icon}</span>
         <span className={s.cardTitle}>{clip ? t.home.clipTitle : t.home.imageTitle}</span>
@@ -138,7 +138,7 @@ export function HomePage() {
         <div className={s.grid}>
           <Card group="image" index={0} icon={<Images size={22} strokeWidth={1.7} />} art={<ImageArt />} />
           <Card group="clip" index={1} icon={<Film size={22} strokeWidth={1.7} />} art={<ClipArt />} />
-          <motion.div className={s.convert} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.17, ease: EASE }}>
+          <motion.div data-tour="home-convert" className={s.convert} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.17, ease: EASE }}>
             <ConvertArt />
             <span className={s.icon}>
               <ArrowLeftRight size={22} strokeWidth={1.7} />
@@ -152,7 +152,7 @@ export function HomePage() {
             </Button>
           </motion.div>
         </div>
-        <div className={s.footer}>
+        <div className={s.footer} data-tour="home-drop">
           <span>{t.home.drop}</span>
           <span className={s.dot} />
           <button type="button" className={s.how} onClick={() => setPage("help")}>

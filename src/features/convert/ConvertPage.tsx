@@ -42,14 +42,14 @@ function Start() {
     { label: t.convert.gifToFrames, icon: FolderOpen, gifOutput: "frames" },
   ];
   return (
-    <div className={`${s.start} ${hover ? s.hover : ""}`}>
+    <div className={`${s.start} ${hover ? s.hover : ""}`} data-tour="convert-start">
       <h1 className={s.title}>{t.convert.title}</h1>
       <p className={s.subtitle}>{t.convert.subtitle}</p>
       <button type="button" className={s.drop} onClick={safely(() => pickFiles("convert"))}>
         <span className={s.dropTitle}>{hover ? t.dropzone.dropNow : t.convert.drop}</span>
         <span className={s.dropHint}>{t.convert.browse}</span>
       </button>
-      <div className={s.kinds}>
+      <div className={s.kinds} data-tour="convert-kinds">
         {entries.map(({ label, icon: Icon, gifOutput }) => (
           <button
             key={label}
@@ -184,7 +184,7 @@ function ConvertControls({ job }: { job: Job | null }) {
   const toGif = kind === "video" || kind === "image";
   const srcFps = job?.source.media?.fps;
   return (
-    <aside className={s.panel}>
+    <aside className={s.panel} data-tour="convert-options">
       <div className={s.scroll}>
         <div className={s.main}>
           <Field label={t.convert.output}>

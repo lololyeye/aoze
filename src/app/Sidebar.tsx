@@ -19,7 +19,7 @@ function Item({ page, icon, label, badge }: { page: Page; icon: ReactNode; label
   const active = current === page;
   return (
     <Tooltip content={label} side="right">
-      <button type="button" className={`${s.item} ${active ? s.active : ""}`} aria-current={active ? "page" : undefined} onClick={() => setPage(page)}>
+      <button type="button" data-tour={`nav-${page}`} className={`${s.item} ${active ? s.active : ""}`} aria-current={active ? "page" : undefined} onClick={() => setPage(page)}>
         {/* One shared highlight that glides to the selected section. */}
         {active && (
           <motion.span layoutId="sidebar-active" className={s.highlight} transition={{ type: "spring", stiffness: 480, damping: 38, mass: 0.8 }}>

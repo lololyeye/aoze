@@ -637,6 +637,10 @@ pub struct Settings {
     pub check_for_updates: bool,
     /// Version whose "What's new" was last shown (None: never, e.g. settings from 1.0.0).
     pub last_seen_release_notes: Option<String>,
+    /// The first-launch tour was finished or skipped. Missing in settings from
+    /// before it existed, so updated installs see it once too; a reinstall that
+    /// deleted the app data shows it again.
+    pub tutorial_done: bool,
 }
 
 impl Default for Settings {
@@ -667,6 +671,7 @@ impl Default for Settings {
             convert: ConvertSettings::default(),
             check_for_updates: true,
             last_seen_release_notes: None,
+            tutorial_done: false,
         }
     }
 }

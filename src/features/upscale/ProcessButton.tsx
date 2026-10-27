@@ -106,7 +106,7 @@ export function ProcessButton({ group }: { group: Group }) {
   const detail = detailText(t, progress?.detail);
 
   return (
-    <div className={s.root}>
+    <div className={s.root} data-tour="process">
       <AnimatePresence mode="wait" initial={false}>
         {active ? (
           <motion.div

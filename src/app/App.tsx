@@ -9,6 +9,7 @@ import { DiagnosticsSheet } from "../features/diagnostics/DiagnosticsSheet";
 import { HelpPage } from "../features/help/HelpPage";
 import { HistoryPage } from "../features/history/HistoryPage";
 import { HomePage } from "../features/home/HomePage";
+import { Tour } from "../features/tour/Tour";
 import { SettingsPage } from "../features/settings/SettingsPage";
 import { UpdateFlow } from "../features/update/UpdateFlow";
 import { Workspace } from "../features/workspace/Workspace";
@@ -103,6 +104,7 @@ export function App() {
             <DiagnosticsSheet />
             <AboutDialog />
             <UpdateFlow started={launch !== null && (!launch.animation || splashDone)} />
+            <Tour />
           </>
         )}
         {launch?.animation && <Splash sound={launch.sound} onDone={() => setSplashDone(true)} />}

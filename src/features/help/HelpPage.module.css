@@ -93,3 +93,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.replay {
+  display: flex;
+  margin-bottom: 18px;
+}

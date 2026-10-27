@@ -70,7 +70,7 @@ export function Titlebar() {
 
       <div className={s.right}>
         <Tooltip content={status.detail || null} side="bottom">
-          <button type="button" className={`${s.status} ${s[status.tone]}`} onClick={() => openPanel("diagnostics")}>
+          <button type="button" data-tour="gpu" className={`${s.status} ${s[status.tone]}`} onClick={() => openPanel("diagnostics")}>
             <span className={s.dot} />
             <span className={s.statusText}>{status.label}</span>
           </button>

@@ -30,6 +30,7 @@ const base: Settings = {
   videoEncoder: "auto",
   checkForUpdates: true,
   lastSeenReleaseNotes: null,
+  tutorialDone: true,
 };
 
 describe("presets", () => {

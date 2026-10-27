@@ -48,7 +48,7 @@ export function Stage({ group }: { group: Group }) {
 
   if (!job) {
     return (
-      <section className={s.stage}>
+      <section className={s.stage} data-tour="stage">
         <ImageDropzone group={group} />
       </section>
     );
@@ -62,7 +62,7 @@ export function Stage({ group }: { group: Group }) {
   const meta = [src.info.format, formatDims(src.info.width, src.info.height), ...(src.media ? mediaMeta(t, src.media) : []), formatBytes(src.info.sizeBytes)];
 
   return (
-    <section className={s.stage}>
+    <section className={s.stage} data-tour="stage">
       <header className={s.header}>
         <div className={s.title}>
           <span className={s.name} title={src.path}>

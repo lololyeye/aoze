@@ -92,11 +92,11 @@ input[type="text"] {
 
 /* With Windows animations off, decoration stops, but a loading spinner
    (data-spinner) keeps turning: it is the only sign that something is
-   happening. */
+   happening. The tutorial's pointers (data-keep-motion) keep moving too. */
 @media (prefers-reduced-motion: reduce) {
-  *:not([data-spinner]),
-  *::before,
-  *::after {
+  *:not([data-spinner], [data-keep-motion], [data-keep-motion] *),
+  *:not([data-keep-motion])::before,
+  *:not([data-keep-motion])::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

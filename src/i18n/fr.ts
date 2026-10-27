@@ -396,6 +396,8 @@ export const fr: Messages = {
     zoomOut: "Zoom arrière (−)",
     play: "Lecture",
     pause: "Pause",
+    playClip: "Lecture (Espace · ← → image par image)",
+    pauseClip: "Pause (Espace · ← → image par image)",
     mute: "Couper le son",
     unmute: "Activer le son",
     previewLimited: "Aperçu limité à {size} px. Ouvrez le fichier pour le voir en pleine résolution.",
@@ -403,6 +405,8 @@ export const fr: Messages = {
     previewCopy: "Lecture d'une copie d'aperçu — votre fichier d'origine n'est pas modifié.",
     preparing: "Préparation de l'aperçu…",
     cannotPlay: "Ce clip ne peut pas être prévisualisé ici. Il peut quand même être traité.",
+    afterUnavailable: "L'aperçu du résultat n'est pas disponible. L'original reste lisible et le fichier est bien enregistré.",
+    processingPct: "Résultat · traitement {pct} %",
   },
   result: {
     limitMet: "sous {limit}",

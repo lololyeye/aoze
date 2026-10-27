@@ -101,6 +101,12 @@ pub async fn add_pasted_image(core: CoreState<'_>, request: tauri::ipc::Request<
     blocking(move || c.add_files(vec![path])).await
 }
 
+/// Light preview copy of a clip (`result`: of its result) the viewer could not play.
+#[tauri::command]
+pub async fn repair_preview(core: CoreState<'_>, id: String, result: bool) -> AppResult<()> {
+    core.inner().clone().repair_preview(&id, result).await
+}
+
 /// Exact size a "Compress" job would produce with the current settings (a real encode).
 #[tauri::command]
 pub async fn estimate_compression(core: CoreState<'_>, id: String) -> AppResult<crate::compress::CompressReport> {

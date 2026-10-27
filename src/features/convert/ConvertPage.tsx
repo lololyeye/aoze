@@ -113,7 +113,7 @@ function OutputPreview({ job }: { job: Job }) {
     );
   }
   if (conv === "gifToMp4") {
-    return <ClipViewer clipKey={r.outputPath} original={r.outputPath} usesPreviewCopy={false} poster={null} result={null} processing={false} label={t.convert.output} />;
+    return <ClipViewer key={r.outputPath} clipKey={r.outputPath} original={r.outputPath} usesPreviewCopy={false} poster={null} result={null} processing={false} label={t.convert.output} />;
   }
   return <img className={s.outputImg} src={fileUrl(r.outputPath)} alt="" draggable={false} />;
 }

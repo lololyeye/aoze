@@ -5,7 +5,7 @@ import { fmt, useMessages } from "../../i18n";
 import type { Messages } from "../../i18n/en";
 import { api } from "../../services/api";
 import { pickFiles, safely } from "../../services/actions";
-import { useGroupJobs, useSelectedJob, type Group } from "../../stores/queueStore";
+import { useGroupJobs, useQueueStore, useSelectedJob, type Group } from "../../stores/queueStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { useUiStore } from "../../stores/uiStore";
 import type { Job, MediaInfo, Settings } from "../../types";
@@ -44,6 +44,7 @@ export function Stage({ group }: { group: Group }) {
   const jobCount = useGroupJobs(group).length;
   const settings = useSettingsStore((st) => st.settings);
   const dragHover = useUiStore((st) => st.dragHover);
+  const live = useQueueStore((st) => (job ? st.progress[job.id] : undefined));
 
   if (!job) {
     return (
@@ -56,6 +57,7 @@ export function Stage({ group }: { group: Group }) {
   const src = job.source;
   const result = job.status === "completed" && job.result ? job.result : null;
   const processing = job.status === "processing" || job.status === "waiting";
+  const progress = job.status === "processing" ? (live?.progress ?? job.progress) : 0;
   const target = plannedSize(job, settings);
   const meta = [src.info.format, formatDims(src.info.width, src.info.height), ...(src.media ? mediaMeta(t, src.media) : []), formatBytes(src.info.sizeBytes)];
 
@@ -83,13 +85,19 @@ export function Stage({ group }: { group: Group }) {
       <div className={s.viewport}>
         {src.kind === "video" ? (
           <ClipViewer
-            clipKey={job.id}
+            // By file, not by job: processing again (a copy of the job) keeps the
+            // original playing where it is, and the new result joins it.
+            key={src.path}
+            clipKey={src.path}
             original={src.media?.playable && !src.preview ? src.path : src.preview}
             usesPreviewCopy={!src.media?.playable || Boolean(src.preview)}
             poster={src.thumb}
-            // HDR / HEVC results play through their tone-mapped preview copy.
-            result={result ? (result.media?.playable === false && result.preview ? result.preview : result.outputPath) : null}
+            // HDR / HEVC or very large results play through their light preview copy.
+            result={result ? (result.preview ?? result.outputPath) : null}
             processing={processing}
+            progress={progress}
+            fps={{ original: src.media?.fps, result: result?.media?.fps }}
+            onUnplayable={(ofResult) => api.repairPreview(job.id, ofResult)}
             timing={result?.timing ?? null}
             reshaped={Boolean(result && Math.abs(result.info.width / result.info.height - src.info.width / src.info.height) > 0.01)}
           />

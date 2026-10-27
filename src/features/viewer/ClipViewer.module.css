@@ -39,7 +39,6 @@
   left: var(--split-px, 50%);
   right: 0;
   overflow: hidden;
-  background: #000;
 }
 
 .window .windowVideo {
@@ -56,6 +55,29 @@
   object-fit: contain;
   display: block;
   cursor: pointer;
+  background: #000;
+}
+
+/* A result without its first frame yet: the original shows through instead of black. */
+.hidden {
+  opacity: 0;
+}
+
+/* Over the result side: loading, or why the result can't be shown. */
+.paneNote {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 0 28px;
+  pointer-events: none;
+}
+
+.badge.working {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .handle {
@@ -125,7 +147,6 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  background: rgb(0 0 0 / 0.22);
 }
 
 .scan::after {
@@ -221,6 +242,7 @@
 
 .pendingLabel {
   position: relative;
+  text-align: center;
   display: flex;
   align-items: center;
   gap: 8px;

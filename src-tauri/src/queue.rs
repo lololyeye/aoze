@@ -450,14 +450,14 @@ impl Core {
             self.hooks.allow_file(&thumb);
             thumb
         });
-        // Modest GPUs also get the light copy for very large clips: comparing
-        // means decoding two videos at once.
-        let lite = self.profile.read().unwrap().as_ref().is_some_and(|p| p.gpu == crate::tuning::Tier::Low);
-        let heavy = lite && media.width as u64 * media.height as u64 > 2560 * 1440;
+        // Very large clips also get the light copy: comparing means decoding two
+        // videos at once. Until it is ready, the original itself plays.
+        let (limit, height) = self.clip_preview_size();
+        let heavy = media.width as u64 * media.height as u64 > limit;
         let proxy = (source.kind == MediaKind::Video && (!media.playable || heavy)).then(|| {
-            let dest = dir.join(format!("{key}_p.mp4"));
+            let dest = dir.join(format!("{key}_p{height}.mp4"));
             if !dest.is_file() {
-                if let Err(e) = self.ffmpeg.preview_copy(&source.path, &dest, media.transfer, &media.color_matrix) {
+                if let Err(e) = self.ffmpeg.preview_copy(&source.path, &dest, media.transfer, &media.color_matrix, height) {
                     log::warn!("preview copy failed for {}: {e}", source.path.display());
                     return None;
                 }
@@ -466,6 +466,52 @@ impl Core {
             Some(dest)
         });
         (thumb, proxy.flatten())
+    }
+
+    /// (pixels above which a clip plays through a light copy, height of that copy).
+    /// Modest GPUs get a smaller copy sooner.
+    fn clip_preview_size(&self) -> (u64, u32) {
+        let lite = self.profile.read().unwrap().as_ref().is_some_and(|p| p.gpu == crate::tuning::Tier::Low);
+        if lite {
+            (1920 * 1080, 720)
+        } else {
+            (2560 * 1440, 1080)
+        }
+    }
+
+    /// Makes the light preview copy of a clip (or of its result) after the
+    /// webview failed to play the file itself, then announces it.
+    pub async fn repair_preview(self: &Arc<Self>, id: &str, result: bool) -> AppResult<()> {
+        let job = self.queue.lock().unwrap().jobs.iter().find(|j| j.id == id).cloned().ok_or_else(|| AppError::new(ErrorCode::InvalidParams, "unknown job"))?;
+        let (path, media) = match (&job.result, result) {
+            (Some(r), true) => (r.output_path.clone(), r.media.clone()),
+            (_, false) => (job.source.path.clone(), job.source.media.clone()),
+            _ => return Err(AppError::new(ErrorCode::InvalidParams, "no result yet")),
+        };
+        let media = media.ok_or_else(|| AppError::new(ErrorCode::InvalidParams, "not a clip"))?;
+        let (_, height) = self.clip_preview_size();
+        let key = if result { format!("{id}_result_fix") } else { format!("{}_fix", cache_key(&job.source.path, &job.source.info)) };
+        let dest = self.paths.thumbs_dir().join(format!("{key}{height}.mp4"));
+        if !dest.is_file() {
+            let _permit = self.preview_slots.acquire().await;
+            let (ff, src, d) = (self.ffmpeg.dir().to_path_buf(), path.clone(), dest.clone());
+            tokio::task::spawn_blocking(move || {
+                let _ = std::fs::create_dir_all(d.parent().unwrap_or(Path::new(".")));
+                Ffmpeg::new(ff).preview_copy(&src, &d, media.transfer, &media.color_matrix, height)
+            })
+            .await
+            .map_err(|e| AppError::new(ErrorCode::Internal, e.to_string()))??;
+        }
+        self.hooks.allow_file(&dest);
+        if let Some(job) = self.queue.lock().unwrap().job_mut(id) {
+            match (&mut job.result, result) {
+                (Some(r), true) if r.output_path == path => r.preview = Some(dest),
+                (_, false) => job.source.preview = Some(dest),
+                _ => {}
+            }
+        }
+        self.emit_snapshot();
+        Ok(())
     }
 
     /// True once detection has run and found no usable Vulkan device.
@@ -965,15 +1011,17 @@ impl Core {
                 }
                 _ => None,
             },
-            // HDR or HEVC results cannot play in the webview: a tone-mapped copy for the comparison.
+            // HDR or HEVC results cannot play in the webview, and very large ones are
+            // too heavy to decode next to the original: a light copy for the comparison.
             Ok(o) if !o.skipped => match &o.media {
-                Some(m) if source.kind == MediaKind::Video && !m.playable => {
+                Some(m) if source.kind == MediaKind::Video && (!m.playable || m.width as u64 * m.height as u64 > self.clip_preview_size().0) => {
                     let (ff, path, m) = (self.ffmpeg.dir().to_path_buf(), o.output_path.clone(), m.clone());
+                    let height = self.clip_preview_size().1;
                     let dest = self.paths.thumbs_dir().join(format!("{id}_result.mp4"));
                     let _permit = self.preview_slots.acquire().await;
                     let made = tokio::task::spawn_blocking(move || {
                         let _ = std::fs::create_dir_all(dest.parent().unwrap_or(Path::new(".")));
-                        Ffmpeg::new(ff).preview_copy(&path, &dest, m.transfer, &m.color_matrix).map(|_| dest)
+                        Ffmpeg::new(ff).preview_copy(&path, &dest, m.transfer, &m.color_matrix, height).map(|_| dest)
                     })
                     .await;
                     match made {

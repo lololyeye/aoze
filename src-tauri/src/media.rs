@@ -371,12 +371,13 @@ impl Ffmpeg {
         })
     }
 
-    /// Small H.264 SDR copy (720p max) for clips the webview cannot play.
+    /// Light H.264 SDR copy (at most `max_h` lines) for clips the webview cannot
+    /// play, or that are too heavy to decode twice for the comparison.
     /// HDR clips are tone mapped so the preview shows their real colours. Blocking.
-    pub fn preview_copy(&self, src: &Path, dest: &Path, transfer: Transfer, matrix: &str) -> AppResult<()> {
+    pub fn preview_copy(&self, src: &Path, dest: &Path, transfer: Transfer, matrix: &str, max_h: u32) -> AppResult<()> {
         self.ensure()?;
         let tmp = crate::fsutil::sibling_temp(dest).with_extension("mp4");
-        let mut vf = vec!["scale=-2:'min(720,ih)'".to_string()];
+        let mut vf = vec![format!("scale=-2:'min({max_h},ih)'")];
         let lut_dir = dest.parent().unwrap_or(Path::new("."));
         let stem = dest.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
         let plan = ColorPlan { input: transfer, output: Transfer::Sdr, look: Default::default(), creative: None };

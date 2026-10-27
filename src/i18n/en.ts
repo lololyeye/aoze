@@ -394,6 +394,8 @@ export const en = {
     zoomOut: "Zoom out (−)",
     play: "Play",
     pause: "Pause",
+    playClip: "Play (Space · ← → one frame)",
+    pauseClip: "Pause (Space · ← → one frame)",
     mute: "Mute",
     unmute: "Unmute",
     previewLimited: "Preview limited to {size}px. Open the file to see it at full resolution.",
@@ -401,6 +403,8 @@ export const en = {
     previewCopy: "Playing a preview copy — your original file is untouched.",
     preparing: "Preparing preview…",
     cannotPlay: "This clip can't be previewed here. It can still be processed.",
+    afterUnavailable: "The enhanced preview isn't available. The original still plays, and the file is saved.",
+    processingPct: "Result · processing {pct}%",
   },
   result: {
     limitMet: "under {limit}",

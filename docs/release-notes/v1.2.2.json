@@ -1,0 +1,44 @@
+{
+  "version": "1.2.2",
+  "date": "2026-10-27",
+  "en": {
+    "summary": "A Clip preview you can rely on: watch while it works, compare in sync.",
+    "changes": [
+      "Frame by frame: ← and → step one frame at a time, on both sides of the comparison. With a result, the steps follow its frames, so the in-between frames of Smooth Motion show one by one."
+    ],
+    "improvements": [
+      "The original plays as soon as a clip is imported, and keeps playing while it is processed. The progress shows on the result side.",
+      "The result joins playback by itself when it is ready, at the same moment, with no need to reopen the clip. Processing again keeps the original playing too.",
+      "Before / After stays in sync: the result follows the original with small speed adjustments instead of jumps, pauses on the same frame, and seeks and loops together.",
+      "One sound only: the original's, or the result's when the speed was changed.",
+      "Lighter preview: clips and results above 1440p play through a 1080p copy (720p on modest graphics cards), so comparing never decodes two 4K videos at once. Your files are untouched.",
+      "Moving the Before / After bar is purely visual: it never seeks, reloads or processes anything."
+    ],
+    "fixes": [
+      "When the result arrived during playback, it stayed paused at the start while the original played on, and the timeline froze.",
+      "A result that could not be shown made the whole clip say it could not be previewed, even on other clips. Now Aoze makes a light copy and carries on; if that fails too, only the result side says so and the original keeps playing.",
+      "The result side was black while it loaded. The original now shows there until the result's first frame is ready.",
+      "Space and the play button could get out of step with what was really playing."
+    ]
+  },
+  "fr": {
+    "summary": "Un aperçu Clip fiable : regardez pendant le traitement, comparez en synchro.",
+    "changes": [
+      "Image par image : ← et → avancent ou reculent d'une image, des deux côtés de la comparaison. Avec un résultat, les pas suivent ses images : les images intermédiaires de Smooth Motion s'affichent une à une."
+    ],
+    "improvements": [
+      "L'original se lit dès l'import du clip, et continue pendant le traitement. La progression s'affiche côté résultat.",
+      "Le résultat rejoint la lecture tout seul quand il est prêt, au même moment, sans rouvrir le clip. Relancer un traitement laisse aussi l'original jouer.",
+      "Avant / Après reste synchronisé : le résultat suit l'original par de petits ajustements de vitesse au lieu de sauts, s'arrête sur la même image, et se déplace et boucle avec lui.",
+      "Un seul son : celui de l'original, ou celui du résultat quand la vitesse a été changée.",
+      "Aperçu plus léger : les clips et résultats au-delà de 1440p passent par une copie 1080p (720p sur les cartes graphiques modestes), la comparaison ne décode jamais deux vidéos 4K à la fois. Vos fichiers ne sont pas modifiés.",
+      "Déplacer la barre Avant / Après est purement visuel : jamais de saut, de rechargement ni de nouveau traitement."
+    ],
+    "fixes": [
+      "Quand le résultat arrivait pendant la lecture, il restait en pause au début pendant que l'original continuait, et la timeline se figeait.",
+      "Un résultat impossible à afficher faisait dire à tout le clip qu'il ne pouvait pas être prévisualisé, même sur les autres clips. Désormais Aoze crée une copie légère et continue ; si elle échoue aussi, seul le côté résultat le signale et l'original continue de jouer.",
+      "Le côté résultat était noir pendant son chargement. L'original s'y affiche maintenant jusqu'à la première image du résultat.",
+      "Espace et le bouton lecture pouvaient ne plus correspondre à ce qui jouait vraiment."
+    ]
+  }
+}

@@ -348,7 +348,7 @@ async fn rotated_and_10bit_clips_are_probed_correctly() {
     assert!(ff.probe(&base, MediaKind::Video).unwrap().playable);
     // The preview copy is a playable 8-bit H.264 file.
     let copy = tmp.path().join("copy.mp4");
-    ff.preview_copy(&ten, &copy, m.transfer, &m.color_matrix).unwrap();
+    ff.preview_copy(&ten, &copy, m.transfer, &m.color_matrix, 720).unwrap();
     let c = ff.probe(&copy, MediaKind::Video).unwrap();
     assert!(c.playable, "{c:?}");
     // A rotated clip processed by the pipeline keeps its displayed orientation.
@@ -567,7 +567,7 @@ async fn hdr_kept_converted_and_created() {
     assert!(o.transfer == Transfer::Sdr && o.codec == "h264" && o.playable, "{o:?}");
     // The preview copy of the HDR source is SDR and playable.
     let copy = tmp.path().join("preview.mp4");
-    ff.preview_copy(&hdr, &copy, m.transfer, &m.color_matrix).unwrap();
+    ff.preview_copy(&hdr, &copy, m.transfer, &m.color_matrix, 720).unwrap();
     assert!(ff.probe(&copy, MediaKind::Video).unwrap().playable);
     std::fs::remove_file(&out.output_path).unwrap();
 

@@ -55,6 +55,8 @@ export const api = {
   removeJobs: (ids: string[]) => invoke<void>("remove_jobs", { ids }),
   clearFinished: () => invoke<void>("clear_finished"),
   duplicateJob: (id: string) => invoke<string | null>("duplicate_job", { id }),
+  /** Light preview copy of a clip (or its result) the viewer could not play. */
+  repairPreview: (id: string, result: boolean) => invoke<void>("repair_preview", { id, result }),
   jobLog: (id: string) => invoke<string[]>("get_job_log", { id }),
 
   history: () => invoke<HistoryEntry[]>("get_history"),

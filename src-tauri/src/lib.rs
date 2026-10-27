@@ -208,6 +208,7 @@ pub fn run() {
             commands::add_files,
             commands::add_pasted_image,
             commands::estimate_compression,
+            commands::repair_preview,
             commands::startup_sound_path,
             commands::get_queue,
             commands::enqueue,

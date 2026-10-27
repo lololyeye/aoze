@@ -187,3 +187,7 @@ section { padding-block: clamp(72px, 11vw, 136px); }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 15px; }
 .site-footer nav a { color: var(--text-2); text-decoration: none; transition: color 0.2s; }
 .site-footer nav a:hover { color: var(--text); }
+/* Legal pages: a quieter second line under the main links. */
+.site-footer .legal-links { flex-basis: 100%; justify-content: flex-end; margin-top: -14px; font-size: 14px; }
+.site-footer .legal-links a { color: var(--text-3); }
+@media (max-width: 720px) { .site-footer .legal-links { justify-content: flex-start; } }

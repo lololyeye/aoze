@@ -1,0 +1,197 @@
+---
+import Legal from "../layouts/Legal.astro";
+import Fill from "../components/Fill.astro";
+import { legal } from "../data/legal";
+import { ISSUES_URL, KOFI_URL, RELEASES_URL, pageHref } from "../lib/site";
+import type { Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const fr = lang === "fr";
+const email = legal.contactEmail;
+const KOFI_TERMS = "https://more.ko-fi.com/terms";
+const toc: [string, string][] = fr
+  ? [["objet", "À quoi servent ces conditions"], ["licence", "Licence du logiciel"], ["gratuit", "Gratuit, dons volontaires"], ["telechargement", "Téléchargement"], ["mises-a-jour", "Mises à jour"], ["fichiers", "Vos fichiers"], ["usage", "Usage interdit"], ["propriete", "Propriété intellectuelle"], ["responsabilite", "Garantie et responsabilité"], ["disponibilite", "Disponibilité et arrêt"], ["liens", "Liens externes"], ["modifications", "Modification des conditions"], ["droit", "Droit applicable"], ["contact", "Contact"]]
+  : [["purpose", "What these terms are for"], ["licence", "Software licence"], ["free", "Free, voluntary donations"], ["download", "Downloading"], ["updates", "Updates"], ["files", "Your files"], ["use", "What not to do"], ["ip", "Intellectual property"], ["liability", "Warranty and liability"], ["availability", "Availability and ending"], ["links", "External links"], ["changes", "Changes to these terms"], ["law", "Governing law"], ["contact", "Contact"]];
+const summaryFr = [
+  "Aoze est gratuit et sous licence MIT : ces conditions ne retirent aucun droit que la licence vous donne.",
+  "Vos fichiers restent les vôtres. Vous devez avoir le droit de traiter ce que vous ouvrez.",
+  "Aoze est fourni tel quel, sans garantie. Gardez une copie de vos originaux.",
+  "Un don sur Ko-fi est un soutien volontaire, pas un achat.",
+];
+const summaryEn = [
+  "Aoze is free and MIT licensed: these terms take away none of the rights the licence gives you.",
+  "Your files stay yours. You need the right to process what you open.",
+  "Aoze is provided as is, without warranty. Keep a copy of your originals.",
+  "A donation on Ko-fi is voluntary support, not a purchase.",
+];
+---
+{fr ? (
+  <Legal lang={lang} path="terms/" title="Conditions d'utilisation" description="Les règles simples d'utilisation de l'application Aoze et de son site."
+    eyebrow="Conditions d'utilisation" h1="Conditions d'utilisation." lead="Les règles d'utilisation de l'application Aoze et de ce site, écrites pour être lues." toc={toc} summary={summaryFr}>
+    <section id="objet">
+      <h2>À quoi servent ces conditions</h2>
+      <p>Elles s'appliquent à l'utilisation de ce site et de l'application Aoze, publiés par <Fill value={legal.publisherName} label="nom ou raison sociale" /> (voir les <a href={pageHref(lang, "legal/")}>mentions légales</a>). En utilisant le site ou Aoze, vous les acceptez.</p>
+    </section>
+
+    <section id="licence">
+      <h2>Licence du logiciel</h2>
+      <p>Le code d'Aoze est sous <a href={pageHref(lang, "license/")}>licence MIT</a>. Vous pouvez l'utiliser, le copier, le modifier et le redistribuer selon cette licence. En cas de différence entre ces conditions et la licence MIT pour le code d'Aoze, c'est la licence qui s'applique.</p>
+      <p>Les programmes et modèles d'autres auteurs inclus dans l'installeur (FFmpeg, waifu2x, RIFE, Real-ESRGAN…) restent sous leur propre licence, listée sur la page <a href={pageHref(lang, "credits/")}>Crédits</a>.</p>
+    </section>
+
+    <section id="gratuit">
+      <h2>Gratuit, dons volontaires</h2>
+      <p>Aoze est gratuit. Vous pouvez soutenir le projet sur <a href={KOFI_URL}>Ko-fi</a> si vous le souhaitez. Un don est volontaire : ce n'est pas l'achat d'Aoze, il ne débloque aucune fonctionnalité et ne donne droit à aucun support particulier.</p>
+      <p>Le paiement est traité par Ko-fi et ses prestataires, selon les <a href={KOFI_TERMS}>conditions de Ko-fi</a>. Ce site ne demande jamais vos données de paiement.</p>
+    </section>
+
+    <section id="telechargement">
+      <h2>Téléchargement</h2>
+      <p>Les seules sources officielles d'Aoze sont les <a href={RELEASES_URL}>versions publiées sur GitHub</a> et la <a href={pageHref(lang, "download/")}>page Télécharger</a> de ce site, qui pointe vers elles. Un fichier obtenu ailleurs a pu être modifié.</p>
+      <p>Être hébergé sur GitHub ne garantit pas qu'un fichier est sans danger. L'installeur n'a pas encore de signature de code. Pour vérifier que votre fichier est bien celui qui a été publié, comparez son empreinte SHA-256 avec celle affichée sur la page Télécharger.</p>
+      <p>Aoze fonctionne sur Windows 10 et 11, 64 bits.</p>
+    </section>
+
+    <section id="mises-a-jour">
+      <h2>Mises à jour</h2>
+      <p>Aoze peut rechercher une nouvelle version à son ouverture (option désactivable). Une mise à jour n'est installée que si vous l'acceptez, et seulement si sa signature, son empreinte SHA-256 et sa taille correspondent à la version publiée. Aucune mise à jour n'est garantie : le projet peut évoluer ou s'arrêter.</p>
+    </section>
+
+    <section id="fichiers">
+      <h2>Vos fichiers</h2>
+      <p>Aoze traite vos fichiers sur votre PC. Ils restent les vôtres, ainsi que les résultats : nous ne revendiquons aucun droit dessus.</p>
+      <p>Vous êtes responsable des fichiers que vous ouvrez : vous devez avoir le droit de les utiliser et de les modifier, en particulier pour des images de personnes ou des œuvres protégées.</p>
+      <p>L'agrandissement et l'interpolation créent des détails et des images qui n'existaient pas dans l'original. Ne présentez pas un résultat comme une image d'origine quand cela compte (preuve, document officiel). Gardez toujours une copie de vos originaux.</p>
+    </section>
+
+    <section id="usage">
+      <h2>Usage interdit</h2>
+      <ul>
+        <li>Utiliser Aoze pour traiter ou diffuser des contenus illégaux, ou pour porter atteinte aux droits d'autrui.</li>
+        <li>Tenter de perturber le site, de le surcharger ou d'en contourner la sécurité.</li>
+        <li>Distribuer une version modifiée d'Aoze en la faisant passer pour la version officielle.</li>
+      </ul>
+    </section>
+
+    <section id="propriete">
+      <h2>Propriété intellectuelle</h2>
+      <p>Le code d'Aoze et de ce site est sous licence MIT. Les noms, logos et contenus d'autres projets ou services appartiennent à leurs propriétaires.</p>
+    </section>
+
+    <section id="responsabilite">
+      <h2>Garantie et responsabilité</h2>
+      <p>Comme le prévoit la licence MIT, Aoze est fourni « tel quel », sans garantie d'aucune sorte. Nous faisons de notre mieux pour qu'il fonctionne bien, mais nous ne pouvons pas garantir qu'il fonctionnera sur chaque PC ni qu'il sera exempt d'erreurs.</p>
+      <p>Dans les limites permises par la loi applicable, nous ne sommes pas responsables des dommages liés à l'utilisation d'Aoze ou du site, comme la perte de fichiers. Rien dans ces conditions ne limite les droits que la loi vous accorde et auxquels on ne peut pas renoncer.</p>
+    </section>
+
+    <section id="disponibilite">
+      <h2>Disponibilité et arrêt</h2>
+      <p>Le site et les téléchargements dépendent de GitHub et peuvent être indisponibles. Nous pouvons modifier Aoze, retirer une fonctionnalité ou arrêter le projet à tout moment. Les versions déjà publiées restent utilisables selon la licence MIT.</p>
+    </section>
+
+    <section id="liens">
+      <h2>Liens externes</h2>
+      <p>Le site renvoie vers d'autres sites (GitHub, Ko-fi, projets open source). Nous ne contrôlons pas leur contenu, et leurs propres conditions s'appliquent.</p>
+    </section>
+
+    <section id="modifications">
+      <h2>Modification des conditions</h2>
+      <p>Ces conditions peuvent changer. La date en haut de la page indique la version en vigueur, et chaque changement est visible dans l'historique du dépôt GitHub.</p>
+    </section>
+
+    <section id="droit">
+      <h2>Droit applicable</h2>
+      <p>Ces conditions sont soumises au droit suivant : <Fill value={legal.governingLaw} label="droit applicable (ex. droit français)" />. Avant toute démarche, écrivez-nous : la plupart des problèmes se règlent simplement.</p>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>Par e-mail : <Fill value={email} label="adresse e-mail de contact" mailto />. Pour un bug ou une idée : les <a href={ISSUES_URL}>issues GitHub</a>.</p>
+    </section>
+  </Legal>
+) : (
+  <Legal lang={lang} path="terms/" title="Terms of use" description="The simple rules for using the Aoze app and its website."
+    eyebrow="Terms of use" h1="Terms of use." lead="The rules for using the Aoze app and this website, written to be read." toc={toc} summary={summaryEn}>
+    <section id="purpose">
+      <h2>What these terms are for</h2>
+      <p>They apply to the use of this website and of the Aoze app, published by <Fill value={legal.publisherName} label="nom ou raison sociale" /> (see the <a href={pageHref(lang, "legal/")}>legal notice</a>). By using the website or Aoze, you accept them.</p>
+    </section>
+
+    <section id="licence">
+      <h2>Software licence</h2>
+      <p>Aoze's code is under the <a href={pageHref(lang, "license/")}>MIT License</a>. You may use, copy, modify and redistribute it under that licence. Where these terms and the MIT License differ about Aoze's code, the licence wins.</p>
+      <p>The programs and models by other authors included in the installer (FFmpeg, waifu2x, RIFE, Real-ESRGAN…) stay under their own licences, listed on the <a href={pageHref(lang, "credits/")}>Credits</a> page.</p>
+    </section>
+
+    <section id="free">
+      <h2>Free, voluntary donations</h2>
+      <p>Aoze is free. You can support the project on <a href={KOFI_URL}>Ko-fi</a> if you wish. A donation is voluntary: it is not a purchase of Aoze, unlocks no feature and gives no right to special support.</p>
+      <p>Payment is handled by Ko-fi and its providers, under <a href={KOFI_TERMS}>Ko-fi's terms</a>. This website never asks for your payment details.</p>
+    </section>
+
+    <section id="download">
+      <h2>Downloading</h2>
+      <p>The only official sources of Aoze are the <a href={RELEASES_URL}>releases published on GitHub</a> and this website's <a href={pageHref(lang, "download/")}>Download page</a>, which points to them. A file obtained elsewhere may have been altered.</p>
+      <p>Being hosted on GitHub does not make a file safe. The installer has no code signature yet. To check that your file is the one that was published, compare its SHA-256 checksum with the one shown on the Download page.</p>
+      <p>Aoze runs on Windows 10 and 11, 64-bit.</p>
+    </section>
+
+    <section id="updates">
+      <h2>Updates</h2>
+      <p>Aoze can check for a new version when it opens (you can turn this off). An update is installed only if you accept it, and only if its signature, SHA-256 checksum and size match the published release. No update is guaranteed: the project may change or stop.</p>
+    </section>
+
+    <section id="files">
+      <h2>Your files</h2>
+      <p>Aoze processes your files on your PC. They stay yours, and so do the results: we claim no rights over them.</p>
+      <p>You are responsible for the files you open: you need the right to use and modify them, especially for pictures of people or protected works.</p>
+      <p>Enlargement and frame interpolation create details and frames that were not in the original. Don't present a result as an original image where it matters (evidence, official documents). Always keep a copy of your originals.</p>
+    </section>
+
+    <section id="use">
+      <h2>What not to do</h2>
+      <ul>
+        <li>Use Aoze to process or spread illegal content, or to infringe other people's rights.</li>
+        <li>Try to disrupt the website, overload it or get around its security.</li>
+        <li>Distribute a modified version of Aoze while passing it off as the official one.</li>
+      </ul>
+    </section>
+
+    <section id="ip">
+      <h2>Intellectual property</h2>
+      <p>The code of Aoze and of this website is under the MIT License. Names, logos and content of other projects or services belong to their owners.</p>
+    </section>
+
+    <section id="liability">
+      <h2>Warranty and liability</h2>
+      <p>As the MIT License says, Aoze is provided “as is”, without warranty of any kind. We do our best to make it work well, but we can't promise it will work on every PC or be free of errors.</p>
+      <p>To the extent allowed by applicable law, we are not liable for damage arising from the use of Aoze or of the website, such as lost files. Nothing in these terms limits the rights the law gives you and that cannot be waived.</p>
+    </section>
+
+    <section id="availability">
+      <h2>Availability and ending</h2>
+      <p>The website and downloads depend on GitHub and may be unavailable. We may change Aoze, remove a feature or end the project at any time. Versions already published stay usable under the MIT License.</p>
+    </section>
+
+    <section id="links">
+      <h2>External links</h2>
+      <p>The website links to other sites (GitHub, Ko-fi, open source projects). We don't control their content, and their own terms apply.</p>
+    </section>
+
+    <section id="changes">
+      <h2>Changes to these terms</h2>
+      <p>These terms may change. The date at the top of the page shows the version in force, and every change is visible in the history of the GitHub repository.</p>
+    </section>
+
+    <section id="law">
+      <h2>Governing law</h2>
+      <p>These terms are governed by: <Fill value={legal.governingLaw} label="droit applicable (ex. droit français)" />. Before taking any step, write to us: most problems are simple to sort out.</p>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>By email: <Fill value={email} label="adresse e-mail de contact" mailto />. For a bug or an idea: the <a href={ISSUES_URL}>GitHub issues</a>.</p>
+    </section>
+  </Legal>
+)}

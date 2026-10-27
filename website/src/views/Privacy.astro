@@ -1,0 +1,229 @@
+---
+import Legal from "../layouts/Legal.astro";
+import Fill from "../components/Fill.astro";
+import { legal } from "../data/legal";
+import { ISSUES_URL, KOFI_URL, pageHref } from "../lib/site";
+import type { Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const fr = lang === "fr";
+const email = legal.privacyEmail ?? legal.contactEmail;
+const GITHUB_PRIVACY = "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement";
+const KOFI_PRIVACY = "https://more.ko-fi.com/privacy";
+const WEBVIEW2 = "https://learn.microsoft.com/microsoft-edge/webview2/concepts/data-privacy";
+const toc: [string, string][] = fr
+  ? [["qui", "Qui est responsable"], ["application", "L'application Aoze"], ["mises-a-jour", "Mises à jour"], ["site", "Le site"], ["cookies", "Cookies et stockage local"], ["tiers", "Services tiers"], ["contact", "Si vous nous écrivez"], ["base", "Finalités et bases légales"], ["duree", "Durées de conservation"], ["transferts", "Transferts hors UE"], ["droits", "Vos droits"], ["changements", "Modifications"]]
+  : [["who", "Who is responsible"], ["app", "The Aoze app"], ["updates", "Updates"], ["website", "The website"], ["cookies", "Cookies and local storage"], ["third", "Third-party services"], ["contact", "If you write to us"], ["basis", "Purposes and legal bases"], ["retention", "How long data is kept"], ["transfers", "Transfers outside the EU"], ["rights", "Your rights"], ["changes", "Changes"]];
+const summaryFr = [
+  "Aoze traite vos images, GIF et clips sur votre PC. Ils ne sont envoyés nulle part.",
+  "La seule connexion que l'application fait d'elle-même est la recherche de mises à jour sur GitHub, que vous pouvez désactiver.",
+  "Le site n'a ni cookies, ni mesure d'audience, ni publicité, ni formulaire, ni compte.",
+  "Le site et les téléchargements sont servis par GitHub, qui voit votre adresse IP comme tout hébergeur.",
+];
+const summaryEn = [
+  "Aoze processes your images, GIFs and clips on your PC. They are not sent anywhere.",
+  "The only connection the app makes on its own is the update check on GitHub, which you can turn off.",
+  "The website has no cookies, no analytics, no ads, no forms and no accounts.",
+  "The website and the downloads are served by GitHub, which sees your IP address like any host.",
+];
+---
+{fr ? (
+  <Legal lang={lang} path="privacy/" title="Confidentialité" description="Ce que l'application Aoze et son site font de vos données, vérifié dans le code."
+    eyebrow="Confidentialité" h1="Vos données, simplement." lead="Ce que l'application Aoze et ce site font, et ne font pas, avec vos données. Tout ce qui suit a été vérifié dans le code source d'Aoze." toc={toc} summary={summaryFr}>
+    <section id="qui">
+      <h2>Qui est responsable</h2>
+      <p>Aoze et ce site sont publiés par <Fill value={legal.publisherName} label="nom ou raison sociale" /> (voir les <a href={pageHref(lang, "legal/")}>mentions légales</a>). Pour toute question sur vos données : <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
+    </section>
+
+    <section id="application">
+      <h2>L'application Aoze</h2>
+      <h3>Vos fichiers restent sur votre PC</h3>
+      <p>Les images, GIF et clips que vous ouvrez sont traités sur votre ordinateur, par des programmes installés avec Aoze (waifu2x, FFmpeg, RIFE, Real-ESRGAN). Aoze n'envoie aucun fichier, aucune image et aucun nom de fichier sur Internet. Il n'y a pas de compte, pas de télémétrie, pas de rapport de plantage automatique et pas de publicité.</p>
+      <h3>Ce qu'Aoze enregistre sur votre PC</h3>
+      <div class="rows">
+        <div class="row"><h3>Réglages</h3><p>Vos préférences (langue, préréglages, dossier de sortie…). Dans <code>%APPDATA%\app.aoze</code>.</p></div>
+        <div class="row"><h3>Historique</h3><p>Pour chaque fichier traité : son chemin, celui du résultat, les dimensions, les tailles et les réglages utilisés. Effaçable depuis l'écran Historique. Dans <code>%APPDATA%\app.aoze</code>.</p></div>
+        <div class="row"><h3>Mesures de performance</h3><p>Les vitesses mesurées sur votre matériel, pour adapter les réglages. Dans <code>%APPDATA%\app.aoze</code>.</p></div>
+        <div class="row"><h3>Journal</h3><p>Un fichier <code>aoze.log</code> (2 Mo au plus) qui peut contenir des chemins de fichiers et le nom de votre carte graphique. Dans <code>%LOCALAPPDATA%\app.aoze\logs</code>.</p></div>
+        <div class="row"><h3>Cache</h3><p>Aperçus, fichiers de travail temporaires, images collées et mises à jour téléchargées. Dans <code>%LOCALAPPDATA%\app.aoze</code>.</p></div>
+      </div>
+      <p>Ces fichiers ne quittent jamais votre PC. À la désinstallation, cochez l'option de suppression des données de l'application pour tout effacer.</p>
+      <h3>Rapport de diagnostic</h3>
+      <p>Si vous cliquez sur le bouton de copie du diagnostic, Aoze copie dans votre presse-papiers un rapport technique (versions, carte graphique, fin du journal). Rien n'est envoyé : c'est vous qui décidez de le partager. Il peut contenir des chemins de dossiers avec votre nom d'utilisateur Windows : relisez-le avant de le publier.</p>
+      <h3>Composants Windows</h3>
+      <p>L'interface d'Aoze s'affiche avec Microsoft Edge WebView2, un composant de Windows. Si votre PC ne l'a pas, l'installeur le télécharge depuis Microsoft. Ce composant suit les <a href={WEBVIEW2}>règles de Microsoft</a>. Les liens (GitHub, Ko-fi) s'ouvrent dans votre navigateur.</p>
+    </section>
+
+    <section id="mises-a-jour">
+      <h2>Mises à jour</h2>
+      <p>Quand Aoze s'ouvre, si l'option <strong>Rechercher les mises à jour</strong> est activée (elle l'est par défaut), l'application lit le fichier <code>latest.json</code> de la dernière version publiée sur GitHub. Si une nouvelle version existe, elle vous la propose ; elle ne la télécharge que si vous le demandez, depuis GitHub Releases.</p>
+      <p>Comme pour toute connexion, GitHub reçoit les données techniques de la requête (adresse IP, date, fichier demandé). Aoze n'y ajoute aucun fichier, aucun identifiant et aucune donnée d'utilisation. Vous pouvez désactiver cette option dans les Réglages, section Mises à jour.</p>
+    </section>
+
+    <section id="site">
+      <h2>Le site</h2>
+      <p>Ce site est un ensemble de pages statiques : il n'a pas de serveur à nous, pas de base de données, pas de formulaire et pas de compte. Les polices et les images sont servies par le site lui-même (pas de Google Fonts, pas de vidéo intégrée d'un autre site).</p>
+      <h3>Hébergement</h3>
+      <p>Le site est servi par GitHub Pages. Comme tout hébergeur, GitHub reçoit les données techniques de chaque visite (adresse IP, navigateur, page demandée, date) pour afficher le site et le protéger. Nous n'avons pas accès à ces journaux.</p>
+      <h3>Version et nombre de téléchargements</h3>
+      <p>Les pages d'accueil et de téléchargement demandent à l'API de GitHub (<code>api.github.com</code>) le numéro de la dernière version et le total des téléchargements, directement depuis votre navigateur. GitHub reçoit donc votre adresse IP et des informations sur votre navigateur. Aucun cookie n'est utilisé pour cela.</p>
+      <h3>Téléchargement</h3>
+      <p>Le bouton Télécharger mène au fichier hébergé sur GitHub Releases. GitHub compte les téléchargements de chaque fichier ; le site affiche seulement ce total. Nous ne savons pas qui a téléchargé Aoze.</p>
+    </section>
+
+    <section id="cookies">
+      <h2>Cookies et stockage local</h2>
+      <p>Le site ne dépose <strong>aucun cookie</strong> et n'utilise aucun outil de mesure d'audience, aucun pixel publicitaire et aucun traceur. C'est pour cela qu'il n'affiche pas de bannière de cookies.</p>
+      <p>Une seule valeur peut être enregistrée dans votre navigateur : <code>aoze-lang</code>, dans le stockage local, quand vous changez de langue avec le bouton EN / FR. Elle sert uniquement à retenir ce choix, n'est jamais envoyée et s'efface avec les données du site dans votre navigateur.</p>
+    </section>
+
+    <section id="tiers">
+      <h2>Services tiers</h2>
+      <ul>
+        <li><strong>GitHub</strong> héberge le site, le code et les téléchargements, et répond à la recherche de mises à jour. <a href={GITHUB_PRIVACY}>Déclaration de confidentialité de GitHub</a>.</li>
+        <li><strong>Ko-fi</strong> reçoit les dons volontaires. Le site ne fait qu'un lien vers <a href={KOFI_URL}>ko-fi.com</a> : aucun script Ko-fi n'est chargé ici, et le paiement se fait entièrement chez Ko-fi et ses prestataires de paiement. Nous ne voyons jamais vos données de paiement. <a href={KOFI_PRIVACY}>Politique de confidentialité de Ko-fi</a>.</li>
+        <li><strong>Microsoft</strong> fournit WebView2, utilisé par l'application pour afficher son interface.</li>
+      </ul>
+      <p>Quand vous ouvrez un de ces services, ses propres règles s'appliquent.</p>
+    </section>
+
+    <section id="contact">
+      <h2>Si vous nous écrivez</h2>
+      <p>Si vous nous envoyez un e-mail, nous recevons votre adresse et votre message, et nous les utilisons uniquement pour vous répondre. Les issues GitHub sont publiques et soumises aux règles de GitHub.</p>
+    </section>
+
+    <section id="base">
+      <h2>Finalités et bases légales</h2>
+      <ul>
+        <li>Répondre à vos messages : intérêt légitime (article 6.1.f du RGPD), pouvoir répondre aux personnes qui nous écrivent.</li>
+        <li>Héberger le site et distribuer Aoze via GitHub : intérêt légitime, publier le site et distribuer Aoze. GitHub traite les données techniques de ses serveurs (adresse IP, journaux) en tant que responsable indépendant, selon sa propre <a href={GITHUB_PRIVACY}>déclaration de confidentialité</a>.</li>
+        <li>Rechercher les mises à jour : intérêt légitime, vous proposer les correctifs et les nouvelles versions. La demande va directement à GitHub, nous n'en recevons rien, et vous pouvez la désactiver dans les Réglages.</li>
+      </ul>
+    </section>
+
+    <section id="duree">
+      <h2>Durées de conservation</h2>
+      <ul>
+        <li>Vos e-mails : 3 ans après le dernier échange, puis ils sont supprimés.</li>
+        <li>Journaux de GitHub : selon la <a href={GITHUB_PRIVACY}>déclaration de GitHub</a>. Nous ne les conservons pas, nous n'y avons pas accès.</li>
+        <li>Données de l'application : sur votre PC, jusqu'à ce que vous les effaciez.</li>
+      </ul>
+    </section>
+
+    <section id="transferts">
+      <h2>Transferts hors de l'Union européenne</h2>
+      <p>GitHub, Inc. est une société basée aux États-Unis : les données techniques de vos visites et de la recherche de mises à jour peuvent y être traitées. GitHub est certifié au <a href="https://www.dataprivacyframework.gov/list">Data Privacy Framework</a> UE–États-Unis, qui encadre ces transferts.</p>
+    </section>
+
+    <section id="droits">
+      <h2>Vos droits</h2>
+      <p>Selon la loi qui s'applique à vous (notamment le RGPD), vous pouvez demander l'accès à vos données, leur correction, leur effacement, la limitation de leur traitement, leur portabilité, ou vous opposer à leur traitement. Écrivez à <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
+      <p>Comme nous ne gardons presque aucune donnée, une demande portant sur les journaux de GitHub ou sur un paiement Ko-fi doit souvent être adressée à ces services. Vous pouvez aussi déposer une réclamation auprès de l'autorité de protection des données de votre pays, en France la <a href="https://www.cnil.fr">CNIL</a>.</p>
+    </section>
+
+    <section id="changements">
+      <h2>Modifications</h2>
+      <p>Si Aoze ou le site changent leur façon de traiter des données, cette page sera mise à jour avant, et la date en haut de page changera. L'historique de cette page est public dans le <a href={ISSUES_URL.replace("/issues", "/commits/main/website")}>dépôt GitHub</a>.</p>
+    </section>
+  </Legal>
+) : (
+  <Legal lang={lang} path="privacy/" title="Privacy" description="What the Aoze app and its website do with your data, checked against the code."
+    eyebrow="Privacy" h1="Your data, plainly." lead="What the Aoze app and this website do, and don't do, with your data. Everything below was checked against Aoze's source code." toc={toc} summary={summaryEn}>
+    <section id="who">
+      <h2>Who is responsible</h2>
+      <p>Aoze and this website are published by <Fill value={legal.publisherName} label="nom ou raison sociale" /> (see the <a href={pageHref(lang, "legal/")}>legal notice</a>). For any question about your data: <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
+    </section>
+
+    <section id="app">
+      <h2>The Aoze app</h2>
+      <h3>Your files stay on your PC</h3>
+      <p>The images, GIFs and clips you open are processed on your computer, by programs installed with Aoze (waifu2x, FFmpeg, RIFE, Real-ESRGAN). Aoze sends no file, no image and no file name over the Internet. There is no account, no telemetry, no automatic crash report and no advertising.</p>
+      <h3>What Aoze stores on your PC</h3>
+      <div class="rows">
+        <div class="row"><h3>Settings</h3><p>Your preferences (language, presets, output folder…). In <code>%APPDATA%\app.aoze</code>.</p></div>
+        <div class="row"><h3>History</h3><p>For each processed file: its path, the result's path, dimensions, sizes and the settings used. You can clear it from the History screen. In <code>%APPDATA%\app.aoze</code>.</p></div>
+        <div class="row"><h3>Performance measurements</h3><p>Speeds measured on your hardware, used to tune the settings. In <code>%APPDATA%\app.aoze</code>.</p></div>
+        <div class="row"><h3>Log</h3><p>An <code>aoze.log</code> file (2 MB at most) that may contain file paths and your graphics card's name. In <code>%LOCALAPPDATA%\app.aoze\logs</code>.</p></div>
+        <div class="row"><h3>Cache</h3><p>Previews, temporary work files, pasted images and downloaded updates. In <code>%LOCALAPPDATA%\app.aoze</code>.</p></div>
+      </div>
+      <p>These files never leave your PC. When you uninstall, tick the option to delete the app's data to remove them all.</p>
+      <h3>Diagnostic report</h3>
+      <p>If you click the button that copies the diagnostics, Aoze puts a technical report (versions, graphics card, end of the log) on your clipboard. Nothing is sent: you decide whether to share it. It may contain folder paths that include your Windows user name, so read it before posting it.</p>
+      <h3>Windows components</h3>
+      <p>Aoze draws its interface with Microsoft Edge WebView2, a Windows component. If your PC doesn't have it, the installer downloads it from Microsoft. That component follows <a href={WEBVIEW2}>Microsoft's rules</a>. Links (GitHub, Ko-fi) open in your browser.</p>
+    </section>
+
+    <section id="updates">
+      <h2>Updates</h2>
+      <p>When Aoze opens, if <strong>Check for updates</strong> is on (it is by default), the app reads the <code>latest.json</code> file of the latest release on GitHub. If there is a new version, it offers it to you; it only downloads it from GitHub Releases when you ask.</p>
+      <p>As with any connection, GitHub receives the technical data of the request (IP address, date, file requested). Aoze adds no file, no identifier and no usage data to it. You can turn this option off in Settings, under Updates.</p>
+    </section>
+
+    <section id="website">
+      <h2>The website</h2>
+      <p>This website is a set of static pages: no server of our own, no database, no forms and no accounts. Fonts and images are served by the site itself (no Google Fonts, no video embedded from another site).</p>
+      <h3>Hosting</h3>
+      <p>The website is served by GitHub Pages. Like any host, GitHub receives the technical data of each visit (IP address, browser, page requested, date) to serve the site and protect it. We have no access to these logs.</p>
+      <h3>Version and download count</h3>
+      <p>The home and download pages ask GitHub's API (<code>api.github.com</code>) for the latest version number and the total number of downloads, straight from your browser. GitHub therefore receives your IP address and information about your browser. No cookie is used for this.</p>
+      <h3>Downloading</h3>
+      <p>The Download button leads to the file hosted on GitHub Releases. GitHub counts the downloads of each file; the website only shows that total. We don't know who downloaded Aoze.</p>
+    </section>
+
+    <section id="cookies">
+      <h2>Cookies and local storage</h2>
+      <p>The website sets <strong>no cookies</strong> and uses no analytics, no advertising pixel and no tracker. That is why it shows no cookie banner.</p>
+      <p>Only one value can be saved in your browser: <code>aoze-lang</code>, in local storage, when you switch language with the EN / FR button. It only remembers that choice, is never sent anywhere, and is removed when you clear this site's data in your browser.</p>
+    </section>
+
+    <section id="third">
+      <h2>Third-party services</h2>
+      <ul>
+        <li><strong>GitHub</strong> hosts the website, the code and the downloads, and answers the update check. <a href={GITHUB_PRIVACY}>GitHub's privacy statement</a>.</li>
+        <li><strong>Ko-fi</strong> receives voluntary donations. The website only links to <a href={KOFI_URL}>ko-fi.com</a>: no Ko-fi script is loaded here, and payment happens entirely on Ko-fi and its payment providers. We never see your payment details. <a href={KOFI_PRIVACY}>Ko-fi's privacy policy</a>.</li>
+        <li><strong>Microsoft</strong> provides WebView2, which the app uses to draw its interface.</li>
+      </ul>
+      <p>When you open one of these services, its own rules apply.</p>
+    </section>
+
+    <section id="contact">
+      <h2>If you write to us</h2>
+      <p>If you send us an email, we receive your address and your message, and use them only to answer you. GitHub issues are public and follow GitHub's rules.</p>
+    </section>
+
+    <section id="basis">
+      <h2>Purposes and legal bases</h2>
+      <ul>
+        <li>Answering your messages: legitimate interest (Article 6(1)(f) GDPR), so we can reply to people who write to us.</li>
+        <li>Hosting the website and distributing Aoze through GitHub: legitimate interest, to publish the website and distribute Aoze. GitHub processes the technical data of its servers (IP address, logs) as an independent controller, under its own <a href={GITHUB_PRIVACY}>privacy statement</a>.</li>
+        <li>Checking for updates: legitimate interest, to offer you fixes and new versions. The request goes straight to GitHub, we receive nothing from it, and you can turn it off in Settings.</li>
+      </ul>
+    </section>
+
+    <section id="retention">
+      <h2>How long data is kept</h2>
+      <ul>
+        <li>Your emails: 3 years after the last exchange, then they are deleted.</li>
+        <li>GitHub's logs: as set out in <a href={GITHUB_PRIVACY}>GitHub's statement</a>. We don't keep them and have no access to them.</li>
+        <li>The app's data: on your PC, until you delete it.</li>
+      </ul>
+    </section>
+
+    <section id="transfers">
+      <h2>Transfers outside the European Union</h2>
+      <p>GitHub, Inc. is based in the United States, so the technical data of your visits and of the update check may be processed there. GitHub is certified under the EU–U.S. <a href="https://www.dataprivacyframework.gov/list">Data Privacy Framework</a>, which covers these transfers.</p>
+    </section>
+
+    <section id="rights">
+      <h2>Your rights</h2>
+      <p>Depending on the law that applies to you (the GDPR in particular), you can ask to access your data, correct it, erase it, restrict its use or take a copy of it, or object to its use. Write to <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
+      <p>Since we keep almost no data, a request about GitHub's logs or a Ko-fi payment often has to go to those services. You can also complain to the data protection authority of your country, in France the <a href="https://www.cnil.fr">CNIL</a>.</p>
+    </section>
+
+    <section id="changes">
+      <h2>Changes</h2>
+      <p>If Aoze or the website change how they handle data, this page will be updated first and the date at the top will change. The history of this page is public in the <a href={ISSUES_URL.replace("/issues", "/commits/main/website")}>GitHub repository</a>.</p>
+    </section>
+  </Legal>
+)}

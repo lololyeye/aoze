@@ -6,28 +6,24 @@
 
 export const legal = {
   /** Name of the person, or company name, that publishes Aoze. */
-  publisherName: null as string | null,
+  publisherName: "Zero",
   /** "Particulier", "Entrepreneur individuel (micro-entreprise)", "SAS", etc. */
-  publisherStatus: null as string | null,
-  /** Postal address of the publisher (or of the company's registered office). */
-  publisherAddress: null as string | null,
+  publisherStatus: "Particulier",
   /** SIREN / SIRET or company registration number. Leave null if there is none. */
   publisherRegistration: null as string | null,
   /** Person responsible for what is published on the site (often the publisher). */
-  publicationDirector: null as string | null,
+  publicationDirector: "Zero et Aoxy",
   /** Contact email shown on every legal page. */
-  contactEmail: null as string | null,
+  contactEmail: "f3908770@gmail.com",
   /** Email for personal data requests. Leave null to use contactEmail. */
   privacyEmail: null as string | null,
   /** Country whose law applies to the terms, e.g. "France". */
-  governingLaw: null as string | null,
+  governingLaw: "France",
 
   /** The site is served by GitHub Pages (see .github/workflows/website.yml). */
   host: {
     name: "GitHub, Inc.",
     address: "88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States",
-    /** Check it on GitHub's own pages before filling it in. */
-    phone: null as string | null,
     url: "https://pages.github.com",
   },
 
@@ -41,16 +37,12 @@ export type LegalField = Exclude<keyof typeof legal, "host" | "updated">;
 export const required: LegalField[] = [
   "publisherName",
   "publisherStatus",
-  "publisherAddress",
   "publicationDirector",
   "contactEmail",
   "governingLaw",
 ];
 
-export const missing = [
-  ...required.filter((k) => !legal[k]),
-  ...(legal.host.phone ? [] : ["host.phone"]),
-];
+export const missing = required.filter((k) => !legal[k]);
 
 if (missing.length) {
   console.warn(`[legal] Still to fill in src/data/legal.ts: ${missing.join(", ")}`);

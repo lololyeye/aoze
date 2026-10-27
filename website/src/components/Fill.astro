@@ -1,0 +1,6 @@
+---
+// A fact from src/data/legal.ts, or a visible marker while it is still missing.
+interface Props { value: string | null | undefined; label: string; verify?: boolean; mailto?: boolean }
+const { value, label, verify, mailto } = Astro.props;
+---
+{value ? (mailto ? <a href={`mailto:${value}`}>{value}</a> : <>{value}</>) : <mark class="fill">[{verify ? "À VÉRIFIER" : "À REMPLIR"} : {label}]</mark>}

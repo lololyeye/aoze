@@ -1,0 +1,108 @@
+---
+import Legal from "../layouts/Legal.astro";
+import Fill from "../components/Fill.astro";
+import { legal } from "../data/legal";
+import { GITHUB_URL, ISSUES_URL, LICENSE_URL, pageHref } from "../lib/site";
+import type { Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const fr = lang === "fr";
+const email = legal.contactEmail;
+const toc: [string, string][] = fr
+  ? [["editeur", "Éditeur"], ["publication", "Directeur de la publication"], ["hebergeur", "Hébergeur"], ["contact", "Contact"], ["propriete", "Propriété intellectuelle"], ["donnees", "Données personnelles"]]
+  : [["publisher", "Publisher"], ["publication", "Publication director"], ["host", "Hosting"], ["contact", "Contact"], ["ip", "Intellectual property"], ["data", "Personal data"]];
+---
+{fr ? (
+  <Legal lang={lang} path="legal/" title="Mentions légales" description="Qui publie Aoze et son site, qui les héberge, et comment nous contacter."
+    eyebrow="Mentions légales" h1="Mentions légales." lead="Qui publie Aoze et ce site, qui les héberge, et comment nous joindre." toc={toc}>
+    <section id="editeur">
+      <h2>Éditeur</h2>
+      <p>Le site lololyeye.github.io/aoze et l'application Aoze sont publiés par :</p>
+      <dl>
+        <div><dt>Nom</dt><dd><Fill value={legal.publisherName} label="nom ou raison sociale" /></dd></div>
+        <div><dt>Statut</dt><dd><Fill value={legal.publisherStatus} label="statut juridique" /></dd></div>
+        {legal.publisherRegistration && <div><dt>Immatriculation</dt><dd>{legal.publisherRegistration}</dd></div>}
+        <div><dt>E-mail</dt><dd><Fill value={email} label="adresse e-mail de contact" mailto /></dd></div>
+      </dl>
+    </section>
+
+    <section id="publication">
+      <h2>Directeur de la publication</h2>
+      <p><Fill value={legal.publicationDirector} label="nom du directeur de la publication" /></p>
+    </section>
+
+    <section id="hebergeur">
+      <h2>Hébergeur</h2>
+      <p>Le site est hébergé par GitHub Pages. Les fichiers d'installation d'Aoze sont hébergés par GitHub Releases.</p>
+      <dl>
+        <div><dt>Société</dt><dd>{legal.host.name}</dd></div>
+        <div><dt>Adresse</dt><dd>{legal.host.address}</dd></div>
+        <div><dt>Site</dt><dd><a href={legal.host.url}>{legal.host.url.replace("https://", "")}</a></dd></div>
+      </dl>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>Pour toute question sur le site, sur Aoze ou sur ces mentions : <Fill value={email} label="adresse e-mail de contact" mailto />.</p>
+      <p>Pour un bug ou une idée, le plus simple est d'ouvrir un ticket dans les <a href={ISSUES_URL}>issues GitHub</a>. Ces tickets sont publics : n'y mettez pas d'informations personnelles.</p>
+    </section>
+
+    <section id="propriete">
+      <h2>Propriété intellectuelle</h2>
+      <p>Le code d'Aoze et de ce site est publié sous <a href={pageHref(lang, "license/")}>licence MIT</a>. Vous pouvez le réutiliser selon les conditions de cette licence, dont le texte est dans le fichier <a href={LICENSE_URL}>LICENSE</a> du <a href={GITHUB_URL}>dépôt</a>.</p>
+      <p>Les programmes, modèles et polices d'autres auteurs utilisés par Aoze restent sous leur propre licence. Ils sont listés sur la page <a href={pageHref(lang, "credits/")}>Crédits</a>. Les noms et logos de services tiers (GitHub, Ko-fi, Windows, etc.) appartiennent à leurs propriétaires.</p>
+    </section>
+
+    <section id="donnees">
+      <h2>Données personnelles</h2>
+      <p>Ce que le site et l'application font, ou ne font pas, avec vos données est expliqué dans la <a href={pageHref(lang, "privacy/")}>politique de confidentialité</a>.</p>
+    </section>
+  </Legal>
+) : (
+  <Legal lang={lang} path="legal/" title="Legal notice" description="Who publishes Aoze and its website, who hosts them, and how to get in touch."
+    eyebrow="Legal notice" h1="Legal notice." lead="Who publishes Aoze and this website, who hosts them, and how to reach us." toc={toc}>
+    <section id="publisher">
+      <h2>Publisher</h2>
+      <p>The website lololyeye.github.io/aoze and the Aoze application are published by:</p>
+      <dl>
+        <div><dt>Name</dt><dd><Fill value={legal.publisherName} label="nom ou raison sociale" /></dd></div>
+        <div><dt>Status</dt><dd><Fill value={legal.publisherStatus} label="statut juridique" /></dd></div>
+        {legal.publisherRegistration && <div><dt>Registration</dt><dd>{legal.publisherRegistration}</dd></div>}
+        <div><dt>Email</dt><dd><Fill value={email} label="adresse e-mail de contact" mailto /></dd></div>
+      </dl>
+    </section>
+
+    <section id="publication">
+      <h2>Publication director</h2>
+      <p><Fill value={legal.publicationDirector} label="nom du directeur de la publication" /></p>
+    </section>
+
+    <section id="host">
+      <h2>Hosting</h2>
+      <p>The website is hosted by GitHub Pages. Aoze's installers are hosted by GitHub Releases.</p>
+      <dl>
+        <div><dt>Company</dt><dd>{legal.host.name}</dd></div>
+        <div><dt>Address</dt><dd>{legal.host.address}</dd></div>
+        <div><dt>Website</dt><dd><a href={legal.host.url}>{legal.host.url.replace("https://", "")}</a></dd></div>
+      </dl>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>For any question about the website, Aoze or this notice: <Fill value={email} label="adresse e-mail de contact" mailto />.</p>
+      <p>For a bug or an idea, the easiest way is to open an issue in the <a href={ISSUES_URL}>GitHub issues</a>. Issues are public, so please keep personal information out of them.</p>
+    </section>
+
+    <section id="ip">
+      <h2>Intellectual property</h2>
+      <p>The code of Aoze and of this website is published under the <a href={pageHref(lang, "license/")}>MIT License</a>. You may reuse it under the terms of that licence, whose text is in the <a href={LICENSE_URL}>LICENSE</a> file of the <a href={GITHUB_URL}>repository</a>.</p>
+      <p>The programs, models and typefaces by other authors that Aoze uses stay under their own licences. They are listed on the <a href={pageHref(lang, "credits/")}>Credits</a> page. Names and logos of third-party services (GitHub, Ko-fi, Windows and others) belong to their owners.</p>
+    </section>
+
+    <section id="data">
+      <h2>Personal data</h2>
+      <p>What the website and the app do, and don't do, with your data is explained in the <a href={pageHref(lang, "privacy/")}>privacy policy</a>.</p>
+    </section>
+  </Legal>
+)}

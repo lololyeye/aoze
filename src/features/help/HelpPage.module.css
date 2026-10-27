@@ -80,8 +80,13 @@
   transform: rotate(90deg);
 }
 
+.answer {
+  margin-top: -4px;
+  overflow: hidden;
+}
+
 .a {
-  margin: -4px 0 14px 24px;
+  margin: 0 0 14px 24px;
   color: var(--text-2);
   line-height: 1.55;
   max-width: 62ch;

@@ -206,3 +206,66 @@
     line-height: 15px;
   }
 }
+
+
+/* --- The little bubble beside "Support Aoze" ---------------------------- */
+
+.supportWrap {
+  position: relative;
+}
+
+.say {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 22px);
+  z-index: 30;
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 13px;
+  border: 1px solid rgb(255 170 195 / 0.55);
+  border-radius: 14px;
+  background: linear-gradient(160deg, #ffe3ea, #ffc9d7);
+  box-shadow:
+    0 6px 18px -6px rgb(255 120 160 / 0.45),
+    0 1px 0 rgb(255 255 255 / 0.6) inset;
+  color: #6b2440;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  pointer-events: none;
+  user-select: none;
+  transform: translateY(-50%);
+  animation: bubble-float 3.4s var(--ease-in-out) infinite;
+}
+
+/* The tail, pointing at the button. */
+.say::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  width: 11px;
+  height: 11px;
+  border-left: 1px solid rgb(255 170 195 / 0.55);
+  border-bottom: 1px solid rgb(255 170 195 / 0.55);
+  border-bottom-left-radius: 3px;
+  background: #ffe1e9;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@keyframes bubble-float {
+  0%,
+  100% {
+    transform: translate(0, -50%);
+  }
+  50% {
+    transform: translate(3px, calc(-50% - 2px));
+  }
+}
+
+/* Narrow windows: the sidebar is only icons, the bubble sits closer. */
+@media (max-width: 1180px) {
+  .say {
+    left: calc(100% + 14px);
+  }
+}

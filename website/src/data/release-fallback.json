@@ -1,13 +1,13 @@
 {
-  "tag": "v1.1.0",
-  "name": "Aoze 1.1.0",
-  "url": "https://github.com/lololyeye/aoze/releases/tag/v1.1.0",
-  "publishedAt": "2026-10-26T18:03:10Z",
-  "bodyHtml": "<p><strong>Aoze 1.1.0</strong>: Aoze now keeps itself up to date.</p>\n<h3>New</h3>\n<ul>\n<li>Updates: Aoze tells you when a new version is out and installs it in one click, then reopens.</li>\n<li>What's new: after an update, a short list of the changes, shown once.</li>\n<li>Settings: turn the update check off, or check now. The installed version is shown at the bottom of the sidebar.</li>\n</ul>\n<h3>Improved</h3>\n<ul>\n<li>Every update is checked before it is installed: official GitHub release only, Aoze's signature and SHA-256. Your current version stays untouched until the new one is ready.</li>\n</ul>\n<p>Download <strong>Aoze_1.1.0_x64-setup.exe</strong>, run it, done (FFmpeg and every engine are included).<br>\nAoze 1.1.0 and later update themselves: they offer the new version when it is out.<br>\nThe installer is per-user (no admin rights). It is not code-signed yet, so Windows SmartScreen<br>\nmay show \"Windows protected your PC\": choose \"More info\", then \"Run anyway\".</p>\n<p>SHA-256 of <strong>Aoze_1.1.0_x64-setup.exe</strong>: <code>7cabbfa2aec15432d25d6f95c897e1f71290216d75298f052d1cde946b1836e0</code><br>\n(all files: <code>SHA256SUMS.txt</code>). Third-party licences: <code>THIRD_PARTY_NOTICES.md</code> and<br>\n<code>THIRD_PARTY_LICENSES.txt</code>.</p>\n<p>Made for aoxy, by zero.</p>",
+  "tag": "v1.1.2",
+  "name": "Aoze 1.1.2",
+  "url": "https://github.com/lololyeye/aoze/releases/tag/v1.1.2",
+  "publishedAt": "2026-10-27T05:46:29Z",
+  "bodyHtml": "<p><strong>Aoze 1.1.2</strong>: Clip gets the tools edits need, without getting complicated.</p>\n<h3>New</h3>\n<ul>\n<li>Smart Reframe: turn a clip into 16:9, 9:16, 1:1 or 4:5. The frame follows what matters (the moving subject, or the cursor and changing panels on a screen recording) and moves smoothly, instead of always cutting the centre.</li>\n<li>Speed: Slow, Fast, a ready-made Ramp, or your own curve. Changes are eased, slow parts get new in-between frames, and the sound follows at the same pitch.</li>\n<li>Color: LUTs, with six built-in looks or your own .cube files, and an intensity slider. They also work with HDR output.</li>\n<li>Beat Sync: a zoom punch or a short shake on the beat of the clip's music. If there is no clear beat, nothing is added and Aoze says so.</li>\n<li>Glow: a soft light around bright areas.</li>\n<li>Clip presets: Anime Smooth, TikTok Smooth, Cinematic and Clean. Hover a preset to see exactly what it turns on.</li>\n</ul>\n<h3>Improved</h3>\n<ul>\n<li>Smooth Motion on anime: drawings held for two or three frames are now interpolated between, so the motion is fluid on every frame instead of stop-and-go.</li>\n<li>Smooth Motion has a Fast / Balanced / High quality choice. If the graphics card runs out of memory, it switches to a lighter setting instead of failing.</li>\n<li>Motion blur has an intensity slider, and follows speed changes: faster parts get a longer smear.</li>\n<li>The Clip panel is grouped into Motion and Color, with effects and fine settings folded away.</li>\n<li>Before / After stays in sync when the speed changes, and switches to side by side when the shape changes.</li>\n</ul>\n<p>Download <strong>Aoze_1.1.2_x64-setup.exe</strong>, run it, done (FFmpeg and every engine are included).<br>\nAoze 1.1.0 and later update themselves: they offer the new version when it is out.<br>\nThe installer is per-user (no admin rights). It is not code-signed yet, so Windows SmartScreen<br>\nmay show \"Windows protected your PC\": choose \"More info\", then \"Run anyway\".</p>\n<p>SHA-256 of <strong>Aoze_1.1.2_x64-setup.exe</strong>: <code>35836261e39eea23039d5b2ea7ab7a715df419cf3c888cefc852218eab582fb1</code><br>\n(all files: <code>SHA256SUMS.txt</code>). Third-party licences: <code>THIRD_PARTY_NOTICES.md</code> and<br>\n<code>THIRD_PARTY_LICENSES.txt</code>.</p>\n<p>Made for aoxy, by zero.</p>",
   "asset": {
-    "name": "Aoze_1.1.0_x64-setup.exe",
-    "size": 119384605,
-    "digest": "sha256:7cabbfa2aec15432d25d6f95c897e1f71290216d75298f052d1cde946b1836e0",
-    "url": "https://github.com/lololyeye/aoze/releases/download/v1.1.0/Aoze_1.1.0_x64-setup.exe"
+    "name": "Aoze_1.1.2_x64-setup.exe",
+    "size": 119462013,
+    "digest": "sha256:35836261e39eea23039d5b2ea7ab7a715df419cf3c888cefc852218eab582fb1",
+    "url": "https://github.com/lololyeye/aoze/releases/download/v1.1.2/Aoze_1.1.2_x64-setup.exe"
   }
 }

@@ -1,0 +1,125 @@
+---
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import Legal from "../layouts/Legal.astro";
+import { GITHUB_URL, LICENSE_URL, NOTICES_URL, pageHref } from "../lib/site";
+import type { Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const fr = lang === "fr";
+
+// The licence text is read from the repository's LICENSE at build time (the site builds from website/).
+let mit: string | null = null;
+try {
+  mit = readFileSync(resolve(process.cwd(), "../LICENSE"), "utf8").trim();
+} catch {}
+const holder = mit?.match(/^Copyright .+$/m)?.[0] ?? null;
+
+const LICENSES_TXT = `${GITHUB_URL}/releases/latest/download/THIRD_PARTY_LICENSES.txt`;
+const FFMPEG_SOURCE = "https://github.com/FFmpeg/FFmpeg";
+const BTBN = "https://github.com/BtbN/FFmpeg-Builds";
+
+// Parts of the installer that are not under the MIT License. Mirrors THIRD_PARTY_NOTICES.md.
+const others = [
+  { license: "GPL-3.0", parts: "FFmpeg (ffmpeg.exe, ffprobe.exe et ses DLL)", partsEn: "FFmpeg (ffmpeg.exe, ffprobe.exe and its DLLs)" },
+  { license: "GPL-2.0+", parts: "Rubber Band, compilé dans FFmpeg", partsEn: "Rubber Band, compiled into FFmpeg" },
+  { license: "LGPL-2.1", parts: "libplacebo, compilé dans FFmpeg", partsEn: "libplacebo, compiled into FFmpeg" },
+  { license: "BSD-3-Clause", parts: "Modèles Real-ESRGAN, libwebp (dans aoze.exe)", partsEn: "Real-ESRGAN models, libwebp (in aoze.exe)" },
+  { license: "CC BY 4.0", parts: "Voix d'accueil Piper (welcome.ogg)", partsEn: "Piper welcome voice (welcome.ogg)" },
+  { license: "MPL-2.0", parts: "Cinq bibliothèques Rust utilisées par Tauri, non modifiées", partsEn: "Five Rust libraries used by Tauri, unmodified" },
+  { license: "OFL-1.1", parts: "Police Inter", partsEn: "Inter typeface" },
+  { license: "Microsoft", parts: "vcomp140.dll (Visual C++ Redistributable), fourni avec les moteurs ncnn", partsEn: "vcomp140.dll (Visual C++ Redistributable), shipped with the ncnn engines" },
+];
+const toc: [string, string][] = fr
+  ? [["licence", "La licence d'Aoze"], ["droits", "Ce que vous pouvez faire"], ["conditions", "La seule condition"], ["garantie", "Sans garantie"], ["tiers", "Composants sous d'autres licences"], ["redistribuer", "Redistribuer l'installeur"], ["texte", "Texte de la licence"]]
+  : [["licence", "Aoze's licence"], ["rights", "What you can do"], ["conditions", "The one condition"], ["warranty", "No warranty"], ["third", "Parts under other licences"], ["redistribute", "Redistributing the installer"], ["text", "Licence text"]];
+---
+{fr ? (
+  <Legal lang={lang} path="license/" title="Licence" description="Aoze est sous licence MIT. Ce que cela permet, et les composants qui ont une autre licence."
+    eyebrow="Licence MIT" h1="Licence." lead="Aoze est un logiciel libre sous licence MIT. Voici ce que cela vous permet, et quelles parties de l'installeur ont une autre licence." toc={toc}>
+    <section id="licence">
+      <h2>La licence d'Aoze</h2>
+      <p>Le code source d'Aoze (l'application et ce site) est publié sous la <strong>licence MIT</strong>{holder && <>, <code>{holder}</code></>}. Le texte officiel est dans le fichier <a href={LICENSE_URL}>LICENSE</a> du dépôt, et il est reproduit en bas de cette page.</p>
+    </section>
+    <section id="droits">
+      <h2>Ce que vous pouvez faire</h2>
+      <ul>
+        <li>Utiliser Aoze gratuitement, pour un usage personnel ou commercial.</li>
+        <li>Lire, copier et modifier son code.</li>
+        <li>Redistribuer Aoze, modifié ou non, gratuitement ou non, et l'inclure dans un autre projet.</li>
+      </ul>
+    </section>
+    <section id="conditions">
+      <h2>La seule condition</h2>
+      <p>Toute copie d'Aoze, ou de parties importantes de son code, doit garder la mention de copyright et le texte de la licence MIT. Si vous publiez une version modifiée, merci de ne pas la présenter comme la version officielle.</p>
+    </section>
+    <section id="garantie">
+      <h2>Sans garantie</h2>
+      <p>La licence fournit Aoze « tel quel », sans garantie, et exclut la responsabilité des auteurs.</p>
+    </section>
+    <section id="tiers">
+      <h2>Composants sous d'autres licences</h2>
+      <p>L'installeur contient aussi des programmes, des modèles et des bibliothèques d'autres auteurs. La plupart sont sous licence MIT ; ceux-ci ont une licence différente :</p>
+      <dl>{others.map((o) => <div><dt>{o.license}</dt><dd>{o.parts}</dd></div>)}</dl>
+      <p>Les fichiers de licence des moteurs sont installés à côté d'eux. La liste complète est sur la page <a href={pageHref(lang, "credits/")}>Crédits</a>, dans <a href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a>, et le texte de chaque licence des bibliothèques compilées dans <a href={LICENSES_TXT}>THIRD_PARTY_LICENSES.txt</a>, publié avec chaque version.</p>
+    </section>
+    <section id="redistribuer">
+      <h2>Redistribuer l'installeur</h2>
+      <p>Aoze lance FFmpeg comme un programme séparé, sans s'y lier : le code d'Aoze reste sous licence MIT. Mais l'installeur contient FFmpeg, qui est sous licence GPL-3.0. Si vous redistribuez l'installeur complet, vous devez aussi respecter la GPL pour FFmpeg : garder sa licence et donner accès à son code source.</p>
+      <p>Le code source exact de FFmpeg utilisé est indiqué dans <a href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a> (<a href={FFMPEG_SOURCE}>code de FFmpeg</a>, <a href={BTBN}>scripts de compilation BtbN</a>). Si un de ces liens ne fonctionne plus, ouvrez une issue et le code correspondant vous sera fourni.</p>
+    </section>
+    <section id="texte">
+      <h2>Texte de la licence</h2>
+      <p>Le texte légal de la licence est en anglais.</p>
+      {mit ? <pre class="license-text" lang="en">{mit}</pre> : <p><a href={LICENSE_URL}>Lire le fichier LICENSE sur GitHub</a>.</p>}
+    </section>
+  </Legal>
+) : (
+  <Legal lang={lang} path="license/" title="License" description="Aoze is under the MIT License. What it allows, and the parts that have another licence."
+    eyebrow="MIT License" h1="License." lead="Aoze is free software under the MIT License. Here is what it lets you do, and which parts of the installer have a different licence." toc={toc}>
+    <section id="licence">
+      <h2>Aoze's licence</h2>
+      <p>Aoze's source code (the app and this website) is published under the <strong>MIT License</strong>{holder && <>, <code>{holder}</code></>}. The official text is in the repository's <a href={LICENSE_URL}>LICENSE</a> file, and it is reproduced at the bottom of this page.</p>
+    </section>
+    <section id="rights">
+      <h2>What you can do</h2>
+      <ul>
+        <li>Use Aoze for free, for personal or commercial work.</li>
+        <li>Read, copy and modify its code.</li>
+        <li>Redistribute Aoze, modified or not, for free or not, and include it in another project.</li>
+      </ul>
+    </section>
+    <section id="conditions">
+      <h2>The one condition</h2>
+      <p>Any copy of Aoze, or of substantial parts of its code, must keep the copyright notice and the MIT License text. If you publish a modified version, please don't present it as the official one.</p>
+    </section>
+    <section id="warranty">
+      <h2>No warranty</h2>
+      <p>The licence provides Aoze “as is”, without warranty, and excludes the authors' liability.</p>
+    </section>
+    <section id="third">
+      <h2>Parts under other licences</h2>
+      <p>The installer also contains programs, models and libraries by other authors. Most are under the MIT License; these have a different licence:</p>
+      <dl>{others.map((o) => <div><dt>{o.license}</dt><dd>{o.partsEn}</dd></div>)}</dl>
+      <p>The engines' licence files are installed next to them. The full list is on the <a href={pageHref(lang, "credits/")}>Credits</a> page, in <a href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a>, and the licence text of every compiled library is in <a href={LICENSES_TXT}>THIRD_PARTY_LICENSES.txt</a>, published with each release.</p>
+    </section>
+    <section id="redistribute">
+      <h2>Redistributing the installer</h2>
+      <p>Aoze runs FFmpeg as a separate program and does not link to it, so Aoze's code stays under the MIT License. But the installer contains FFmpeg, which is under the GPL-3.0. If you redistribute the whole installer, you must also follow the GPL for FFmpeg: keep its licence and give access to its source code.</p>
+      <p>The exact FFmpeg source used is given in <a href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a> (<a href={FFMPEG_SOURCE}>FFmpeg source</a>, <a href={BTBN}>BtbN build scripts</a>). If one of these links stops working, open an issue and the corresponding source will be provided.</p>
+    </section>
+    <section id="text">
+      <h2>Licence text</h2>
+      {mit ? <pre class="license-text" lang="en">{mit}</pre> : <p><a href={LICENSE_URL}>Read the LICENSE file on GitHub</a>.</p>}
+    </section>
+  </Legal>
+)}
+
+<style>
+  .license-text {
+    margin: 14px 0 0; padding: 20px 22px; border-radius: var(--radius);
+    background: var(--bg-deep); border: 1px solid var(--line);
+    font: 13.5px/1.65 var(--mono); color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+</style>

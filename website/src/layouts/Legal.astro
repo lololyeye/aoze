@@ -1,0 +1,132 @@
+---
+// Shared frame of the legal pages: title, short summary, table of contents, then the text.
+import Base from "./Base.astro";
+import { legal } from "../data/legal";
+import { formatDate } from "../lib/release";
+import { type Lang } from "../i18n/ui";
+
+interface Props {
+  lang: Lang;
+  path: string;
+  title: string;
+  description: string;
+  eyebrow: string;
+  h1: string;
+  lead: string;
+  /** The page's sections, in order: [id, title]. */
+  toc: [string, string][];
+  /** A few plain sentences that sum the page up. */
+  summary?: string[];
+}
+const { lang, path, title, description, eyebrow, h1, lead, toc, summary } = Astro.props;
+const words = lang === "fr"
+  ? { updated: "Dernière mise à jour :", summary: "En bref", contents: "Sur cette page" }
+  : { updated: "Last updated:", summary: "In short", contents: "On this page" };
+---
+<Base lang={lang} path={path} title={title} description={description}>
+  <article class="legal">
+    <div class="wrap">
+      <header class="legal-head">
+        <span class="eyebrow">{eyebrow}</span>
+        <h1>{h1}</h1>
+        <p class="lead">{lead}</p>
+        <p class="updated">{words.updated} <time datetime={legal.updated}>{formatDate(legal.updated, lang)}</time></p>
+      </header>
+
+      {summary && (
+        <div class="summary reveal">
+          <h2>{words.summary}</h2>
+          <ul>{summary.map((s) => <li>{s}</li>)}</ul>
+        </div>
+      )}
+
+      <div class="legal-grid">
+        <nav class="toc" aria-labelledby="toc-title">
+          <p id="toc-title">{words.contents}</p>
+          <ol>{toc.map(([id, label]) => <li><a href={`#${id}`}>{label}</a></li>)}</ol>
+        </nav>
+        <div class="prose">
+          <slot />
+        </div>
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .legal { padding-block: clamp(48px, 8vw, 96px); }
+  .legal-head { display: grid; gap: 16px; max-width: 760px; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -0.03em; }
+  .lead { color: var(--text-2); font-size: clamp(1.02rem, 1.4vw, 1.14rem); max-width: 62ch; }
+  .updated { color: var(--text-3); font-size: 14px; }
+
+  .summary {
+    margin-top: 36px; max-width: 760px; padding: 22px 24px; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--line);
+  }
+  .summary h2 { font-size: 1.05rem; letter-spacing: -0.01em; margin-bottom: 10px; }
+  .summary ul { display: grid; gap: 8px; }
+  .summary li { position: relative; padding-left: 22px; color: var(--text-2); font-size: 16px; }
+  .summary li::before {
+    content: ""; position: absolute; left: 0; top: 0.72em; width: 10px; height: 2px; background: var(--accent); border-radius: 1px;
+  }
+
+  .legal-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: clamp(32px, 6vw, 80px); margin-top: clamp(40px, 6vw, 64px); align-items: start; }
+  .toc { position: sticky; top: 88px; }
+  .toc p { color: var(--text-3); font: 500 13px/1 var(--mono); letter-spacing: 0.02em; margin-bottom: 14px; }
+  .toc ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; border-left: 1px solid var(--line); }
+  .toc a {
+    display: block; padding: 6px 0 6px 14px; margin-left: -1px; border-left: 1px solid transparent;
+    color: var(--text-2); text-decoration: none; font-size: 14.5px; line-height: 1.4;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .toc a:hover { color: var(--text); border-left-color: var(--accent); }
+
+  .prose { max-width: 720px; }
+  .prose :global(section) { padding: 0; scroll-margin-top: 88px; }
+  .prose :global(section + section) { margin-top: 44px; padding-top: 40px; border-top: 1px solid var(--line); }
+  .prose :global(h2) { font-size: clamp(1.35rem, 2.4vw, 1.6rem); margin-bottom: 16px; }
+  .prose :global(h3) { font-size: 1.05rem; margin: 22px 0 8px; letter-spacing: -0.01em; }
+  .prose :global(p), .prose :global(li), .prose :global(dd) { color: var(--text-2); }
+  .prose :global(p + p), .prose :global(p + ul), .prose :global(ul + p), .prose :global(dl + p), .prose :global(p + dl) { margin-top: 12px; }
+  .prose :global(ul) { display: grid; gap: 8px; }
+  .prose :global(ul li) { position: relative; padding-left: 22px; }
+  .prose :global(ul li::before) {
+    content: ""; position: absolute; left: 0; top: 0.78em; width: 10px; height: 2px; background: var(--accent); border-radius: 1px;
+  }
+  .prose :global(strong) { color: var(--text); font-weight: 600; }
+  .prose :global(a:not(.btn)) { color: var(--text); text-decoration: underline; text-decoration-color: rgb(61 214 208 / 0.6); text-underline-offset: 3px; }
+  .prose :global(a:not(.btn):hover) { color: var(--accent-hover); }
+  .prose :global(code) { font: 0.86em var(--mono); color: var(--text); background: var(--surface-2); padding: 2px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+
+  /* Facts as label / value rows, like the download page. */
+  .prose :global(dl) { margin: 0; border-top: 1px solid var(--line); }
+  .prose :global(dl > div) { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+  .prose :global(dt) { color: var(--text-3); font: 500 13px/1.6 var(--mono); padding-top: 2px; }
+  .prose :global(dd) { margin: 0; overflow-wrap: anywhere; }
+
+  /* Tables of data: kept as cards so they read well on a phone. */
+  .prose :global(.rows) { display: grid; gap: 10px; margin-top: 14px; }
+  .prose :global(.row) { padding: 16px 18px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+  .prose :global(.row h3) { margin: 0 0 6px; font-size: 1rem; }
+  .prose :global(.row p) { font-size: 15.5px; }
+
+  .prose :global(.note) {
+    margin-top: 16px; padding: 14px 16px; border-radius: 10px;
+    background: var(--accent-soft); border: 1px solid rgb(61 214 208 / 0.18); color: var(--text); font-size: 15.5px;
+  }
+
+  /* Information the publisher still has to provide: impossible to miss. */
+  :global(mark.fill) {
+    background: rgb(255 196 87 / 0.14); color: #ffd58a; border: 1px dashed rgb(255 196 87 / 0.55);
+    padding: 1px 6px; border-radius: 5px; font: 600 0.9em var(--mono); letter-spacing: 0;
+  }
+
+  @media (max-width: 900px) {
+    .legal-grid { grid-template-columns: 1fr; }
+    .toc { position: static; }
+  }
+  @media (max-width: 560px) {
+    .prose :global(dl > div) { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>

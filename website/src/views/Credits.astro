@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { LICENSE_URL, NOTICES_URL } from "../lib/site";
+import { GITHUB_URL, LICENSE_URL, NOTICES_URL, pageHref } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
 
 interface Props { lang: Lang }
@@ -16,6 +16,10 @@ const components = [
   { name: "rife-ncnn-vulkan", by: "TNTwise, fork of nihui's", license: "MIT", use: t.uses.rifeNcnn, url: "https://github.com/TNTwise/rife-ncnn-vulkan" },
   { name: "Real-ESRGAN", by: "xinntao, realesr-animevideov3 weights", license: "BSD-3-Clause", use: t.uses.realesrgan, url: "https://github.com/xinntao/Real-ESRGAN" },
   { name: "realesrgan-ncnn-vulkan", by: "xinntao", license: "MIT", use: t.uses.realesrganNcnn, url: "https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan" },
+  { name: "Rubber Band", by: "Chris Cannam, Particular Programs. Compiled into FFmpeg", license: "GPL-2.0+", use: t.uses.rubberband, url: "https://breakfastquay.com/rubberband/" },
+  { name: "libplacebo", by: "Niklas Haas and contributors. Compiled into FFmpeg", license: "LGPL-2.1", use: t.uses.libplacebo, url: "https://code.videolan.org/videolan/libplacebo" },
+  { name: "libwebp", by: "Google", license: "BSD-3-Clause", use: t.uses.libwebp, url: "https://chromium.googlesource.com/webm/libwebp" },
+  { name: "vcomp140.dll", by: "Microsoft, Visual C++ Redistributable", license: "Microsoft", use: t.uses.vcomp, url: "https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist" },
   { name: "Piper", by: "rhasspy. en_US hfc_female voice, Hi-Fi TTS data (NVIDIA)", license: "CC BY 4.0 (voice)", use: t.uses.piper, url: "https://github.com/rhasspy/piper" },
 ];
 ---
@@ -43,7 +47,7 @@ const components = [
         </li>
       </ul>
 
-      <p class="foot">{t.foot[0]} <a class="link" href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a>. {t.foot[1]}</p>
+      <p class="foot">{t.foot[0]} <a class="link" href={NOTICES_URL}>THIRD_PARTY_NOTICES.md</a>. {t.allLicenses} <a class="link" href={`${GITHUB_URL}/releases/latest/download/THIRD_PARTY_LICENSES.txt`}>THIRD_PARTY_LICENSES.txt</a>. {t.licensePage} <a class="link" href={pageHref(lang, "license/")}>{ui[lang].nav.license}</a>. {t.foot[1]}</p>
     </div>
   </section>
 </Base>

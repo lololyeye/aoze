@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { pageHref } from "../lib/site";
 import { LANGS } from "../i18n/ui";
 
-const pages = ["", "download/", "credits/"];
+const pages = ["", "download/", "credits/", "license/"];
 
 // Each page is listed in both languages, with its hreflang alternates.
 export const GET: APIRoute = ({ site }) => {

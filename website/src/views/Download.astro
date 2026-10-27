@@ -51,6 +51,7 @@ const hash = sha256(release);
               <p>{t.checkHash}</p>
               <code class="hash" data-r="hash">{hash}</code>
               <button class="btn btn-ghost btn-sm copy" type="button" data-copy data-copied={t.copied} data-fail={t.copyFail}>{t.copy}</button>
+              <p>{t.checkWhy}</p>
               <p>{t.checkCmd}</p>
               <code class="cmd">Get-FileHash .\<span data-r="name">{release.asset.name}</span></code>
             </>
@@ -67,8 +68,12 @@ const hash = sha256(release);
           <p>{t.installText}</p>
         </div>
         <div class="card">
+          <h2>{t.updateTitle}</h2>
+          <p>{t.updateText}</p>
+        </div>
+        <div class="card">
           <h2>{ui[lang].kofi.title}</h2>
-          <p>{ui[lang].kofi.text}</p>
+          <p>{ui[lang].kofi.text} {t.donateNote}</p>
           <KofiButton lang={lang} size="sm" />
         </div>
       </aside>

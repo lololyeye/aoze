@@ -1,5 +1,5 @@
 import fallback from "../data/release-fallback.json";
-import { API_LATEST, API_RELEASES, INSTALLER } from "./site";
+import { API_LATEST, API_RELEASES, INSTALLER, installerDownloads } from "./site";
 
 export interface Release {
   tag: string;
@@ -62,8 +62,9 @@ export const version = (r: Release) => r.tag.replace(/^v/, "");
 
 
 /**
- * Total downloads of the Windows installer across every release, as counted by GitHub.
- * Every download counts, including repeats from the same person. null when GitHub can't be reached.
+ * Downloads of the Windows installer across every release, as counted by GitHub. Automatic
+ * updates are not counted (they download from the UPDATES_TAG pre-release), but a person who
+ * downloads twice counts twice. null when GitHub can't be reached.
  */
 export async function downloadCount(): Promise<number | null> {
   try {
@@ -71,8 +72,7 @@ export async function downloadCount(): Promise<number | null> {
     if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
     const res = await fetch(API_RELEASES, { headers });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-    const releases: { assets: { name: string; download_count: number }[] }[] = await res.json();
-    return releases.flatMap((r) => r.assets).filter((a) => INSTALLER.test(a.name)).reduce((n, a) => n + a.download_count, 0);
+    return installerDownloads(await res.json());
   } catch (e) {
     console.warn(`[release] no download count: ${(e as Error).message}`);
     return null;

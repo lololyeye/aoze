@@ -1,5 +1,6 @@
 ---
 // How many times the installer was downloaded, from GitHub's own counter on the release assets.
+// Automatic updates are left out (see UPDATES_TAG in lib/site.ts).
 // Built with the value at build time, then refreshed in the browser. Hidden if GitHub never answered.
 import { downloadCount } from "../lib/release";
 import { ui, type Lang } from "../i18n/ui";
@@ -29,14 +30,14 @@ const text = (n: number) => (n === 1 || (lang === "fr" && n === 0) ? t.one : t.m
 </style>
 
 <script>
-  import { API_RELEASES, INSTALLER } from "../lib/site";
+  import { API_RELEASES, installerDownloads } from "../lib/site";
 
   const els = document.querySelectorAll<HTMLElement>("[data-downloads]");
   if (els.length) {
     fetch(API_RELEASES, { headers: { Accept: "application/vnd.github+json" } })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((releases: { assets: { name: string; download_count: number }[] }[]) => {
-        const n = releases.flatMap((r) => r.assets).filter((a) => INSTALLER.test(a.name)).reduce((s, a) => s + a.download_count, 0);
+      .then((releases) => {
+        const n = installerDownloads(releases);
         els.forEach((el) => {
           const one = n === 1 || (el.dataset.lang === "fr" && n === 0);
           el.querySelector(".dl-count-text")!.textContent = (one ? el.dataset.one! : el.dataset.many!).replace("{n}", n.toLocaleString(el.dataset.locale));

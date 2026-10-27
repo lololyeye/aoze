@@ -93,7 +93,11 @@ await writeFile(join(out, "THIRD_PARTY_LICENSES.txt"), await thirdPartyLicenses(
 
 const installer = await readFile(join(out, exeName));
 const installerSha = createHash("sha256").update(installer).digest("hex");
-const url = `https://github.com/${REPO}/releases/download/v${version}/${exeName}`;
+// Automatic updates download their own copy of the installer, attached to the "updates"
+// pre-release, so the website's download counter only counts downloads people start
+// themselves. The app accepts it: same official prefix, same file name, same signature.
+const UPDATES_TAG = "updates";
+const url = `https://github.com/${REPO}/releases/download/${UPDATES_TAG}/${exeName}`;
 // Update manifest, published as a release asset: the app reads it from
 // https://github.com/<repo>/releases/latest/download/latest.json
 const manifest = {

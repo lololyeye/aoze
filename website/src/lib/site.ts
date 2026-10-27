@@ -13,22 +13,6 @@ export const API_LATEST = `https://api.github.com/repos/${REPO}/releases/latest`
 export const API_RELEASES = `https://api.github.com/repos/${REPO}/releases?per_page=100`;
 /** The Windows installer is the release asset Tauri names `<Product>_<version>_x64-setup.exe`. */
 export const INSTALLER = /_x64-setup\.exe$/i;
-/**
- * Pre-release holding the copies of the installers that the app's automatic updates download
- * (see RELEASE.md). Not counted: the counter only shows downloads people start themselves.
- */
-export const UPDATES_TAG = "updates";
-
-type CountedRelease = { tag_name: string; assets: { name: string; download_count: number }[] };
-
-/** Downloads of the installer across the versioned releases, as counted by GitHub. */
-export function installerDownloads(releases: CountedRelease[]): number {
-  return releases
-    .filter((r) => r.tag_name !== UPDATES_TAG)
-    .flatMap((r) => r.assets)
-    .filter((a) => INSTALLER.test(a.name))
-    .reduce((n, a) => n + a.download_count, 0);
-}
 
 /** Prefixes a site path with the GitHub Pages base ("/aoze/"). Use it for assets. */
 export function href(path = ""): string {

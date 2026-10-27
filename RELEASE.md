@@ -81,23 +81,6 @@ source code (this repository, a tagged commit)
    installed copies offer the update at their next launch, and the website rebuilds (its
    workflow runs on `release: published`) and links the new installer. Refresh
    `website/src/data/release-fallback.json` (size, digest, notes) so its offline fallback matches.
-6. **Attach the installer to `updates` too**, before publishing the release (or right after):
-
-   ```
-   gh release upload updates release/v<version>/Aoze_<version>_x64-setup.exe
-   ```
-
-   `latest.json` sends installed copies to this copy, not to the one in `v<version>`, so the
-   website's download counter only counts the downloads people start themselves (GitHub counts
-   every download of an asset, and updates would count the same people again and again). Until
-   it is attached, installed copies see the update but cannot download it.
-
-   `updates` is a single pre-release that collects these copies; it is never "latest", so
-   `releases/latest/...` and the website ignore it. It was created once with:
-
-   ```
-   gh release create updates --prerelease --title "Update downloads" --notes "Copies of the installers that Aoze's automatic updates download. To install Aoze, use the latest release."
-   ```
 
 The installer must keep the Tauri file name `Aoze_<version>_x64-setup.exe`: the website finds
 it by the `_x64-setup.exe` suffix, and the app refuses any other name.
@@ -109,8 +92,7 @@ at launch (Settings → Updates turns it off). When a newer version is announced
 
 1. the app shows its notes and asks; nothing is downloaded before "Update now";
 2. the installer is downloaded only from `https://github.com/lololyeye/aoze/releases/download/`
-   (any other URL is refused; releases from 1.3.1 on point to the copy in the `updates`
-   pre-release, see *Publish*), then checked: its minisign signature against the public key
+   (any other URL is refused), then checked: its minisign signature against the public key
    built into the app (`plugins.updater.pubkey` in `tauri.conf.json`), the version recorded in
    that signature against the announced one (`requireSignedVersion`: an older signed installer
    cannot be passed off as a new version), and its SHA-256 and size against `latest.json`;

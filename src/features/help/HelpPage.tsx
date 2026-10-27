@@ -8,27 +8,7 @@ import { useMessages } from "../../i18n";
 import { useTourStore } from "../tour/tourStore";
 import s from "./HelpPage.module.css";
 
-const TOPICS: HelpTopic[] = [
-  "scale",
-  "noise",
-  "enhance",
-  "compress",
-  "limit",
-  "fps",
-  "smooth",
-  "blur",
-  "reframe",
-  "speed",
-  "hdr",
-  "lut",
-  "look",
-  "glow",
-  "beat",
-  "format",
-  "style",
-  "quality",
-  "gpu",
-];
+const TOPICS: HelpTopic[] = ["scale", "noise", "enhance", "compress", "limit", "fps", "smooth", "blur", "reframe", "speed", "hdr", "lut", "look", "glow", "beat", "format", "style", "quality", "gpu"];
 
 export function HelpPage() {
   const t = useMessages();
@@ -36,12 +16,7 @@ export function HelpPage() {
   return (
     <Page title={t.help.title}>
       <div className={s.replay}>
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<Sparkles />}
-          onClick={() => useTourStore.getState().start()}
-        >
+        <Button variant="secondary" size="sm" icon={<Sparkles />} onClick={() => useTourStore.getState().start()}>
           {t.tour.replay}
         </Button>
       </div>
@@ -66,12 +41,7 @@ export function HelpPage() {
               const expanded = open === k;
               return (
                 <div key={k} className={`${s.item} ${expanded ? s.open : ""}`}>
-                  <button
-                    type="button"
-                    className={s.q}
-                    aria-expanded={expanded}
-                    onClick={() => setOpen(expanded ? null : k)}
-                  >
+                  <button type="button" className={s.q} aria-expanded={expanded} onClick={() => setOpen(expanded ? null : k)}>
                     <ChevronRight size={14} className={s.chevron} />
                     {item.q}
                   </button>
@@ -83,21 +53,9 @@ export function HelpPage() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{
-                          duration: 0.28,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
+                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                       >
-                        <motion.p
-                          className={s.a}
-                          initial={{ y: -6 }}
-                          animate={{ y: 0 }}
-                          exit={{ y: -6 }}
-                          transition={{
-                            duration: 0.28,
-                            ease: [0.22, 1, 0.36, 1],
-                          }}
-                        >
+                        <motion.p className={s.a} initial={{ y: -6 }} animate={{ y: 0 }} exit={{ y: -6 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
                           {item.a}
                         </motion.p>
                       </motion.div>

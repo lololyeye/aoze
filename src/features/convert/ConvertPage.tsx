@@ -1,14 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import {
-  ArrowLeftRight,
-  ArrowRight,
-  FileImage,
-  Film,
-  FolderOpen,
-  Images,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeftRight, ArrowRight, FileImage, Film, FolderOpen, Images, Plus, Trash2 } from "lucide-react";
 import { Button, IconButton } from "../../components/ui/Button";
 import { Collapsible } from "../../components/ui/Collapsible";
 import { Field } from "../../components/ui/Field";
@@ -34,17 +25,10 @@ const FPS = [10, 15, 24, 30];
 const WIDTHS = [320, 480, 720, 1080];
 const FRAME_MS = [100, 250, 500, 1000, 2000];
 
-function useConvert(): [
-  ConvertSettings,
-  (patch: Partial<ConvertSettings>) => void,
-] {
+function useConvert(): [ConvertSettings, (patch: Partial<ConvertSettings>) => void] {
   const settings = useSettingsStore((st) => st.settings)!;
   const update = useSettingsStore((st) => st.update);
-  return [
-    settings.convert,
-    (patch) =>
-      update((st) => ({ ...st, convert: { ...st.convert, ...patch } })),
-  ];
+  return [settings.convert, (patch) => update((st) => ({ ...st, convert: { ...st.convert, ...patch } }))];
 }
 
 /** Empty state: the four conversions, each opening the file picker. */
@@ -52,13 +36,12 @@ function Start() {
   const t = useMessages();
   const [, setConvert] = useConvert();
   const hover = useUiStore((st) => st.dragHover);
-  const entries: { label: string; icon: typeof Film; gifOutput?: GifOutput }[] =
-    [
-      { label: t.convert.clipToGif, icon: Film },
-      { label: t.convert.gifToVideo, icon: FileImage, gifOutput: "mp4" },
-      { label: t.convert.imagesToGif, icon: Images },
-      { label: t.convert.gifToFrames, icon: FolderOpen, gifOutput: "frames" },
-    ];
+  const entries: { label: string; icon: typeof Film; gifOutput?: GifOutput }[] = [
+    { label: t.convert.clipToGif, icon: Film },
+    { label: t.convert.gifToVideo, icon: FileImage, gifOutput: "mp4" },
+    { label: t.convert.imagesToGif, icon: Images },
+    { label: t.convert.gifToFrames, icon: FolderOpen, gifOutput: "frames" },
+  ];
   const pick = safely(() => pickFiles("convert"));
   const choose = safely(async (gifOutput?: GifOutput) => {
     if (gifOutput) setConvert({ gifOutput });
@@ -75,25 +58,14 @@ function Start() {
         onClick={pick}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) =>
-          e.target === e.currentTarget &&
-          (e.key === "Enter" || e.key === " ") &&
-          pick()
-        }
+        onKeyDown={(e) => e.target === e.currentTarget && (e.key === "Enter" || e.key === " ") && pick()}
       >
         <div className={dz.inner}>
           <div className={dz.iconWrap}>
             <ArrowLeftRight size={26} strokeWidth={1.6} />
           </div>
-          <h2 className={dz.title}>
-            {hover ? t.dropzone.dropNow : t.convert.drop}
-          </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={dz.browse}
-            onClick={(e) => (e.stopPropagation(), pick())}
-          >
+          <h2 className={dz.title}>{hover ? t.dropzone.dropNow : t.convert.drop}</h2>
+          <Button variant="ghost" size="sm" className={dz.browse} onClick={(e) => (e.stopPropagation(), pick())}>
             {t.dropzone.browse}
           </Button>
           <div className={dz.meta}>
@@ -125,28 +97,17 @@ function Start() {
 function InputCard({ job }: { job: Job }) {
   const t = useMessages();
   const m = job.source.media;
-  const rows: [string, string][] = [
-    [
-      t.convert.resolution,
-      formatDims(job.source.info.width, job.source.info.height),
-    ],
-  ];
+  const rows: [string, string][] = [[t.convert.resolution, formatDims(job.source.info.width, job.source.info.height)]];
   if (m) {
     rows.unshift([t.convert.duration, `${(m.durationMs / 1000).toFixed(1)} s`]);
-    rows.push(
-      [t.convert.fps, String(Math.round(m.fps * 100) / 100)],
-      [t.convert.frames, String(m.frames)],
-    );
+    rows.push([t.convert.fps, String(Math.round(m.fps * 100) / 100)], [t.convert.frames, String(m.frames)]);
   }
   rows.push([t.convert.size, formatBytes(job.source.info.sizeBytes)]);
-  const preview =
-    job.source.kind === "video" ? job.source.thumb : job.source.path;
+  const preview = job.source.kind === "video" ? job.source.thumb : job.source.path;
   return (
     <div className={s.card}>
       <div className={s.cardLabel}>{t.convert.input}</div>
-      <div className={s.thumb}>
-        {preview && <img src={fileUrl(preview)} alt="" draggable={false} />}
-      </div>
+      <div className={s.thumb}>{preview && <img src={fileUrl(preview)} alt="" draggable={false} />}</div>
       <div className={s.name} title={job.source.path}>
         {job.source.name}
       </div>
@@ -169,70 +130,35 @@ function OutputPreview({ job }: { job: Job }) {
   const conv = job.task?.convert?.conversion;
   if (conv === "gifToFrames") {
     return (
-      <button
-        type="button"
-        className={s.folder}
-        onClick={safely(() => api.revealFile(r.outputPath))}
-      >
+      <button type="button" className={s.folder} onClick={safely(() => api.revealFile(r.outputPath))}>
         <FolderOpen size={26} />
         <span>{fmt(t.media.frames, { count: r.media?.frames ?? 0 })}</span>
       </button>
     );
   }
   if (conv === "gifToMp4") {
-    return (
-      <ClipViewer
-        key={r.outputPath}
-        clipKey={r.outputPath}
-        original={r.outputPath}
-        usesPreviewCopy={false}
-        poster={null}
-        result={null}
-        processing={false}
-        label={t.convert.output}
-      />
-    );
+    return <ClipViewer key={r.outputPath} clipKey={r.outputPath} original={r.outputPath} usesPreviewCopy={false} poster={null} result={null} processing={false} label={t.convert.output} />;
   }
-  return (
-    <img
-      className={s.outputImg}
-      src={fileUrl(r.outputPath)}
-      alt=""
-      draggable={false}
-    />
-  );
+  return <img className={s.outputImg} src={fileUrl(r.outputPath)} alt="" draggable={false} />;
 }
 
 function ConvertStage({ job, count }: { job: Job; count: number }) {
   const t = useMessages();
-  const images = useGroupJobs("convert").filter(
-    (j) => j.source.kind === "image" && j.status === "idle",
-  ).length;
+  const images = useGroupJobs("convert").filter((j) => j.source.kind === "image" && j.status === "idle").length;
   return (
     <section className={s.stage}>
       <header className={s.header}>
         <div className={s.headerTitle}>
           {conversionLabel(t, job)}
-          {job.source.kind === "image" && images > 1 && (
-            <span className={s.count}>{images}</span>
-          )}
+          {job.source.kind === "image" && images > 1 && <span className={s.count}>{images}</span>}
         </div>
         <div className={s.headerActions}>
           {count <= 1 && job.status !== "processing" && (
-            <IconButton
-              label={t.action.remove}
-              size="sm"
-              onClick={safely(() => api.removeJobs([job.id]))}
-            >
+            <IconButton label={t.action.remove} size="sm" onClick={safely(() => api.removeJobs([job.id]))}>
               <Trash2 />
             </IconButton>
           )}
-          <Button
-            size="sm"
-            variant="ghost"
-            icon={<Plus />}
-            onClick={safely(() => pickFiles("convert"))}
-          >
+          <Button size="sm" variant="ghost" icon={<Plus />} onClick={safely(() => pickFiles("convert"))}>
             {t.action.addFiles}
           </Button>
         </div>
@@ -243,20 +169,13 @@ function ConvertStage({ job, count }: { job: Job; count: number }) {
         <div className={`${s.card} ${s.outputCard}`}>
           <div className={s.cardLabel}>{t.convert.output}</div>
           <div className={s.outputArea}>
-            {job.result ? (
-              <OutputPreview job={job} />
-            ) : (
-              <div className={s.placeholder}>{outputName(t, job)}</div>
-            )}
+            {job.result ? <OutputPreview job={job} /> : <div className={s.placeholder}>{outputName(t, job)}</div>}
           </div>
         </div>
         <AnimatePresence>
           {job.status === "failed" && job.error && (
             <motion.div className={s.overlay} key="err" exit={{ opacity: 0 }}>
-              <ErrorCard
-                error={job.error}
-                onRetry={safely(() => api.retryJobs([job.id]))}
-              />
+              <ErrorCard error={job.error} onRetry={safely(() => api.retryJobs([job.id]))} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -270,26 +189,15 @@ type T = ReturnType<typeof useMessages>;
 
 function conversionLabel(t: T, job: Job): string {
   const conv = job.task?.convert?.conversion;
-  if (conv)
-    return {
-      clipToGif: t.convert.clipToGif,
-      gifToMp4: t.convert.gifToVideo,
-      gifToFrames: t.convert.gifToFrames,
-      imagesToGif: t.convert.imagesToGif,
-    }[conv];
+  if (conv) return { clipToGif: t.convert.clipToGif, gifToMp4: t.convert.gifToVideo, gifToFrames: t.convert.gifToFrames, imagesToGif: t.convert.imagesToGif }[conv];
   if (job.source.kind === "video") return t.convert.clipToGif;
   if (job.source.kind === "image") return t.convert.imagesToGif;
-  return useSettingsStore.getState().settings?.convert.gifOutput === "frames"
-    ? t.convert.gifToFrames
-    : t.convert.gifToVideo;
+  return useSettingsStore.getState().settings?.convert.gifOutput === "frames" ? t.convert.gifToFrames : t.convert.gifToVideo;
 }
 
 function outputName(t: T, job: Job): string {
   const settings = useSettingsStore.getState().settings;
-  if (job.source.kind === "gif")
-    return settings?.convert.gifOutput === "frames"
-      ? t.convert.outputFrames
-      : t.convert.outputMp4;
+  if (job.source.kind === "gif") return settings?.convert.gifOutput === "frames" ? t.convert.outputFrames : t.convert.outputMp4;
   return t.convert.outputGif;
 }
 
@@ -319,12 +227,8 @@ function ConvertControls({ job }: { job: Job | null }) {
               <div className={s.fixed}>{t.convert.outputGif}</div>
             )}
           </Field>
-          {kind === "gif" && c.gifOutput === "mp4" && (
-            <p className={s.note}>{t.convert.transparencyNote}</p>
-          )}
-          {kind === "gif" && c.gifOutput === "frames" && (
-            <p className={s.note}>{t.convert.framesNote}</p>
-          )}
+          {kind === "gif" && c.gifOutput === "mp4" && <p className={s.note}>{t.convert.transparencyNote}</p>}
+          {kind === "gif" && c.gifOutput === "frames" && <p className={s.note}>{t.convert.framesNote}</p>}
           {kind === "image" && <p className={s.note}>{t.convert.imagesNote}</p>}
           {kind === "video" && (
             <Field label={t.convert.frameRate} help="fps">
@@ -334,17 +238,8 @@ function ConvertControls({ job }: { job: Job | null }) {
                 value={c.gifFps ?? 0}
                 onChange={(f) => setConvert({ gifFps: f === 0 ? null : f })}
                 options={[
-                  {
-                    value: 0,
-                    label: srcFps
-                      ? `${t.convert.original} · ${Math.round(srcFps)}`
-                      : t.convert.original,
-                  },
-                  ...FPS.map((f) => ({
-                    value: f,
-                    label: String(f),
-                    disabled: !!srcFps && f > srcFps + 0.01,
-                  })),
+                  { value: 0, label: srcFps ? `${t.convert.original} · ${Math.round(srcFps)}` : t.convert.original },
+                  ...FPS.map((f) => ({ value: f, label: String(f), disabled: !!srcFps && f > srcFps + 0.01 })),
                 ]}
               />
             </Field>
@@ -356,10 +251,7 @@ function ConvertControls({ job }: { job: Job | null }) {
                 size="sm"
                 value={c.frameMs}
                 onChange={(frameMs) => setConvert({ frameMs })}
-                options={FRAME_MS.map((ms) => ({
-                  value: ms,
-                  label: `${ms / 1000}s`,
-                }))}
+                options={FRAME_MS.map((ms) => ({ value: ms, label: `${ms / 1000}s` }))}
               />
             </Field>
           )}
@@ -370,19 +262,12 @@ function ConvertControls({ job }: { job: Job | null }) {
                 size="sm"
                 value={c.width ?? 0}
                 onChange={(w) => setConvert({ width: w === 0 ? null : w })}
-                options={[
-                  { value: 0, label: t.convert.original },
-                  ...WIDTHS.map((w) => ({ value: w, label: String(w) })),
-                ]}
+                options={[{ value: 0, label: t.convert.original }, ...WIDTHS.map((w) => ({ value: w, label: String(w) }))]}
               />
             </Field>
           )}
-          {(toGif || c.gifOutput === "mp4" || !kind) && (
-            <QualityField which="convert" />
-          )}
-          {(toGif || c.gifOutput === "mp4" || !kind) && (
-            <MaxSizeField which="convert" />
-          )}
+          {(toGif || c.gifOutput === "mp4" || !kind) && <QualityField which="convert" />}
+          {(toGif || c.gifOutput === "mp4" || !kind) && <MaxSizeField which="convert" />}
         </div>
         <Collapsible title={t.controls.advanced}>
           <FolderField />

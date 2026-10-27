@@ -4,7 +4,6 @@ export const en = {
     tagline: "Fast. Simple. Optimized.",
     signature: "Made for aoxy, by zero.",
     support: "Support Aoze",
-    supportBubble: "Like our apps? A small donation helps us a lot!",
   },
   nav: {
     home: "Home",

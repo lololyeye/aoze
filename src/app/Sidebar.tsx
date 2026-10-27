@@ -88,20 +88,14 @@ export function Sidebar() {
         <Item page="help" icon={<CircleHelp />} label={t.nav.help} />
       </div>
       <div className={s.spacer} />
-      <div className={s.supportWrap}>
-        <Tooltip content="ko-fi.com/aoze_support" side="right">
-          <button type="button" className={`${s.item} ${s.support}`} onClick={safely(() => openUrl(KOFI_URL))}>
-            <span className={s.icon}>
-              <Coffee />
-            </span>
-            <span className={s.label}>{t.app.support}</span>
-          </button>
-        </Tooltip>
-        {/* Always there, beside the button, over empty space; clicks go through it. */}
-        <span className={s.say} aria-hidden="true">
-          {t.app.supportBubble}
-        </span>
-      </div>
+      <Tooltip content="ko-fi.com/aoze_support" side="right">
+        <button type="button" className={`${s.item} ${s.support}`} onClick={safely(() => openUrl(KOFI_URL))}>
+          <span className={s.icon}>
+            <Coffee />
+          </span>
+          <span className={s.label}>{t.app.support}</span>
+        </button>
+      </Tooltip>
       <VersionItem />
     </nav>
   );

@@ -6,7 +6,6 @@ export const fr: Messages = {
     tagline: "Rapide. Simple. Optimisé.",
     signature: "Made for aoxy, by zero.",
     support: "Soutenir Aoze",
-    supportBubble: "Vous aimez nos applis ? Un petit don nous aide énormément !",
   },
   nav: {
     home: "Accueil",

@@ -1,6 +1,6 @@
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { ArrowRight, MousePointerClick, Sparkles } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LogoMark } from "../../app/Logo";
 import { Button } from "../../components/ui/Button";
@@ -47,7 +47,8 @@ function useViewport() {
 /** Finds the step's element (the visible one) and follows it, gliding from the previous one. */
 function useHole(target: string | undefined, vw: number, vh: number, stepKey: number) {
   // `key`: the step the state belongs to (the previous step's hole glides on).
-  const [state, setState] = useState<{ key: number; hole: Rect | null; missing: boolean }>({ key: -1, hole: null, missing: false });
+  // `settled`: the glide has reached the element (the bubble may appear).
+  const [state, setState] = useState<{ key: number; hole: Rect | null; missing: boolean; settled: boolean }>({ key: -1, hole: null, missing: false, settled: false });
   const shown = useRef<Rect | null>(null);
 
   useEffect(() => {
@@ -73,17 +74,18 @@ function useHole(target: string | undefined, vw: number, vh: number, stepKey: nu
         if (want) break;
       }
       if (!want) {
-        if (now - started > MISSING_MS) setState((st) => (st.key === stepKey && st.missing ? st : { key: stepKey, hole: st.hole, missing: true }));
+        if (now - started > MISSING_MS) setState((st) => (st.key === stepKey && st.missing ? st : { key: stepKey, hole: st.hole, missing: true, settled: false }));
       } else {
         const cur = shown.current;
-        // Exponential glide (about 0.25 s), framerate independent.
-        const k = cur ? 1 - Math.exp(-(now - last) / 70) : 1;
-        const next = cur ? { x: cur.x + (want.x - cur.x) * k, y: cur.y + (want.y - cur.y) * k, w: cur.w + (want.w - cur.w) * k, h: cur.h + (want.h - cur.h) * k } : want;
-        const moved = !cur || Math.abs(next.x - cur.x) + Math.abs(next.y - cur.y) + Math.abs(next.w - cur.w) + Math.abs(next.h - cur.h) > 0.3;
-        if (moved) {
-          shown.current = next;
-          setState({ key: stepKey, hole: next, missing: false });
-        } else setState((st) => (st.key === stepKey && !st.missing ? st : { key: stepKey, hole: next, missing: false }));
+        // Exponential glide (about 0.2 s), framerate independent; the last pixels snap.
+        const k = cur ? 1 - Math.exp(-(now - last) / 55) : 1;
+        const glide = cur ? { x: cur.x + (want.x - cur.x) * k, y: cur.y + (want.y - cur.y) * k, w: cur.w + (want.w - cur.w) * k, h: cur.h + (want.h - cur.h) * k } : want;
+        const settled = Math.abs(want.x - glide.x) + Math.abs(want.y - glide.y) + Math.abs(want.w - glide.w) + Math.abs(want.h - glide.h) < 3;
+        const next = settled ? want : glide;
+        const moved = !cur || Math.abs(next.x - cur.x) + Math.abs(next.y - cur.y) + Math.abs(next.w - cur.w) + Math.abs(next.h - cur.h) > 0.01;
+        shown.current = next;
+        if (moved) setState({ key: stepKey, hole: next, missing: false, settled });
+        else setState((st) => (st.key === stepKey && !st.missing && st.settled === settled ? st : { key: stepKey, hole: next, missing: false, settled }));
       }
       last = now;
       raf = requestAnimationFrame(tick);
@@ -93,7 +95,7 @@ function useHole(target: string | undefined, vw: number, vh: number, stepKey: nu
   }, [target, vw, vh, stepKey]);
 
   const missing = state.key === stepKey && state.missing;
-  return { hole: target && !missing ? state.hole : null, missing };
+  return { hole: target && !missing ? state.hole : null, missing, settled: state.key === stepKey && state.settled };
 }
 
 function TourOverlay() {
@@ -107,9 +109,9 @@ function TourOverlay() {
   const step = STEPS[index]!;
   const text = t.tour.steps[step.id];
   const { w: vw, h: vh } = useViewport();
-  const { hole, missing } = useHole(step.target, vw, vh, index);
-  const bubbleRef = useRef<HTMLDivElement>(null);
-  const [bh, setBh] = useState(180);
+  const { hole, missing, settled } = useHole(step.target, vw, vh, index);
+  // Height of each step's bubble, measured while it is still invisible.
+  const [measured, setMeasured] = useState({ index: -1, h: 180 });
   const [nudge, setNudge] = useState(0);
   // The chapter banner shows when a chapter starts (set while rendering, hidden by a timer).
   const [bannerChapter, setBannerChapter] = useState<string | null>(null);
@@ -125,7 +127,7 @@ function TourOverlay() {
   // The page behind the step (a replay may start anywhere).
   useEffect(() => {
     if (useUiStore.getState().page !== step.page) setPage(step.page);
-  }, [step.page, setPage]);
+  }, [index, step.page, setPage]);
 
   // A new chapter: its voice line ("Tutorial of clips"…).
   useEffect(() => {
@@ -142,14 +144,14 @@ function TourOverlay() {
     return () => window.clearTimeout(timer);
   }, [bannerOn, bannerChapter]);
 
-  useLayoutEffect(() => {
-    const el = bubbleRef.current;
+  const measure = useCallback((el: HTMLDivElement | null) => {
     if (!el) return;
+    const step = Number(el.dataset.step);
     // Called once right away, then on every size change.
-    const ro = new ResizeObserver(() => setBh(el.offsetHeight));
+    const ro = new ResizeObserver(() => setMeasured({ index: step, h: el.offsetHeight }));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [index, centred]);
+  }, []);
 
   const advance = useCallback(() => {
     if (step.go) setPage(step.go);
@@ -169,10 +171,13 @@ function TourOverlay() {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [advance, end]);
 
-  const p = hole && !centred ? place(hole, BUBBLE_W, bh, vw, vh) : null;
+  // The new bubble shows once the highlight has reached its element and the
+  // bubble's size is known: it fades in where it belongs, never sliding there.
+  const ready = settled && measured.index === index;
+  const p = hole && !centred ? place(hole, BUBBLE_W, measured.h, vw, vh) : null;
   const n = index + 1;
   const total = STEPS.length;
-  const arrow = p?.arrow;
+  const arrow = ready ? p?.arrow : undefined;
   const len = arrow ? Math.hypot(arrow.x2 - arrow.x1, arrow.y2 - arrow.y1) || 1 : 1;
 
   return (
@@ -196,13 +201,7 @@ function TourOverlay() {
             style={{ ["--bx" as string]: `${((arrow.x2 - arrow.x1) / len) * 4}px`, ["--by" as string]: `${((arrow.y2 - arrow.y1) / len) * 4}px` }}
           >
             <path className={s.arrowGlow} d={`M${arrow.x1} ${arrow.y1} Q${arrow.cx} ${arrow.cy} ${arrow.x2} ${arrow.y2}`} />
-            <path
-              className={s.arrow}
-              data-keep-motion
-              pathLength={1}
-              d={`M${arrow.x1} ${arrow.y1} Q${arrow.cx} ${arrow.cy} ${arrow.x2} ${arrow.y2}`}
-              markerEnd="url(#tour-head)"
-            />
+            <path className={s.arrow} data-keep-motion pathLength={1} d={`M${arrow.x1} ${arrow.y1} Q${arrow.cx} ${arrow.cy} ${arrow.x2} ${arrow.y2}`} markerEnd="url(#tour-head)" />
           </g>
         )}
       </svg>
@@ -218,7 +217,6 @@ function TourOverlay() {
         <div className={s.centre}>
           <motion.div
             key={`c-${index}`}
-            ref={bubbleRef}
             className={`${s.bubble} ${s.card}`}
             initial={{ opacity: 0, y: 10, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -263,16 +261,21 @@ function TourOverlay() {
             {step.id !== "intro" && <Progress n={n} total={total} />}
           </motion.div>
         </div>
-      ) : (
-        p && (
+      ) : null}
+
+      {/* The previous bubble fades out where it was; the next one fades in at its place. */}
+      <AnimatePresence>
+        {p && (
           <motion.div
             key={`b-${index}`}
-            ref={bubbleRef}
+            ref={measure}
+            data-step={index}
             className={s.bubble}
-            style={{ left: p.left, top: p.top, width: BUBBLE_W }}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, ease: EASE, delay: 0.08 }}
+            style={{ left: p.left, top: p.top, width: BUBBLE_W, pointerEvents: ready ? "auto" : "none" }}
+            initial={{ opacity: 0, scale: 0.96, y: 6 }}
+            animate={ready ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.96, y: 6 }}
+            exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.16, ease: EASE } }}
+            transition={{ duration: 0.32, ease: EASE }}
           >
             <Header chapter={t.tour.chapters[step.chapter]} label={t.tour.chapter} counter={fmt(t.tour.stepOf, { n, total })} />
             <h3 className={s.title}>{text.title}</h3>
@@ -288,8 +291,8 @@ function TourOverlay() {
               </button>
             </div>
           </motion.div>
-        )
-      )}
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {banner && (

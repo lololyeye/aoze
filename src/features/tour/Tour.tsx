@@ -17,7 +17,9 @@ import s from "./Tour.module.css";
 const PAD = 6;
 const BUBBLE_W = 330;
 /** No element after this long (a page without it): a centred card with "Next". */
-const MISSING_MS = 900;
+const MISSING_MS = 2500;
+/** The element must stay put this long (page fade, smooth scroll, late layout) before the bubble shows. */
+const STILL_MS = 160;
 const BANNER_MS = 2600;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -60,8 +62,13 @@ function useHole(target: string | undefined, vw: number, vh: number, stepKey: nu
     let raf = 0;
     let last = started;
     let scrolled = false;
+    // Where the element was last frame, and since when it has not moved.
+    let lastWant: Rect | null = null;
+    let lastEl: Element | null = null;
+    let stillSince = started;
     const tick = (now: number) => {
       let want: Rect | null = null;
+      let found: Element | null = null;
       for (const el of document.querySelectorAll(`[data-tour="${target}"]`)) {
         const r = el.getBoundingClientRect();
         if (r.width <= 0 || r.height <= 0) continue;
@@ -71,8 +78,14 @@ function useHole(target: string | undefined, vw: number, vh: number, stepKey: nu
           el.scrollIntoView({ block: "center", behavior: "smooth" });
         }
         want = visible({ x: r.left, y: r.top, w: r.width, h: r.height }, vw, vh, PAD);
-        if (want) break;
+        if (want) {
+          found = el;
+          break;
+        }
       }
+      if (!want || found !== lastEl || !lastWant || Math.abs(want.x - lastWant.x) + Math.abs(want.y - lastWant.y) + Math.abs(want.w - lastWant.w) + Math.abs(want.h - lastWant.h) > 0.5) stillSince = now;
+      lastWant = want;
+      lastEl = found;
       if (!want) {
         if (now - started > MISSING_MS) setState((st) => (st.key === stepKey && st.missing ? st : { key: stepKey, hole: st.hole, missing: true, settled: false }));
       } else {
@@ -80,8 +93,9 @@ function useHole(target: string | undefined, vw: number, vh: number, stepKey: nu
         // Exponential glide (about 0.2 s), framerate independent; the last pixels snap.
         const k = cur ? 1 - Math.exp(-(now - last) / 55) : 1;
         const glide = cur ? { x: cur.x + (want.x - cur.x) * k, y: cur.y + (want.y - cur.y) * k, w: cur.w + (want.w - cur.w) * k, h: cur.h + (want.h - cur.h) * k } : want;
-        const settled = Math.abs(want.x - glide.x) + Math.abs(want.y - glide.y) + Math.abs(want.w - glide.w) + Math.abs(want.h - glide.h) < 3;
-        const next = settled ? want : glide;
+        const close = Math.abs(want.x - glide.x) + Math.abs(want.y - glide.y) + Math.abs(want.w - glide.w) + Math.abs(want.h - glide.h) < 3;
+        const next = close ? want : glide;
+        const settled = close && now - stillSince >= STILL_MS;
         const moved = !cur || Math.abs(next.x - cur.x) + Math.abs(next.y - cur.y) + Math.abs(next.w - cur.w) + Math.abs(next.h - cur.h) > 0.01;
         shown.current = next;
         if (moved) setState({ key: stepKey, hole: next, missing: false, settled });
@@ -174,10 +188,16 @@ function TourOverlay() {
   // The new bubble shows once the highlight has reached its element and the
   // bubble's size is known: it fades in where it belongs, never sliding there.
   const ready = settled && measured.index === index;
-  const p = hole && !centred ? place(hole, BUBBLE_W, measured.h, vw, vh) : null;
+  const live = hole && !centred ? place(hole, BUBBLE_W, measured.h, vw, vh) : null;
+  // Once shown, the bubble stays where it appeared (a new window size places it again).
+  const [locked, setLocked] = useState<{ key: string; p: NonNullable<typeof live> } | null>(null);
+  const lockKey = `${index}:${vw}x${vh}`;
+  if (ready && live && locked?.key !== lockKey) setLocked({ key: lockKey, p: live });
+  const revealed = locked?.key === lockKey;
+  const p = revealed ? locked.p : live;
   const n = index + 1;
   const total = STEPS.length;
-  const arrow = ready ? p?.arrow : undefined;
+  const arrow = revealed ? p?.arrow : undefined;
   const len = arrow ? Math.hypot(arrow.x2 - arrow.x1, arrow.y2 - arrow.y1) || 1 : 1;
 
   return (
@@ -271,9 +291,9 @@ function TourOverlay() {
             ref={measure}
             data-step={index}
             className={s.bubble}
-            style={{ left: p.left, top: p.top, width: BUBBLE_W, pointerEvents: ready ? "auto" : "none" }}
+            style={{ left: p.left, top: p.top, width: BUBBLE_W, pointerEvents: revealed ? "auto" : "none" }}
             initial={{ opacity: 0, scale: 0.96, y: 6 }}
-            animate={ready ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.96, y: 6 }}
+            animate={revealed ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.96, y: 6 }}
             exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.16, ease: EASE } }}
             transition={{ duration: 0.32, ease: EASE }}
           >

@@ -1,0 +1,24 @@
+{
+  "version": "1.2.3",
+  "date": "2026-10-27",
+  "en": {
+    "summary": "Clips play in the preview again.",
+    "changes": [],
+    "improvements": [
+      "Loading spinners keep turning even when Windows animations are turned off, so you can see the preview is being prepared."
+    ],
+    "fixes": [
+      "In the installed app, no clip could be previewed: \"This clip can't be previewed here\" showed for every clip, and for every result. The app's security policy blocked local videos; it now allows them (and only them)."
+    ]
+  },
+  "fr": {
+    "summary": "Les clips se lisent de nouveau dans l'aperçu.",
+    "changes": [],
+    "improvements": [
+      "Les indicateurs de chargement tournent même quand les animations de Windows sont désactivées : on voit que l'aperçu est en préparation."
+    ],
+    "fixes": [
+      "Dans l'app installée, aucun clip ne pouvait être prévisualisé : « Ce clip ne peut pas être prévisualisé ici » s'affichait pour tous les clips et tous les résultats. La politique de sécurité de l'app bloquait les vidéos locales ; elle les autorise désormais (et seulement elles)."
+    ]
+  }
+}

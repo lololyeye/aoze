@@ -50,7 +50,7 @@ export function DiagnosticsSheet() {
         </Button>
       }
     >
-      <Section title={t.diagnostics.gpu} aside={<Button size="sm" variant="ghost" icon={<RefreshCw className={refreshing ? s.spin : ""} />} onClick={safely(refresh)} disabled={refreshing}>{t.diagnostics.refresh}</Button>}>
+      <Section title={t.diagnostics.gpu} aside={<Button size="sm" variant="ghost" icon={<RefreshCw className={refreshing ? s.spin : ""} data-spinner />} onClick={safely(refresh)} disabled={refreshing}>{t.diagnostics.refresh}</Button>}>
         {vk?.gpus.length ? (
           vk.gpus.map((g) => (
             <div key={g.index} className={s.device}>

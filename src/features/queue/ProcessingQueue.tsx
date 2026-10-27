@@ -16,7 +16,7 @@ function StatusIcon({ job }: { job: Job }) {
     case "completed":
       return <Check size={13} strokeWidth={2.6} className={s.ok} />;
     case "processing":
-      return <Loader2 size={13} className={s.spin} />;
+      return <Loader2 size={13} className={s.spin} data-spinner />;
     case "failed":
       return <CircleAlert size={13} className={s.bad} />;
     case "cancelled":

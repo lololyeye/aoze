@@ -373,7 +373,7 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
             <div className={s.pending}>
               {poster && <img src={fileUrl(poster)} alt="" className={s.posterImg} />}
               <div className={s.pendingLabel}>
-                <Loader2 size={15} className={s.spin} />
+                <Loader2 size={15} className={s.spin} data-spinner />
                 {t.viewer.preparing}
               </div>
             </div>
@@ -381,7 +381,7 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
           {(side || !result) && <span className={`${s.badge} ${s.left}`}>{label ?? t.viewer.original}</span>}
           {resultLabel && (
             <span className={`${s.badge} ${s.right} ${s.working}`}>
-              <Loader2 size={11} className={s.spin} />
+              <Loader2 size={11} className={s.spin} data-spinner />
               {resultLabel}
             </span>
           )}
@@ -409,7 +409,7 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
             {(resProblem || (resOk && !resShown)) && (
               <div className={s.paneNote}>
                 <span className={s.pendingLabel}>
-                  {resProblem && repairing !== "res" ? <CircleAlert size={14} /> : <Loader2 size={14} className={s.spin} />}
+                  {resProblem && repairing !== "res" ? <CircleAlert size={14} /> : <Loader2 size={14} className={s.spin} data-spinner />}
                   {resProblem ?? t.viewer.preparing}
                 </span>
               </div>
@@ -431,7 +431,7 @@ export function ClipViewer({ clipKey, original, usesPreviewCopy, poster, result,
         {processing && <div className={s.scan} />}
         {origProblem && (
           <div className={s.error}>
-            {repairing === "orig" ? <Loader2 size={16} className={s.spin} /> : <CircleAlert size={16} />}
+            {repairing === "orig" ? <Loader2 size={16} className={s.spin} data-spinner /> : <CircleAlert size={16} />}
             {origProblem}
           </div>
         )}

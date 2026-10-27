@@ -90,8 +90,11 @@ input[type="text"] {
   white-space: nowrap;
 }
 
+/* With Windows animations off, decoration stops, but a loading spinner
+   (data-spinner) keeps turning: it is the only sign that something is
+   happening. */
 @media (prefers-reduced-motion: reduce) {
-  *,
+  *:not([data-spinner]),
   *::before,
   *::after {
     animation-duration: 0.01ms !important;

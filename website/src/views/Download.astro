@@ -5,6 +5,7 @@ import Logo from "../components/Logo.astro";
 import KofiButton from "../components/KofiButton.astro";
 import DownloadCount from "../components/DownloadCount.astro";
 import ReleaseSync from "../components/ReleaseSync.astro";
+import InstallNotice from "../components/InstallNotice.astro";
 import { latestRelease, version, formatSize, formatDate, sha256 } from "../lib/release";
 import { GITHUB_URL, RELEASES_URL } from "../lib/site";
 
@@ -24,7 +25,7 @@ const hash = sha256(release);
         <p class="lead">{t.lead}</p>
 
         <div class="dl-row">
-        <a class="btn btn-primary btn-lg" href={release.asset.url} data-r="href:asset.url">
+        <a class="btn btn-primary btn-lg" href={release.asset.url} data-r="href:asset.url" data-installer>
           <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" /></svg>
           {t.button}
         </a>
@@ -97,6 +98,7 @@ const hash = sha256(release);
 </Base>
 
 <ReleaseSync lang={lang} />
+<InstallNotice lang={lang} />
 
 <script is:inline>
   const copy = document.querySelector("[data-copy]");

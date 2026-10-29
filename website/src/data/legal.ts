@@ -14,7 +14,7 @@ export const legal = {
   /** Person responsible for what is published on the site (often the publisher). */
   publicationDirector: "Zero et Aoxy",
   /** Contact email shown on every legal page. */
-  contactEmail: "f3908770@gmail.com",
+  contactEmail: "contact@aoze.fr",
   /** Email for personal data requests. Leave null to use contactEmail. */
   privacyEmail: null as string | null,
   /** Country whose law applies to the terms, e.g. "France". */

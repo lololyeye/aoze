@@ -50,7 +50,7 @@ const en = {
   },
   hero: {
     tagFor: "for Windows",
-    title: "Make your media look better.",
+    title: "Make your media look better",
     lead: "Aoze enlarges, cleans up and compresses images, GIFs and clips, right on your PC. Open a file, pick a preset, done.",
     download: "Download for Windows",
     github: "View on GitHub",
@@ -60,8 +60,8 @@ const en = {
   },
   demo: {
     label: "Interactive preview of the Aoze app",
-    hint: "Click Home, Image & GIF, Clip or Convert to look around.",
-    note: "A simulation of the interface with example files: nothing is processed here.",
+    hint: "Not a screenshot: this is Aoze's own interface, loaded with example files. The menu on the left switches screens.",
+    note: "Nothing is processed here.",
     status: "GPU · Ready",
     nav: { home: "Home", image: "Image & GIF", clip: "Clip", convert: "Convert", history: "History", settings: "Settings", help: "Help", support: "Support Aoze" },
     home: {
@@ -154,8 +154,8 @@ const en = {
 
   compare: {
     eyebrow: "Before / after",
-    title: "See the difference.",
-    lead: "Real output from the engines inside Aoze, not a mock-up. Drag the line.",
+    title: "Drag the line and compare",
+    lead: "This is what Aoze's engines really produce from that small file, not a mock-up.",
     tabs: "Demo",
     image: "Image",
     motion: "Motion",
@@ -182,8 +182,8 @@ const en = {
   },
   features: {
     eyebrow: "Features",
-    title: "What it does.",
-    lead: "Three workspaces. Each one shows only the options that make sense for your file.",
+    title: "What Aoze does",
+    lead: "There is a workspace for images, one for clips and one for conversions, and each shows only the options that fit your file.",
     image: {
       title: "Image & GIF",
       items: [
@@ -217,7 +217,7 @@ const en = {
   },
   how: {
     eyebrow: "How it works",
-    title: "Four steps. That's it.",
+    title: "From your file to the result",
     steps: [
       { title: "Import", text: "Drop files anywhere in the window. Aoze opens the right workspace." },
       { title: "Configure", text: "Pick a preset (Anime Smooth, TikTok Smooth, Cinematic, Clean for clips) or change only what you need." },
@@ -227,8 +227,8 @@ const en = {
   },
   editors: {
     eyebrow: "For edits",
-    title: "Made for editors.",
-    trio: ["Sharper clips.", "Smoother motion.", "Better colors."],
+    title: "Made with editors in mind",
+    trio: ["The settings that matter for a clip you're about to post, and nothing you have to fight with."],
     fpsLabel: "24 FPS to 60 FPS",
     points: [
       { title: "Smooth Motion", text: "Real in-between frames, up to 120 FPS. It never blends two shots across a cut." },
@@ -243,7 +243,7 @@ const en = {
   },
   perf: {
     eyebrow: "Performance",
-    title: "Fast by design.",
+    title: "Fast, even on a modest PC",
     lead: "Aoze reads your hardware and adapts to it, from a small laptop to a gaming PC.",
     items: [
       { title: "GPU acceleration", text: "Works on any Vulkan GPU: NVIDIA, AMD, Intel, integrated. Without one, it falls back to the CPU. Slower, but it works." },
@@ -253,14 +253,14 @@ const en = {
     ],
   },
   local: {
-    title: "Your files stay on your PC.",
-    text: "Aoze processes everything locally. No upload, no account, no telemetry. The only connection the app makes on its own is the update check on GitHub, and you can turn it off.",
+    title: "Your files stay on your PC",
+    text: "Everything is processed on your computer. Nothing is uploaded, there is no account, and Aoze collects no usage data. The only connection the app makes on its own is the update check on GitHub, and you can turn it off.",
     fine: "If Windows doesn't have Microsoft's WebView2 runtime yet, the installer downloads it. Links such as GitHub open in your browser.",
     privacy: "Privacy policy",
   },
   oss: {
     eyebrow: "MIT License",
-    title: "Open source.",
+    title: "The code is open",
     lead: "Aoze is MIT licensed. The code, the releases and the issues all live on GitHub.",
     github: "View on GitHub",
     releases: "GitHub Releases",
@@ -273,7 +273,7 @@ const en = {
     credits: "Credits and licenses",
   },
   final: {
-    title: "Try it on your own files.",
+    title: "Try it on your own files",
     download: "Download Aoze",
     meta: "For Windows 10 and 11, 64-bit.",
     details: "Checksum and release notes",
@@ -326,7 +326,7 @@ const en = {
   credits: {
     title: "Credits",
     description: "The open source projects Aoze is built on, and their licenses.",
-    h1: "Built on the work of others.",
+    h1: "The projects behind Aoze",
     lead: ["Aoze's own code is under the", "MIT License", ". The installer also ships the programs and models below, each under its own license. Their license files are installed next to them."],
     uses: {
       waifu2x: "The enlargement and noise reduction method and models.",
@@ -350,7 +350,7 @@ const en = {
   },
   notFound: {
     title: "Page not found",
-    h1: "This page doesn't exist.",
+    h1: "This page doesn't exist",
     text: "The link may be old, or mistyped.",
     home: "Go to the home page",
     download: "Download Aoze",
@@ -406,7 +406,7 @@ const fr: Dict = {
   },
   hero: {
     tagFor: "pour Windows",
-    title: "Vos médias, en mieux.",
+    title: "Vos médias, en mieux",
     lead: "Aoze agrandit, nettoie et compresse vos images, GIF et clips, directement sur votre PC. Ouvrez un fichier, choisissez un préréglage, c'est fait.",
     download: "Télécharger pour Windows",
     github: "Voir sur GitHub",
@@ -416,8 +416,8 @@ const fr: Dict = {
   },
   demo: {
     label: "Aperçu interactif de l'application Aoze",
-    hint: "Cliquez sur Accueil, Image & GIF, Clip ou Convertir pour faire le tour.",
-    note: "Une simulation de l'interface avec des fichiers d'exemple : rien n'est traité ici.",
+    hint: "Ce n'est pas une capture : c'est l'interface d'Aoze, avec des fichiers d'exemple. Le menu de gauche change d'écran.",
+    note: "Rien n'est traité ici.",
     status: "GPU · Prêt",
     nav: { home: "Accueil", image: "Image & GIF", clip: "Clip", convert: "Convertir", history: "Historique", settings: "Réglages", help: "Aide", support: "Soutenir Aoze" },
     home: {
@@ -510,8 +510,8 @@ const fr: Dict = {
 
   compare: {
     eyebrow: "Avant / après",
-    title: "Voyez la différence.",
-    lead: "Le vrai résultat des moteurs d'Aoze, pas une maquette. Faites glisser la ligne.",
+    title: "Faites glisser la ligne pour comparer",
+    lead: "C'est ce que les moteurs d'Aoze produisent vraiment à partir de ce petit fichier, pas une maquette.",
     tabs: "Démo",
     image: "Image",
     motion: "Mouvement",
@@ -538,8 +538,8 @@ const fr: Dict = {
   },
   features: {
     eyebrow: "Fonctionnalités",
-    title: "Ce que fait Aoze.",
-    lead: "Trois espaces de travail. Chacun n'affiche que les options utiles pour votre fichier.",
+    title: "Ce que fait Aoze",
+    lead: "Un espace pour les images, un pour les clips et un pour les conversions, et chacun n'affiche que les options utiles à votre fichier.",
     image: {
       title: "Image & GIF",
       items: [
@@ -573,7 +573,7 @@ const fr: Dict = {
   },
   how: {
     eyebrow: "Comment ça marche",
-    title: "Quatre étapes. C'est tout.",
+    title: "De votre fichier au résultat",
     steps: [
       { title: "Importer", text: "Déposez vos fichiers n'importe où dans la fenêtre. Aoze ouvre le bon espace." },
       { title: "Régler", text: "Choisissez un préréglage (Anime Smooth, TikTok Smooth, Cinéma, Net pour les clips) ou changez seulement ce qu'il faut." },
@@ -583,8 +583,8 @@ const fr: Dict = {
   },
   editors: {
     eyebrow: "Pour les edits",
-    title: "Pensé pour les editors.",
-    trio: ["Des clips plus nets.", "Un mouvement plus fluide.", "De meilleures couleurs."],
+    title: "Pensé avec des editors",
+    trio: ["Les réglages qui comptent pour un clip qu'on va poster, sans rien qui vous complique la vie."],
     fpsLabel: "De 24 à 60 FPS",
     points: [
       { title: "Smooth Motion", text: "De vraies images intermédiaires, jusqu'à 120 FPS. Jamais de mélange entre deux plans." },
@@ -599,7 +599,7 @@ const fr: Dict = {
   },
   perf: {
     eyebrow: "Performances",
-    title: "Rapide par conception.",
+    title: "Rapide, même sur un petit PC",
     lead: "Aoze lit votre matériel et s'y adapte, du petit portable au PC gamer.",
     items: [
       { title: "Accélération GPU", text: "Fonctionne sur tout GPU Vulkan : NVIDIA, AMD, Intel, intégré. Sans GPU, Aoze passe sur le processeur. Plus lent, mais ça marche." },
@@ -609,14 +609,14 @@ const fr: Dict = {
     ],
   },
   local: {
-    title: "Vos fichiers restent sur votre PC.",
-    text: "Aoze traite tout en local. Pas d'envoi, pas de compte, pas de télémétrie. La seule connexion que l'application fait d'elle-même est la recherche de mises à jour sur GitHub, et vous pouvez la désactiver.",
+    title: "Vos fichiers restent sur votre PC",
+    text: "Tout est traité sur votre ordinateur. Rien n'est envoyé sur Internet, il n'y a pas de compte et Aoze ne collecte aucune donnée d'utilisation. La seule connexion que l'application fait d'elle-même est la recherche de mises à jour sur GitHub, et vous pouvez la désactiver.",
     fine: "Si Windows n'a pas encore le runtime WebView2 de Microsoft, l'installeur le télécharge. Les liens comme GitHub s'ouvrent dans votre navigateur.",
     privacy: "Politique de confidentialité",
   },
   oss: {
     eyebrow: "Licence MIT",
-    title: "Open source.",
+    title: "Le code est ouvert",
     lead: "Aoze est sous licence MIT. Le code, les versions et les tickets sont sur GitHub.",
     github: "Voir sur GitHub",
     releases: "Versions sur GitHub",
@@ -629,7 +629,7 @@ const fr: Dict = {
     credits: "Crédits et licences",
   },
   final: {
-    title: "Essayez-le sur vos propres fichiers.",
+    title: "Essayez-le sur vos propres fichiers",
     download: "Télécharger Aoze",
     meta: "Pour Windows 10 et 11, 64 bits.",
     details: "Empreinte et notes de version",
@@ -682,7 +682,7 @@ const fr: Dict = {
   credits: {
     title: "Crédits",
     description: "Les projets open source sur lesquels Aoze repose, et leurs licences.",
-    h1: "Construit sur le travail des autres.",
+    h1: "Les projets derrière Aoze",
     lead: ["Le code d'Aoze est sous", "licence MIT", ". L'installeur contient aussi les programmes et modèles ci-dessous, chacun sous sa propre licence. Leurs fichiers de licence sont installés à côté d'eux."],
     uses: {
       waifu2x: "La méthode et les modèles d'agrandissement et de réduction du bruit.",
@@ -706,7 +706,7 @@ const fr: Dict = {
   },
   notFound: {
     title: "Page introuvable",
-    h1: "Cette page n'existe pas.",
+    h1: "Cette page n'existe pas",
     text: "Le lien est peut-être ancien, ou mal tapé.",
     home: "Revenir à l'accueil",
     download: "Télécharger Aoze",

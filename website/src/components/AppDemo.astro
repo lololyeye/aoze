@@ -252,8 +252,7 @@ const initial = "image";
     </div>
   </div>
   <figcaption>
-    <span class="demo-hint"><span class="demo-pulse" aria-hidden="true"></span>{d.hint}</span>
-    <span class="muted">{d.note}</span>
+    <p><span class="demo-hint">{d.hint}</span> <span class="muted">{d.note}</span></p>
   </figcaption>
 </figure>
 
@@ -487,11 +486,8 @@ const initial = "image";
   .p-kbd { color: var(--d-text-3); font-size: 11px; text-align: center; }
 
   /* Caption */
-  .demo figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 16px; font-size: 14px; }
-  .demo-hint { display: inline-flex; align-items: center; gap: 10px; color: var(--text); }
-  .demo-pulse { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-  .demo-pulse::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--accent); opacity: 0; animation: pulse 2.4s var(--ease) infinite; }
-  @keyframes pulse { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }
+  .demo figcaption { margin-top: 16px; font-size: 14.5px; color: var(--text-2); max-width: 72ch; }
+  .demo-hint { color: var(--text-2); }
 
   /* Medium windows: icons-only sidebar, as the app does under 1180 px. */
   @container demo (max-width: 980px) {
@@ -553,7 +549,7 @@ const initial = "image";
     :global(.js) .demo:not(.in) .app { transform: none; }
     .view.enter { animation: none; }
     .sb-hl { transition: none; }
-    .cv-bar::after, .demo-pulse::after { animation: none; }
+    .cv-bar::after { animation: none; }
   }
 </style>
 

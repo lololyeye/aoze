@@ -14,6 +14,8 @@ const sky = Array.from({ length: stars }, () => ({
   y: Math.round(rand() * 900),
   r: (0.6 + rand() * 1).toFixed(2),
   o: (0.15 + rand() * 0.45).toFixed(2),
+  // About one star in three twinkles, each at its own pace.
+  tw: rand() < 0.34 ? { dur: (3 + rand() * 4).toFixed(1), delay: (-rand() * 7).toFixed(1) } : null,
 }));
 // Pines along the near ridge, mostly on the right like in the app.
 const pines = [
@@ -29,29 +31,65 @@ const pines = [
         <stop offset="0" stop-color="#9fb6d6" stop-opacity="0.1" />
         <stop offset="1" stop-color="#9fb6d6" stop-opacity="0" />
       </radialGradient>
+      <linearGradient id={id("shoot")} x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#dbe6f5" stop-opacity="0" />
+        <stop offset="1" stop-color="#e9f4ff" stop-opacity="0.9" />
+      </linearGradient>
     </defs>
     <g class="night-moon">
       <circle cx="1330" cy="190" r="120" fill={`url(#${id("moon")})`} />
       <circle cx="1330" cy="190" r="7" fill="#d5e0ee" opacity="0.55" />
     </g>
     <g fill="#dbe6f5">
-      {sky.map((s) => <circle cx={s.x} cy={s.y} r={s.r} opacity={s.o} />)}
+      {sky.map((s) => s.tw
+        ? <circle class="tw" cx={s.x} cy={s.y} r={s.r} opacity={s.o} style={`--dur:${s.tw.dur}s;--delay:${s.tw.delay}s`} />
+        : <circle cx={s.x} cy={s.y} r={s.r} opacity={s.o} />)}
     </g>
+    <!-- A shooting star now and then, across the upper sky. -->
+    <line class="night-shoot" x1="0" y1="0" x2="120" y2="0" stroke={`url(#${id("shoot")})`} stroke-width="1.6" stroke-linecap="round" />
   </svg>
   <svg class="night-land" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice" focusable="false">
-    <path d="M0 190 L150 100 L260 150 L420 30 L560 130 L700 60 L860 150 L1010 50 L1150 130 L1300 70 L1450 140 L1600 80 V420 H0Z" fill="#111a26" />
+    <path class="ridge-far" d="M0 190 L150 100 L260 150 L420 30 L560 130 L700 60 L860 150 L1010 50 L1150 130 L1300 70 L1450 140 L1600 80 V420 H0Z" fill="#111a26" />
+    <g class="ridge-near">
     <path d="M0 270 C180 220 330 240 480 230 C660 216 800 270 980 250 C1160 230 1320 270 1600 230 V420 H0Z" fill="#0d1420" />
     <g fill="#0a1019">
       {pines.map(([x, y, h]) => <path d={`M${x - h * 0.28} ${y + 4} L${x} ${y - h} L${x + h * 0.28} ${y + 4}Z`} />)}
+    </g>
     </g>
   </svg>
 </div>
 
 <style>
-  .night { pointer-events: none; overflow: hidden; }
+  .night { pointer-events: none; overflow: clip; }
   .night svg { position: absolute; left: 0; width: 100%; display: block; }
   .night-sky { top: 0; height: 100%; }
   .night-land { bottom: 0; height: var(--land, 46%); }
   /* On narrow screens the sky is cropped hard and the moon lands in the text. */
   @media (max-width: 720px) { .night-moon { display: none; } }
+
+  .night-shoot { opacity: 0; }
+  /* Twinkling and the moon's glow follow time, slowly: kept even with reduced motion. */
+  .tw { animation: twinkle var(--dur) ease-in-out var(--delay) infinite; }
+  @keyframes twinkle { 50% { opacity: 0.08; } }
+  .night-moon { animation: moon 9s ease-in-out infinite; transform-origin: 1330px 190px; }
+  @keyframes moon { 50% { opacity: 0.75; transform: scale(1.06); } }
+  @media (prefers-reduced-motion: no-preference) {
+    /* One streak every 11 s, then a long pause. */
+    .night-shoot { animation: shoot 11s cubic-bezier(0.3, 0, 0.6, 1) 2.5s infinite; }
+    @keyframes shoot {
+      0% { opacity: 0; transform: translate(380px, 70px) rotate(14deg); }
+      2% { opacity: 1; }
+      9% { opacity: 0; transform: translate(900px, 200px) rotate(14deg); }
+      100% { opacity: 0; transform: translate(900px, 200px) rotate(14deg); }
+    }
+    /* Depth while the scene scrolls away: sky slowest, then the far ridge, then the near one. */
+    @supports (animation-timeline: view()) {
+      .night { view-timeline: --night block; }
+      .night-sky, .ridge-far, .ridge-near { animation: drift linear both; animation-timeline: --night; animation-range: exit 0% exit 100%; }
+      .night-sky { --to: 22%; }
+      .ridge-far { --to: 70px; }
+      .ridge-near { --to: 24px; }
+      @keyframes drift { to { transform: translateY(var(--to)); } }
+    }
+  }
 </style>

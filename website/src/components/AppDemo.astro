@@ -279,7 +279,17 @@ const initial = "image";
     transform-origin: 50% 0;
     transition: transform 1.2s var(--ease), box-shadow 0.4s;
   }
-  .js .demo:not(.in) .app { transform: rotateX(9deg) scale(0.97); }
+  :global(.js) .demo:not(.in) .app { transform: rotateX(9deg) scale(0.97); }
+  /* Where the browser can tie it to scrolling, the window stands up as it comes into view. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :global(.js) .demo .app { transform: none; animation: stand-up linear both; animation-timeline: view(); animation-range: entry 0% entry 85%; }
+      @keyframes stand-up {
+        from { transform: rotateX(20deg) scale(0.9) translateY(30px); filter: brightness(0.7); }
+        to { transform: none; filter: none; }
+      }
+    }
+  }
   .app:hover { box-shadow: 0 48px 90px -30px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(61 214 208 / 0.18); }
   .app svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .sb-i, .card, .cc-btn { font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
@@ -540,7 +550,7 @@ const initial = "image";
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .js .demo:not(.in) .app { transform: none; }
+    :global(.js) .demo:not(.in) .app { transform: none; }
     .view.enter { animation: none; }
     .sb-hl { transition: none; }
     .cv-bar::after, .demo-pulse::after { animation: none; }

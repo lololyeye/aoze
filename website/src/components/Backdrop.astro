@@ -1,0 +1,118 @@
+---
+// The sky behind every page: a fixed layer under the content, so the site reads as one night from
+// top to bottom. Slow auroras in the brand's teal, blue and violet drift and shift as the page
+// scrolls, over a field of stars and a fine grain. Purely decorative.
+//   night: the default, for the home page and the other pages
+//   dawn:  the download page, a glowing horizon over the mountains
+//   calm:  the legal pages, the same sky turned down so the text comes first
+interface Props { scene?: "night" | "dawn" | "calm" }
+const { scene = "night" } = Astro.props;
+
+// Fixed seed: the same sky on every build.
+let seed = 29;
+const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const stars = Array.from({ length: scene === "calm" ? 90 : 150 }, () => ({
+  x: Math.round(rand() * 1600),
+  y: Math.round(rand() * (scene === "dawn" ? 620 : 1000)),
+  r: (0.5 + rand() * 1.1).toFixed(2),
+  o: (0.12 + rand() * 0.5).toFixed(2),
+  tw: rand() < 0.3 ? `--dur:${(3 + rand() * 5).toFixed(1)}s;--delay:${(-rand() * 8).toFixed(1)}s` : null,
+}));
+const grain =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")";
+// Ridges and pines for the dawn horizon.
+const pines = [
+  [1120, 300, 50], [1166, 312, 36], [1210, 290, 62], [1262, 306, 44], [1310, 280, 74],
+  [1366, 300, 52], [1414, 272, 88], [1470, 296, 58], [1524, 282, 76], [1576, 304, 46],
+  [40, 318, 40], [84, 306, 56], [126, 322, 34], [170, 312, 46],
+];
+---
+<div class:list={["backdrop", `backdrop-${scene}`]} aria-hidden="true">
+  <div class="bd-shift">
+    <div class="bd-glow bd-a"></div>
+    <div class="bd-glow bd-b"></div>
+    <div class="bd-glow bd-c"></div>
+  </div>
+  <svg class="bd-stars" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" focusable="false">
+    <g fill="#dbe6f5">
+      {stars.map((s) => <circle class:list={[s.tw && "tw"]} cx={s.x} cy={s.y} r={s.r} opacity={s.o} style={s.tw ?? undefined} />)}
+    </g>
+  </svg>
+  {scene === "dawn" && (
+    <>
+      <div class="bd-rays"></div>
+      <div class="bd-horizon"></div>
+      <svg class="bd-land" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice" focusable="false">
+        <path d="M0 230 L140 150 L250 190 L400 90 L540 170 L690 110 L850 190 L1000 100 L1150 170 L1300 120 L1450 180 L1600 130 V420 H0Z" fill="#101a29" opacity="0.92" />
+        <path d="M0 300 C180 262 330 280 480 272 C660 260 800 306 980 290 C1160 274 1320 308 1600 276 V420 H0Z" fill="#0b121d" />
+        <g fill="#080d16">
+          {pines.map(([x, y, h]) => <path d={`M${x - h * 0.28} ${y + 4} L${x} ${y - h} L${x + h * 0.28} ${y + 4}Z`} />)}
+        </g>
+      </svg>
+    </>
+  )}
+  <div class="bd-grain" style={`background-image:${grain}`}></div>
+  <div class="bd-vignette"></div>
+</div>
+
+<style>
+  .backdrop { position: fixed; inset: 0; z-index: -1; overflow: clip; pointer-events: none; background: linear-gradient(#0a0e15, #080b12 60%, #070a10); }
+  .backdrop > *, .bd-shift > * { position: absolute; }
+  .bd-shift { position: absolute; inset: 0; }
+
+  /* Auroras: wide, soft colour fields. */
+  .bd-glow { border-radius: 50%; will-change: transform; }
+  .bd-a { width: 70vmax; height: 46vmax; left: -18vmax; top: -16vmax; background: radial-gradient(closest-side, rgb(61 214 208 / 0.13), transparent); }
+  .bd-b { width: 64vmax; height: 52vmax; right: -22vmax; top: 18vh; background: radial-gradient(closest-side, rgb(78 112 230 / 0.12), transparent); }
+  .bd-c { width: 60vmax; height: 40vmax; left: 20vw; bottom: -22vmax; background: radial-gradient(closest-side, rgb(126 92 236 / 0.09), transparent); }
+
+  .bd-stars { left: 0; top: 0; width: 100%; height: 112%; }
+  .bd-grain { inset: 0; opacity: 0.05; mix-blend-mode: overlay; }
+  .bd-vignette { inset: 0; background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgb(3 5 9 / 0.55)); }
+
+  /* Calm: the same sky, quieter. */
+  .backdrop-calm .bd-glow { opacity: 0.6; }
+  .backdrop-calm .bd-stars { opacity: 0.7; }
+
+  /* Dawn: a horizon glowing behind the mountains, light rising from it. */
+  .backdrop-dawn { background: linear-gradient(#090d16, #0b1020 55%, #101530); }
+  .backdrop-dawn .bd-a { background: radial-gradient(closest-side, rgb(61 214 208 / 0.16), transparent); }
+  .backdrop-dawn .bd-c { width: 90vmax; height: 50vmax; left: 50%; bottom: -26vmax; margin-left: -45vmax; background: radial-gradient(closest-side, rgb(126 92 236 / 0.2), transparent); }
+  .bd-horizon {
+    left: 50%; bottom: 10vh; width: 150vmax; height: 46vmax; margin-left: -75vmax; border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(98 230 223 / 0.34), rgb(61 214 208 / 0.14) 38%, rgb(126 92 236 / 0.1) 62%, transparent);
+    transform: translateY(50%);
+  }
+  .bd-rays {
+    left: 50%; bottom: 0; width: 160vmax; height: 160vmax; margin: 0 0 -80vmax -80vmax;
+    background: repeating-conic-gradient(from 0deg at 50% 50%, rgb(98 230 223 / 0.045) 0deg 3deg, transparent 3deg 14deg);
+    -webkit-mask-image: radial-gradient(closest-side, #000 15%, transparent 70%);
+    mask-image: radial-gradient(closest-side, #000 15%, transparent 70%);
+  }
+  .bd-land { left: 0; bottom: 0; width: 100%; height: 34vh; }
+  .backdrop-dawn .bd-vignette { background: radial-gradient(120% 90% at 50% 80%, transparent 50%, rgb(3 5 9 / 0.6)); }
+
+  /* Motion that only follows time: kept, slowly, even with reduced motion. */
+  .tw { animation: bd-twinkle var(--dur) ease-in-out var(--delay) infinite; }
+  @keyframes bd-twinkle { 50% { opacity: 0.06; } }
+  .bd-a { animation: bd-drift-a 38s ease-in-out infinite alternate; }
+  .bd-b { animation: bd-drift-b 46s ease-in-out infinite alternate; }
+  .bd-c { animation: bd-drift-c 52s ease-in-out infinite alternate; }
+  @keyframes bd-drift-a { to { transform: translate(14vw, 10vh) scale(1.12); } }
+  @keyframes bd-drift-b { to { transform: translate(-12vw, 14vh) scale(0.92); } }
+  @keyframes bd-drift-c { to { transform: translate(-10vw, -8vh) scale(1.1); } }
+  .bd-horizon { animation: bd-breathe 9s ease-in-out infinite; }
+  @keyframes bd-breathe { 50% { opacity: 0.78; } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bd-rays { animation: bd-turn 140s linear infinite; }
+    @keyframes bd-turn { to { transform: rotate(360deg); } }
+    /* While the page scrolls, the auroras slide up and the stars a little less: depth. */
+    @supports (animation-timeline: scroll()) {
+      .bd-shift { animation: bd-scroll linear both; animation-timeline: scroll(root); }
+      .bd-stars { animation: bd-scroll-stars linear both; animation-timeline: scroll(root); }
+      @keyframes bd-scroll { to { transform: translateY(-38vh); } }
+      @keyframes bd-scroll-stars { to { transform: translateY(-9vh); } }
+    }
+  }
+</style>

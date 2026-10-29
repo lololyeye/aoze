@@ -2,6 +2,7 @@
 import "@fontsource-variable/inter/wght.css";
 import "../styles/site.css";
 import Logo from "../components/Logo.astro";
+import Backdrop from "../components/Backdrop.astro";
 import { GITHUB_URL, RELEASES_URL, href, pageHref } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
 
@@ -13,9 +14,11 @@ interface Props {
   description?: string;
   /** Extra JSON-LD for the page. */
   jsonLd?: object;
+  /** Which sky sits behind the page (see components/Backdrop.astro). */
+  scene?: "night" | "dawn" | "calm";
 }
 
-const { lang, path, title, jsonLd } = Astro.props;
+const { lang, path, title, jsonLd, scene } = Astro.props;
 const t = ui[lang];
 const other: Lang = lang === "en" ? "fr" : "en";
 const description = Astro.props.description ?? t.meta.description;
@@ -72,6 +75,7 @@ const home = pageHref(lang);
     </script>
   </head>
   <body>
+    <Backdrop scene={scene} />
     <a class="skip" href="#main">{t.nav.skip}</a>
 
     <header class="site-header">
@@ -119,14 +123,29 @@ const home = pageHref(lang);
           <a href={pageHref(lang, "terms/")}>{t.nav.terms}</a>
         </nav>
       </div>
+      <!-- The name, very large, closing every page: the A of the logo, its teal bar the only colour. -->
+      <div class="footer-mark reveal" data-anim="mark" aria-hidden="true">
+        <svg class="fm-a" viewBox="240 200 640 620" focusable="false">
+          <defs>
+            <linearGradient id="fm-fade" x1="0" y1="248" x2="0" y2="772" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#aac3e6" stop-opacity="0.2" />
+              <stop offset="1" stop-color="#aac3e6" stop-opacity="0.04" />
+            </linearGradient>
+          </defs>
+          <path d="M292 772 L512 248 L732 772" fill="none" stroke="url(#fm-fade)" stroke-width="96" stroke-linecap="round" stroke-linejoin="round" />
+          <g class="fm-glow">
+            <path class="fm-bar" pathLength="1" d="M392 616 L800 616" fill="none" stroke="#3dd6d0" stroke-width="76" stroke-linecap="round" />
+            <circle class="fm-dot" cx="800" cy="616" r="62" fill="#5ff0d4" />
+          </g>
+        </svg><span class="fm-rest">oze</span>
+      </div>
     </footer>
 
     <script>
-      // Header border once the page scrolls, mobile menu, language choice, reveal on scroll.
+      // Mobile menu, language choice, reveal on scroll. Smooth scrolling and the other
+      // animations live in scripts/motion.ts.
+      import "../scripts/motion";
       const header = document.querySelector<HTMLElement>(".site-header")!;
-      const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
-      onScroll();
-      window.addEventListener("scroll", onScroll, { passive: true });
 
       const btn = header.querySelector<HTMLButtonElement>(".menu-btn")!;
       const setMenu = (open: boolean) => {

@@ -20,15 +20,16 @@ export const legal = {
   /** Country whose law applies to the terms, e.g. "France". */
   governingLaw: "France",
 
-  /** The site is served by GitHub Pages (see .github/workflows/website.yml). */
+  /** The site is served by o2switch (see website/README.md). Details from o2switch.fr and its terms of sale. */
   host: {
-    name: "GitHub, Inc.",
-    address: "88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States",
-    url: "https://pages.github.com",
+    name: "o2switch SAS",
+    address: "Chemin des Pardiaux, 63000 Clermont-Ferrand, France",
+    phone: "04 44 44 60 40",
+    url: "https://www.o2switch.fr",
   },
 
   /** Date of the current version of the legal pages (YYYY-MM-DD). */
-  updated: "2026-10-27",
+  updated: "2026-10-29",
 };
 
 export type LegalField = Exclude<keyof typeof legal, "host" | "updated">;

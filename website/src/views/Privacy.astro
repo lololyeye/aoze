@@ -19,13 +19,13 @@ const summaryFr = [
   "Aoze traite vos images, GIF et clips sur votre PC. Ils ne sont envoyés nulle part.",
   "La seule connexion que l'application fait d'elle-même est la recherche de mises à jour sur GitHub, que vous pouvez désactiver.",
   "Le site n'a ni cookies, ni mesure d'audience, ni publicité, ni formulaire, ni compte.",
-  "Le site et les téléchargements sont servis par GitHub, qui voit votre adresse IP comme tout hébergeur.",
+  "Le site est hébergé en France par o2switch, les téléchargements par GitHub : comme tout hébergeur, chacun voit votre adresse IP.",
 ];
 const summaryEn = [
   "Aoze processes your images, GIFs and clips on your PC. They are not sent anywhere.",
   "The only connection the app makes on its own is the update check on GitHub, which you can turn off.",
   "The website has no cookies, no analytics, no ads, no forms and no accounts.",
-  "The website and the downloads are served by GitHub, which sees your IP address like any host.",
+  "The website is hosted in France by o2switch and the downloads by GitHub: like any host, each sees your IP address.",
 ];
 ---
 {fr ? (
@@ -65,7 +65,7 @@ const summaryEn = [
       <h2>Le site</h2>
       <p>Ce site est un ensemble de pages statiques : il n'a pas de serveur à nous, pas de base de données, pas de formulaire et pas de compte. Les polices et les images sont servies par le site lui-même (pas de Google Fonts, pas de vidéo intégrée d'un autre site).</p>
       <h3>Hébergement</h3>
-      <p>Le site est servi par GitHub Pages. Comme tout hébergeur, GitHub reçoit les données techniques de chaque visite (adresse IP, navigateur, page demandée, date) pour afficher le site et le protéger. Nous n'avons pas accès à ces journaux.</p>
+      <p>Le site est hébergé en France par o2switch. Comme tout hébergeur, o2switch enregistre les données techniques de chaque visite (adresse IP, navigateur, page demandée, date) dans les journaux du serveur, pour afficher le site et le protéger. Nous ne nous en servons pas pour suivre les visiteurs ni pour mesurer l'audience.</p>
       <h3>Version et nombre de téléchargements</h3>
       <p>Les pages d'accueil et de téléchargement demandent à l'API de GitHub (<code>api.github.com</code>) le numéro de la dernière version et le total des téléchargements, directement depuis votre navigateur. GitHub reçoit donc votre adresse IP et des informations sur votre navigateur. Aucun cookie n'est utilisé pour cela.</p>
       <h3>Téléchargement</h3>
@@ -97,7 +97,7 @@ const summaryEn = [
       <h2>Finalités et bases légales</h2>
       <ul>
         <li>Répondre à vos messages : intérêt légitime (article 6.1.f du RGPD), pouvoir répondre aux personnes qui nous écrivent.</li>
-        <li>Héberger le site et distribuer Aoze via GitHub : intérêt légitime, publier le site et distribuer Aoze. GitHub traite les données techniques de ses serveurs (adresse IP, journaux) en tant que responsable indépendant, selon sa propre <a href={GITHUB_PRIVACY}>déclaration de confidentialité</a>.</li>
+        <li>Héberger le site chez o2switch et distribuer Aoze via GitHub : intérêt légitime, publier le site et distribuer Aoze. o2switch héberge le site pour nous ; GitHub traite les données techniques de ses serveurs (adresse IP, journaux) en tant que responsable indépendant, selon sa propre <a href={GITHUB_PRIVACY}>déclaration de confidentialité</a>.</li>
         <li>Rechercher les mises à jour : intérêt légitime, vous proposer les correctifs et les nouvelles versions. La demande va directement à GitHub, nous n'en recevons rien, et vous pouvez la désactiver dans les Réglages.</li>
       </ul>
     </section>
@@ -113,7 +113,7 @@ const summaryEn = [
 
     <section id="transferts">
       <h2>Transferts hors de l'Union européenne</h2>
-      <p>GitHub, Inc. est une société basée aux États-Unis : les données techniques de vos visites et de la recherche de mises à jour peuvent y être traitées. GitHub est certifié au <a href="https://www.dataprivacyframework.gov/list">Data Privacy Framework</a> UE–États-Unis, qui encadre ces transferts.</p>
+      <p>GitHub, Inc. est une société basée aux États-Unis : les données techniques des demandes faites à GitHub (version affichée sur le site, téléchargements, recherche de mises à jour) peuvent y être traitées. Le site lui-même est hébergé en France. GitHub est certifié au <a href="https://www.dataprivacyframework.gov/list">Data Privacy Framework</a> UE–États-Unis, qui encadre ces transferts.</p>
     </section>
 
     <section id="droits">
@@ -164,7 +164,7 @@ const summaryEn = [
       <h2>The website</h2>
       <p>This website is a set of static pages: no server of our own, no database, no forms and no accounts. Fonts and images are served by the site itself (no Google Fonts, no video embedded from another site).</p>
       <h3>Hosting</h3>
-      <p>The website is served by GitHub Pages. Like any host, GitHub receives the technical data of each visit (IP address, browser, page requested, date) to serve the site and protect it. We have no access to these logs.</p>
+      <p>The website is hosted in France by o2switch. Like any host, o2switch records the technical data of each visit (IP address, browser, page requested, date) in the server logs, to serve the site and protect it. We don't use them to follow visitors or to measure the audience.</p>
       <h3>Version and download count</h3>
       <p>The home and download pages ask GitHub's API (<code>api.github.com</code>) for the latest version number and the total number of downloads, straight from your browser. GitHub therefore receives your IP address and information about your browser. No cookie is used for this.</p>
       <h3>Downloading</h3>
@@ -196,7 +196,7 @@ const summaryEn = [
       <h2>Purposes and legal bases</h2>
       <ul>
         <li>Answering your messages: legitimate interest (Article 6(1)(f) GDPR), so we can reply to people who write to us.</li>
-        <li>Hosting the website and distributing Aoze through GitHub: legitimate interest, to publish the website and distribute Aoze. GitHub processes the technical data of its servers (IP address, logs) as an independent controller, under its own <a href={GITHUB_PRIVACY}>privacy statement</a>.</li>
+        <li>Hosting the website at o2switch and distributing Aoze through GitHub: legitimate interest, to publish the website and distribute Aoze. o2switch hosts the website for us; GitHub processes the technical data of its servers (IP address, logs) as an independent controller, under its own <a href={GITHUB_PRIVACY}>privacy statement</a>.</li>
         <li>Checking for updates: legitimate interest, to offer you fixes and new versions. The request goes straight to GitHub, we receive nothing from it, and you can turn it off in Settings.</li>
       </ul>
     </section>
@@ -212,7 +212,7 @@ const summaryEn = [
 
     <section id="transfers">
       <h2>Transfers outside the European Union</h2>
-      <p>GitHub, Inc. is based in the United States, so the technical data of your visits and of the update check may be processed there. GitHub is certified under the EU–U.S. <a href="https://www.dataprivacyframework.gov/list">Data Privacy Framework</a>, which covers these transfers.</p>
+      <p>GitHub, Inc. is based in the United States, so the technical data of the requests made to GitHub (version shown on the site, downloads, update check) may be processed there. The website itself is hosted in France. GitHub is certified under the EU–U.S. <a href="https://www.dataprivacyframework.gov/list">Data Privacy Framework</a>, which covers these transfers.</p>
     </section>
 
     <section id="rights">

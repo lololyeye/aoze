@@ -18,7 +18,7 @@ const toc: [string, string][] = fr
     eyebrow="Mentions légales" h1="Mentions légales." lead="Qui publie Aoze et ce site, qui les héberge, et comment nous joindre." toc={toc}>
     <section id="editeur">
       <h2>Éditeur</h2>
-      <p>Le site lololyeye.github.io/aoze et l'application Aoze sont publiés par :</p>
+      <p>Le site aoze.fr et l'application Aoze sont publiés par :</p>
       <dl>
         <div><dt>Nom</dt><dd><Fill value={legal.publisherName} label="nom ou raison sociale" /></dd></div>
         <div><dt>Statut</dt><dd><Fill value={legal.publisherStatus} label="statut juridique" /></dd></div>
@@ -34,10 +34,11 @@ const toc: [string, string][] = fr
 
     <section id="hebergeur">
       <h2>Hébergeur</h2>
-      <p>Le site est hébergé par GitHub Pages. Les fichiers d'installation d'Aoze sont hébergés par GitHub Releases.</p>
+      <p>Le site est hébergé en France par o2switch. Les fichiers d'installation d'Aoze et leurs mises à jour sont hébergés par GitHub Releases (GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis).</p>
       <dl>
         <div><dt>Société</dt><dd>{legal.host.name}</dd></div>
         <div><dt>Adresse</dt><dd>{legal.host.address}</dd></div>
+        <div><dt>Téléphone</dt><dd>{legal.host.phone}</dd></div>
         <div><dt>Site</dt><dd><a href={legal.host.url}>{legal.host.url.replace("https://", "")}</a></dd></div>
       </dl>
     </section>
@@ -64,7 +65,7 @@ const toc: [string, string][] = fr
     eyebrow="Legal notice" h1="Legal notice." lead="Who publishes Aoze and this website, who hosts them, and how to reach us." toc={toc}>
     <section id="publisher">
       <h2>Publisher</h2>
-      <p>The website lololyeye.github.io/aoze and the Aoze application are published by:</p>
+      <p>The website aoze.fr and the Aoze application are published by:</p>
       <dl>
         <div><dt>Name</dt><dd><Fill value={legal.publisherName} label="nom ou raison sociale" /></dd></div>
         <div><dt>Status</dt><dd><Fill value={legal.publisherStatus} label="statut juridique" /></dd></div>
@@ -80,10 +81,11 @@ const toc: [string, string][] = fr
 
     <section id="host">
       <h2>Hosting</h2>
-      <p>The website is hosted by GitHub Pages. Aoze's installers are hosted by GitHub Releases.</p>
+      <p>The website is hosted in France by o2switch. Aoze's installers and their updates are hosted by GitHub Releases (GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States).</p>
       <dl>
         <div><dt>Company</dt><dd>{legal.host.name}</dd></div>
         <div><dt>Address</dt><dd>{legal.host.address}</dd></div>
+        <div><dt>Phone</dt><dd>{legal.host.phone}</dd></div>
         <div><dt>Website</dt><dd><a href={legal.host.url}>{legal.host.url.replace("https://", "")}</a></dd></div>
       </dl>
     </section>

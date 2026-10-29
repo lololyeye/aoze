@@ -1,6 +1,6 @@
 # Aoze website
 
-The public site for Aoze: https://lololyeye.github.io/aoze/
+The public site for Aoze: https://aoze.fr/ (hosted by o2switch).
 
 It lives apart from the desktop app: its own `package.json`, nothing imported from `src/` or `src-tauri/`.
 Built with [Astro](https://astro.build) as plain static HTML, with a few small scripts (interactive app preview,
@@ -51,3 +51,29 @@ Keep the installer name in the form Tauri produces (`Aoze_<version>_x64-setup.ex
   clicked; the settings are drawn, not working controls. File names and values are examples, nothing is processed.
 - `public/shots/app-clip-panel.webp`: a screenshot of the Clip settings panel of Aoze 1.0.0.
 - `public/og.png`: rendered from `demo/og.svg` with FFmpeg.
+
+## Hosting (aoze.fr on o2switch)
+
+The site is static: Apache only serves the files of `dist/`. Nothing runs on the server.
+
+1. `.github/workflows/website.yml` builds the site for `https://aoze.fr` (on every change, on each
+   release and every 6 hours) and force-pushes the result as the single commit of the `site` branch.
+2. On the o2switch account, a cron job (cPanel → *Tâches Cron*, every 5 minutes) fetches that branch
+   over HTTPS and writes it into the domain's folder with git. Files removed from the site are removed
+   there too; `cgi-bin/` and `.well-known/` (certificates) are left alone. A build without
+   `index.html` is ignored, so a broken build never replaces the live site.
+
+o2switch only accepts SSH, SFTP and FTPS from IP addresses allowed in advance, and GitHub's runners
+change address on every run: that is why the host pulls. No password, key or token is stored anywhere,
+the repository being public.
+
+The cron command, with the domain's folder as cPanel → *Domaines* shows it (`~/aoze.fr` here):
+
+```sh
+( R="$HOME/.aoze-site.git"; W="$HOME/aoze.fr"; { [ -d "$R" ] || git init -q --bare "$R"; } && git --git-dir="$R" fetch -q --depth 1 https://github.com/lololyeye/aoze.git site && git --git-dir="$R" cat-file -e FETCH_HEAD:index.html && git --git-dir="$R" --work-tree="$W" reset -q --hard FETCH_HEAD && git --git-dir="$R" gc -q --prune=now ) >> "$HOME/aoze-deploy.log" 2>&1
+```
+
+`public/.htaccess` sends `http://` and `www.` to `https://aoze.fr`, old `/aoze/...` paths to the same
+page, serves the 404 page, and sets the security and cache headers. The installers, `latest.json` and
+the app's updates stay on GitHub Releases: moving the site changes nothing for them.
+

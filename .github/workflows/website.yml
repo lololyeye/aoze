@@ -1,4 +1,9 @@
-# Builds website/ and publishes it to GitHub Pages (https://lololyeye.github.io/aoze/).
+# Builds website/ and publishes it:
+#   - for https://aoze.fr (o2switch): the built site is pushed to the `site` branch, and the o2switch
+#     account copies it into the site's folder every few minutes (cron job, see website/README.md).
+#     o2switch only accepts SSH/SFTP/FTPS from IP addresses allowed in advance, and GitHub's runners
+#     change address on every run, so the host pulls instead: no password or key is needed anywhere.
+#   - for GitHub Pages (https://lololyeye.github.io/aoze/), kept while aoze.fr is being set up.
 # Runs when the site changes, when a release is published so the download page shows
 # the new version right away, and every 6 hours to refresh the download count.
 # The github-pages environment only deploys from main, and a release event runs on its tag:
@@ -35,6 +40,41 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # https://aoze.fr: the built files become the only commit of the `site` branch.
+  aoze-fr:
+    if: github.event_name != 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci
+      - run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check the build
+        run: test -f dist/index.html && test -f dist/fr/index.html && test -f dist/download/index.html && test -f dist/.htaccess
+      - name: Publish to the site branch
+        working-directory: website/dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q -b site
+          git config user.name "lololyeye"
+          git config user.email "326610184+lololyeye@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Built site for aoze.fr from ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" site
+
+  # GitHub Pages copy, under /aoze.
   build:
     if: github.event_name != 'release'
     runs-on: ubuntu-latest
@@ -52,6 +92,8 @@ jobs:
       - run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SITE_URL: https://lololyeye.github.io
+          BASE_PATH: /aoze
       - uses: actions/upload-pages-artifact@v3
         with:
           path: website/dist

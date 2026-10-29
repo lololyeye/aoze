@@ -1,0 +1,54 @@
+# Aoze website on o2switch (Apache). Copied as is into the site's folder by the deployment.
+
+# No folder listings, and the site's own 404 page.
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # One address: https://aoze.fr. Plain http and www are sent there, path kept.
+  # Let's Encrypt / AutoSSL checks under /.well-known/ are left alone.
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteCond %{HTTPS} !=on [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteRule ^ https://aoze.fr%{REQUEST_URI} [R=301,L]
+
+  # Old GitHub Pages paths (/aoze/...) lead to the same page here.
+  RewriteRule ^aoze/?(.*)$ /$1 [R=301,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  # Browsers keep to HTTPS for a year once they have seen the site over HTTPS.
+  Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
+# Files under /_astro/ have a content hash in their name: they never change, cache them for a year.
+# Pages and the rest are checked again on every visit, so a new version shows up at once.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/xml "access plus 1 hour"
+</IfModule>
+<IfModule mod_headers.c>
+  <If "%{REQUEST_URI} =~ m#^/_astro/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  <If "%{REQUEST_URI} =~ m#\.html?$# || %{REQUEST_URI} =~ m#/$#">
+    Header set Cache-Control "no-cache"
+  </If>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml application/xml application/javascript text/javascript image/svg+xml application/json
+</IfModule>
+
+AddType image/webp .webp
+AddType image/svg+xml .svg
+AddType video/mp4 .mp4

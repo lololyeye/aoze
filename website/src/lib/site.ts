@@ -14,7 +14,7 @@ export const API_RELEASES = `https://api.github.com/repos/${REPO}/releases?per_p
 /** The Windows installer is the release asset Tauri names `<Product>_<version>_x64-setup.exe`. */
 export const INSTALLER = /_x64-setup\.exe$/i;
 
-/** Prefixes a site path with the GitHub Pages base ("/aoze/"). Use it for assets. */
+/** Prefixes a site path with the site's base ("/" on aoze.fr). Use it for assets. */
 export function href(path = ""): string {
   return import.meta.env.BASE_URL.replace(/\/$/, "") + "/" + path.replace(/^\//, "");
 }

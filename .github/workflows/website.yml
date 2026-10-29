@@ -3,7 +3,8 @@
 #     account copies it into the site's folder every few minutes (cron job, see website/README.md).
 #     o2switch only accepts SSH/SFTP/FTPS from IP addresses allowed in advance, and GitHub's runners
 #     change address on every run, so the host pulls instead: no password or key is needed anywhere.
-#   - for GitHub Pages (https://lololyeye.github.io/aoze/), kept while aoze.fr is being set up.
+#   - for GitHub Pages (https://lololyeye.github.io/aoze/), the former address: only redirect pages
+#     now, each sending visitors to the same page on aoze.fr (website/scripts/pages-redirects.sh).
 # Runs when the site changes, when a release is published so the download page shows
 # the new version right away, and every 6 hours to refresh the download count.
 # The github-pages environment only deploys from main, and a release event runs on its tag:
@@ -74,7 +75,7 @@ jobs:
           git commit -q -m "Built site for aoze.fr from ${GITHUB_SHA::7}"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" site
 
-  # GitHub Pages copy, under /aoze.
+  # GitHub Pages: redirects from the former address to aoze.fr.
   build:
     if: github.event_name != 'release'
     runs-on: ubuntu-latest
@@ -92,11 +93,10 @@ jobs:
       - run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SITE_URL: https://lololyeye.github.io
-          BASE_PATH: /aoze
+      - run: bash scripts/pages-redirects.sh dist pages
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: website/dist
+          path: website/pages
 
   deploy:
     needs: build

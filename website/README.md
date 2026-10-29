@@ -77,3 +77,7 @@ The cron command, with the domain's folder as cPanel → *Domaines* shows it (`~
 page, serves the 404 page, and sets the security and cache headers. The installers, `latest.json` and
 the app's updates stay on GitHub Releases: moving the site changes nothing for them.
 
+The former address, https://lololyeye.github.io/aoze/, is still published by the same workflow, but
+only as redirect pages (`scripts/pages-redirects.sh`): each page sends visitors to the same page on
+aoze.fr, keeping the query and the anchor.
+

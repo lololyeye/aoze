@@ -11,7 +11,7 @@
 [![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0f141c?style=flat-square&logo=windows)](#-requirements)
 [![MIT License](https://img.shields.io/badge/license-MIT-0f141c?style=flat-square)](LICENSE)
 
-[**⬇ Download for Windows**](https://github.com/lololyeye/aoze/releases/latest) · [Website](https://lololyeye.github.io/aoze/) · [Support on Ko-fi ☕](https://ko-fi.com/aoze_support)
+[**⬇ Download for Windows**](https://github.com/lololyeye/aoze/releases/latest) · [Website](https://aoze.fr) · [Support on Ko-fi ☕](https://ko-fi.com/aoze_support)
 
 <br />
 
@@ -48,7 +48,7 @@ Aoze is a free Windows app that **upscales, cleans up, smooths and compresses** 
   </tr>
 </table>
 
-More examples, including Smooth Motion from 24 to 60 FPS, are on the [website](https://lololyeye.github.io/aoze/).
+More examples, including Smooth Motion from 24 to 60 FPS, are on the [website](https://aoze.fr).
 
 <br />
 
@@ -244,7 +244,7 @@ media.rs →  ffprobe / ffmpeg, hardware encoder detection
 | `src/components/ui/` | Button, Segmented, Select, Slider, Toggle, Tooltip, HelpTip, Sheet… |
 | `src-tauri/src/` | core, queue, tuning, pipeline, anim, smooth, timemap, reframe, beat, color, looks, convert, compress, media, engine, updates… |
 | `src-tauri/tests/` | integration tests with the real engines and FFmpeg |
-| `website/` | the [website](https://lololyeye.github.io/aoze/) (Astro) |
+| `website/` | the [website](https://aoze.fr) (Astro) |
 
 The video engine, its measurements and the choices behind it are documented in [docs/VIDEO_ENGINE.md](docs/VIDEO_ENGINE.md).
 </details>

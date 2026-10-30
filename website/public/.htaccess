@@ -16,7 +16,7 @@ ErrorDocument 404 /404.html
   RewriteRule ^ https://aoze.fr%{REQUEST_URI} [R=301,L]
 
   # Old GitHub Pages paths (/aoze/...) lead to the same page here.
-  RewriteRule ^aoze/?(.*)$ /$1 [R=301,L]
+  RewriteRule ^aoze(?:/(.*))?$ /$1 [R=301,L]
 </IfModule>
 
 <IfModule mod_headers.c>

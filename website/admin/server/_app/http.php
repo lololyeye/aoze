@@ -10,11 +10,12 @@ final class HttpError extends RuntimeException
     }
 }
 
+/**
+ * The site's .htaccess already sends nosniff, X-Frame-Options, Referrer-Policy and HSTS on every
+ * response; sending them again here would give browsers two conflicting values.
+ */
 function send_security_headers(): void
 {
-    header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: DENY');
-    header('Referrer-Policy: no-referrer');
     header('X-Robots-Tag: noindex, nofollow');
     header('Cache-Control: no-store');
     header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");

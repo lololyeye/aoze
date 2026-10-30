@@ -3,6 +3,11 @@ DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # This file's rewrite rules replace the site's for /admin, so the redirect to https://aoze.fr
+  # is repeated here: the session cookie only travels over HTTPS.
+  RewriteCond %{HTTPS} !=on [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteRule ^ https://aoze.fr%{REQUEST_URI} [R=301,L]
   # PHP sources and the shell are only ever served through index.php.
   RewriteRule ^_app(/|$) - [F,L]
   # Built assets (hashed file names) are served as files.
@@ -11,9 +16,17 @@ DirectoryIndex index.php
   RewriteRule ^ index.php [L]
 </IfModule>
 
+# The site's one-hour default expiry must not reach the API or the shell.
+<IfModule mod_expires.c>
+  ExpiresActive Off
+</IfModule>
+
 <IfModule mod_headers.c>
   Header always set X-Robots-Tag "noindex, nofollow"
   <If "%{REQUEST_URI} =~ m#^/admin/assets/#">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </If>
+  <Else>
+    Header set Cache-Control "no-store"
+  </Else>
 </IfModule>

@@ -61,8 +61,21 @@ jobs:
       - run: npm run build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The private dashboard (website/admin/README.md): PHP API plus its built interface, under /admin.
+      - name: Check the admin's PHP
+        run: for f in admin/server/index.php admin/server/_app/*.php; do php -l "$f"; done
+      - run: npm run admin:build
+      - name: Add the admin under /admin
+        run: |
+          mkdir -p dist/admin
+          cp -r admin/server/. dist/admin/
+          rm dist/admin/dev-router.php
+          cp dist-admin/index.html dist/admin/_app/shell.html
+          cp -r dist-admin/assets dist/admin/assets
       - name: Check the build
-        run: test -f dist/index.html && test -f dist/fr/index.html && test -f dist/download/index.html && test -f dist/.htaccess
+        run: |
+          test -f dist/index.html && test -f dist/fr/index.html && test -f dist/download/index.html && test -f dist/.htaccess
+          test -f dist/admin/index.php && test -f dist/admin/.htaccess && test -f dist/admin/_app/shell.html && test -d dist/admin/assets
       - name: Publish to the site branch
         working-directory: website/dist
         env:

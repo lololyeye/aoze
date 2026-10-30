@@ -27,6 +27,9 @@ return [
     // One-time code to create the administrator account. Remove it once the account exists.
     'setup_token' => 'at least 24 random characters',
     'origin' => 'https://aoze.fr',
+    // Hides /admin: without it every admin path answers like a missing page. Open
+    // https://aoze.fr/admin/?key=<access_key> once per device. Changing it locks out every device.
+    'access_key' => 'at least 32 random characters',
     // Optional. GitHub allows 60 requests an hour per address without a token, and the address
     // is shared on a hosting server. A fine-grained token with no permission raises it to 5000.
     // 'github_token' => '',
@@ -53,6 +56,8 @@ the app before installing).
   cannot be reused.
 - Sign-in: one generic error, constant work for unknown accounts, 5 failures per IP or 10 per
   account in 15 minutes block further attempts. Everything is logged.
+- With `access_key` set, everything under /admin (shell, API, assets) is the site's 404 page
+  until the device has the key's cookie (`__Host-`, one year), so the sign-in is not reachable.
 - The first account needs the setup token; the endpoint refuses once an account exists.
 
 ## Local development

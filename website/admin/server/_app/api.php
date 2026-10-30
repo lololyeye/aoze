@@ -39,6 +39,7 @@ function security_settings(int $userId): array
         'twoFactor' => $user['totp_secret'] !== null,
         'passwordChangedAt' => iso((int) $user['password_changed_at']),
         'idleMinutes' => intdiv(IDLE_SECONDS, 60),
+        'hidden' => gate_enabled(),
     ];
 }
 

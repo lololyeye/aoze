@@ -13,7 +13,7 @@ function private_dir(): string
     return $dir ??= rtrim(getenv('AOZE_ADMIN_DIR') ?: dirname(__DIR__, 3) . '/aoze-admin', '/\\');
 }
 
-/** @return array{setup_token: string, origin: string, github_token: string, public_dir: string} */
+/** @return array{setup_token: string, access_key: string, origin: string, github_token: string, public_dir: string} */
 function config(): array
 {
     static $config = null;
@@ -27,6 +27,8 @@ function config(): array
     }
     return $config = [
         'setup_token' => is_string($values['setup_token'] ?? null) ? $values['setup_token'] : '',
+        // Hides /admin from anyone who has not opened /admin/?key=<access_key> (_app/gate.php).
+        'access_key' => is_string($values['access_key'] ?? null) ? $values['access_key'] : '',
         'origin' => is_string($values['origin'] ?? null) ? rtrim($values['origin'], '/') : 'https://aoze.fr',
         // Optional, read-only: lifts GitHub's limit of 60 requests an hour per server address.
         'github_token' => is_string($values['github_token'] ?? null) ? $values['github_token'] : '',

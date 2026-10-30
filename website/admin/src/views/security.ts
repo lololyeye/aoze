@@ -28,6 +28,7 @@ export async function security(): Promise<Html> {
     ${pageHead("Sécurité et activité", "Votre compte, vos sessions et tout ce qui a été fait ici.")}
     <div class="grid">
       ${card("Compte", settings, (s) => html`<dl class="kvs">
+        ${row("Accès à /admin", s.hidden ? pill("ok", "Masqué, clé d'accès requise") : pill("warn", "Visible par tous : ajoutez access_key à config.php"))}
         ${row("Double authentification", s.twoFactor ? pill("ok", "Activée") : pill("warn", "Désactivée"))}
         ${row("Mot de passe modifié", formatAgo(s.passwordChangedAt))}
         ${row("Déconnexion automatique", `après ${s.idleMinutes} minutes d'inactivité`)}

@@ -1,21 +1,41 @@
 <?php
 declare(strict_types=1);
 
-// Front controller for https://aoze.fr/admin/. /admin/api/* answers JSON; anything else gets
-// the dashboard shell, which holds no data: everything it shows comes from the API, and every
-// API route checks the session on the server.
+// Front controller for everything under https://aoze.fr/admin. Without the access key's cookie
+// (_app/gate.php) every path answers as a missing page. Past it: /admin/api/* answers JSON,
+// /admin/assets/* serves the built files, /admin/ the dashboard shell, which holds no data:
+// everything it shows comes from the API, and every API route checks the session on the server.
 require __DIR__ . '/_app/bootstrap.php';
 require __DIR__ . '/_app/http.php';
+require __DIR__ . '/_app/gate.php';
 require __DIR__ . '/_app/totp.php';
 require __DIR__ . '/_app/auth.php';
 require __DIR__ . '/_app/api.php';
 require __DIR__ . '/_app/integrations.php';
 require __DIR__ . '/_app/announcement.php';
 
-send_security_headers();
+const ASSET_TYPES = ['js' => 'text/javascript', 'css' => 'text/css', 'woff2' => 'font/woff2', 'svg' => 'image/svg+xml'];
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-$api = preg_match('#^/admin/api/([a-z0-9/-]+)$#', $path, $m) ? $m[1] : null;
+$route = str_starts_with($path, '/admin') ? substr($path, strlen('/admin')) : $path;
+
+if (!gate_open()) {
+    not_found();
+}
+
+if (preg_match('#^/assets/([A-Za-z0-9_-]+\.(js|css|woff2|svg))$#', $route, $m) && is_file(__DIR__ . "/assets/{$m[1]}")) {
+    header('Content-Type: ' . ASSET_TYPES[$m[2]]);
+    header('Cache-Control: public, max-age=31536000, immutable');
+    readfile(__DIR__ . "/assets/{$m[1]}");
+    exit;
+}
+
+$api = preg_match('#^/api/([a-z0-9/-]+)$#', $route, $m) ? $m[1] : null;
+if ($api === null && $route !== '' && $route !== '/') {
+    not_found();
+}
+
+send_security_headers();
 
 if ($api === null) {
     header('Content-Type: text/html; charset=utf-8');

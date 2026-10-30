@@ -111,4 +111,6 @@ export interface SecuritySettings {
   twoFactor: boolean;
   passwordChangedAt: string;
   idleMinutes: number;
+  /** /admin answers as a missing page to anyone without the access key. */
+  hidden: boolean;
 }

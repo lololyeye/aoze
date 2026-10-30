@@ -18,6 +18,8 @@ function send_security_headers(): void
 {
     header('X-Robots-Tag: noindex, nofollow');
     header('Cache-Control: no-store');
+    // Sent so the site's mod_expires leaves these responses alone.
+    header('Expires: 0');
     header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
 }
 

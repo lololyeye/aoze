@@ -7,13 +7,17 @@ The private dashboard at `https://aoze.fr/admin/`: a small TypeScript app (`src/
 
 ```
 ~/public_html/admin/        from server/, plus the built app
-  index.php                 front controller: /admin/api/* is JSON, anything else the app shell
+  index.php                 front controller: /admin/api/* is JSON, anything else the app shell;
+                            also answers /e and /get/<installer> for the public site
   .htaccess                 _app/ is never served; assets/ are static files
   _app/*.php, shell.html    API code and the built index.html
   assets/                   built JS, CSS and fonts
 ~/aoze-admin/               private, outside the web folder (chmod 700)
   config.php                setup token and allowed origin (chmod 600)
   admin.sqlite              account, sessions, login attempts, activity log, cache, banner
+  analytics.sqlite          audience measurement: visits, page views, download requests, daily totals
+  analytics.key             secret for the keyed hashes, kept apart from the database (chmod 600)
+  geo.sqlite                DB-IP's free country database (CC BY 4.0), refreshed monthly
   error.log                 server errors; the browser only sees a generic message
 ~/public_html/announcement.json   the published banner (`null` when there is none), written by the
                                   admin; the deployment's git reset leaves it alone
@@ -45,6 +49,24 @@ a refresh fails the last good answer is shown with its date. `latest.json` is ch
 updater checks it: version, official download URL, size and SHA-256 of the published file, and the
 file and version named in the signature's trusted comment (the signature itself is verified by
 the app before installing).
+
+## Audience measurement
+
+Off until it is turned on in Réglages, which should only happen once the privacy policy
+describes it. The site's script (`website/src/scripts/stats.ts`) sends page views, visible time
+and the download steps to `/e`; installer links go to `/get/<file>`, which records the request
+and redirects to the same file on GitHub Releases (always, even with measurement off).
+
+- A first-party `aoze_v` cookie (HttpOnly, 13 months, never extended) recognises a returning
+  visitor; the database keeps only a keyed hash of it. A visit ends after 30 minutes without
+  events.
+- The IP address only gives a country, then is dropped; it is never stored.
+- Not counted: robots, other sites, `DNT` or `Sec-GPC`, visitors who opted out (`aoze_optout`
+  cookie), and anyone holding the /admin key.
+- Hourly upkeep, run after a public request: daily totals, purge of raw data after the chosen
+  retention (3 to 25 months), login attempts after 90 days and the activity log after 12 months,
+  GitHub download counters, the monthly country database.
+- A download request is not a finished download: GitHub serves the file and says nothing more.
 
 ## Security model
 

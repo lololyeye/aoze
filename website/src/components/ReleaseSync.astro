@@ -4,15 +4,15 @@
 // (version, installer link, size, ...). If GitHub cannot be reached, the built values stay.
 //
 //   data-r="version"        text: 1.2.0
-//   data-r="href:asset.url" attribute: the installer link
+//   data-r="href:asset.url" attribute: the installer link, through aoze.fr/get/
 //   data-r="html:bodyHtml"  inner HTML: the release notes rendered by GitHub
-import { API_LATEST, INSTALLER, RELEASE_DOWNLOADS } from "../lib/site";
+import { API_LATEST, DOWNLOAD_PATH, INSTALLER, RELEASE_DOWNLOADS } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 ---
-<script is:inline define:vars={{ api: API_LATEST, downloads: RELEASE_DOWNLOADS, installer: INSTALLER.source, lang, notesTitle: ui[lang].download.notes("{name}") }}>
+<script is:inline define:vars={{ api: API_LATEST, downloads: RELEASE_DOWNLOADS, getPath: DOWNLOAD_PATH, installer: INSTALLER.source, lang, notesTitle: ui[lang].download.notes("{name}") }}>
   const fr = lang === "fr";
   const fmtSize = (b) => {
     const mb = (b / 1024 / 1024).toFixed(1);
@@ -29,7 +29,7 @@ const { lang } = Astro.props;
         if (!a || !a.browser_download_url.startsWith(downloads)) return;
         const data = {
           url: r.html_url,
-          "asset.url": a.browser_download_url,
+          "asset.url": getPath + a.name,
           version: r.tag_name.replace(/^v/, ""),
           date: fmtDate(r.published_at),
           name: a.name,

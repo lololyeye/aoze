@@ -377,6 +377,13 @@ dl, dd { margin: 0; }
 .form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .card > .form-actions { margin-top: 16px; justify-content: flex-start; }
 
+.settings-rows { margin-top: 16px; }
+.select {
+  padding: 7px 30px 7px 11px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--field); color: var(--text);
+  font: 14px/1.3 var(--font); cursor: pointer; transition: border-color 0.15s;
+}
+.select:hover { border-color: rgb(170 205 245 / 0.24); }
+.select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .switch { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; font-size: 14px; }
 .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .switch-track { position: relative; flex: none; width: 40px; height: 22px; margin-top: 1px; border-radius: 99px; background: rgb(255 255 255 / 0.1); border: 1px solid var(--line-strong); transition: background-color 0.2s; }

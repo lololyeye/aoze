@@ -7,7 +7,7 @@ import AppDemo from "../components/AppDemo.astro";
 import ReleaseSync from "../components/ReleaseSync.astro";
 import InstallNotice from "../components/InstallNotice.astro";
 import { latestRelease, version, formatSize } from "../lib/release";
-import { GITHUB_URL, RELEASES_URL, LICENSE_URL, ISSUES_URL, README_URL, VIDEO_ENGINE_URL, href, pageHref } from "../lib/site";
+import { GITHUB_URL, RELEASES_URL, LICENSE_URL, ISSUES_URL, README_URL, VIDEO_ENGINE_URL, downloadHref, href, pageHref } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
 
 interface Props { lang: Lang }
@@ -243,7 +243,7 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
         <NightScene class="final-bg" />
         <h2>{t.final.title}</h2>
         <div class="final-actions">
-          <a class="btn btn-primary btn-lg" href={release.asset.url} data-r="href:asset.url" data-installer>
+          <a class="btn btn-primary btn-lg" href={downloadHref(release.asset.name)} data-r="href:asset.url" data-installer>
             <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={downloadIcon} />
             {t.final.download} <span data-r="version">{v}</span>
           </a>

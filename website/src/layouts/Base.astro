@@ -71,7 +71,7 @@ const home = pageHref(lang);
       const browser = ((navigator.languages && navigator.languages[0]) || navigator.language || "").toLowerCase();
       const wanted = saved || (browser.startsWith("fr") ? "fr" : null);
       if (en && wanted && wanted !== lang && (saved || lang === "en")) {
-        location.replace((wanted === "fr" ? fr : en) + location.hash);
+        location.replace((wanted === "fr" ? fr : en) + location.search + location.hash);
       }
     </script>
   </head>
@@ -146,6 +146,7 @@ const home = pageHref(lang);
       // Mobile menu, language choice, reveal on scroll. Smooth scrolling and the other
       // animations live in scripts/motion.ts.
       import "../scripts/motion";
+      import "../scripts/stats";
       const header = document.querySelector<HTMLElement>(".site-header")!;
 
       const btn = header.querySelector<HTMLButtonElement>(".menu-btn")!;

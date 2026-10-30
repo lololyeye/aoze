@@ -2,7 +2,7 @@
 // its own database, caches what it fetches, and dates every answer.
 import { api, ApiError } from "./api";
 import type {
-  ActivityEntry, Announcement, CertificateStatus, Dataset, DeployStatus, LoginEntry, ManifestStatus, PageStatus,
+  ActivityEntry, AnalyticsSettings, Announcement, CertificateStatus, Dataset, DeployStatus, LoginEntry, ManifestStatus, PageStatus,
   Release, SecuritySettings, ServerStatus, SessionEntry, WorkflowRun,
 } from "./types";
 
@@ -40,3 +40,4 @@ export const activity = () => plain<ActivityEntry[]>("activity");
 export const logins = () => plain<LoginEntry[]>("logins");
 export const sessions = () => plain<SessionEntry[]>("sessions");
 export const security = () => plain<SecuritySettings>("security");
+export const analyticsSettings = () => plain<AnalyticsSettings>("analytics/settings");

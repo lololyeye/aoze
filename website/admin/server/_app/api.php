@@ -43,6 +43,24 @@ function security_settings(int $userId): array
     ];
 }
 
+/** @return array<string, mixed> */
+function analytics_settings(): array
+{
+    $db = analytics_db();
+    $oldest = $db->query('SELECT MIN(started_at) FROM sessions')->fetchColumn();
+    $maintained = (int) meta_get('maintenance_at', '0');
+    return [
+        'enabled' => analytics_enabled(),
+        'retentionDays' => retention_days(),
+        'retentionChoices' => RETENTION_CHOICES,
+        'sessions' => (int) $db->query('SELECT COUNT(*) FROM sessions')->fetchColumn(),
+        'downloads' => (int) $db->query('SELECT COUNT(*) FROM downloads')->fetchColumn(),
+        'oldestAt' => $oldest === null ? null : iso((int) $oldest),
+        'geoMonth' => meta_get('geo_month') ?: null,
+        'maintainedAt' => $maintained > 0 ? iso($maintained) : null,
+    ];
+}
+
 /** Checks the password again before a sensitive change, with the same rate limit as signing in. */
 function confirm_password(array $admin, string $password): void
 {
@@ -214,6 +232,29 @@ function handle_api(string $method, string $route): never
         case 'POST announcement':
             $admin = require_admin(write: true);
             json_response(200, ['data' => save_announcement($admin, json_input()), 'fetchedAt' => iso(time())]);
+
+        case 'GET analytics/settings':
+            require_admin();
+            json_response(200, analytics_settings());
+
+        case 'POST analytics/settings':
+            $admin = require_admin(write: true);
+            $in = json_input();
+            if (array_key_exists('enabled', $in)) {
+                if (!is_bool($in['enabled'])) {
+                    throw new HttpError(400, 'Requête invalide.');
+                }
+                meta_set('enabled', $in['enabled'] ? '1' : '0');
+                audit($admin['id'], $in['enabled'] ? "Mesure d'audience activée" : "Mesure d'audience désactivée");
+            }
+            if (array_key_exists('retentionDays', $in)) {
+                if (!in_array($in['retentionDays'], RETENTION_CHOICES, true)) {
+                    throw new HttpError(422, 'Durée de conservation non prévue.');
+                }
+                meta_set('retention_days', (string) $in['retentionDays']);
+                audit($admin['id'], 'Durée de conservation modifiée', "{$in['retentionDays']} jours");
+            }
+            json_response(200, analytics_settings());
 
         default:
             throw new HttpError(404, 'Introuvable.');

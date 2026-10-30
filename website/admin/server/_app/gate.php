@@ -41,8 +41,14 @@ function gate_open(): bool
         header('Location: /admin/', true, 302);
         exit;
     }
+    return has_gate_cookie();
+}
+
+function has_gate_cookie(): bool
+{
+    $key = config()['access_key'];
     $cookie = $_COOKIE[GATE_COOKIE] ?? '';
-    return is_string($cookie) && hash_equals(gate_token($key), $cookie);
+    return $key !== '' && is_string($cookie) && hash_equals(gate_token($key), $cookie);
 }
 
 /** The site's own 404 page with the same status and headers Apache gives any unknown path. */

@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// Front controller for everything under https://aoze.fr/admin. Without the access key's cookie
+// Front controller for everything under https://aoze.fr/admin, and for the two public endpoints
+// the site's .htaccess sends here (/e and /get/, _app/collect.php). Without the access key's cookie
 // (_app/gate.php) every path answers as a missing page. Past it: /admin/api/* answers JSON,
 // /admin/assets/* serves the built files, /admin/ the dashboard shell, which holds no data:
 // everything it shows comes from the API, and every API route checks the session on the server.
@@ -13,11 +14,18 @@ require __DIR__ . '/_app/auth.php';
 require __DIR__ . '/_app/api.php';
 require __DIR__ . '/_app/integrations.php';
 require __DIR__ . '/_app/announcement.php';
+require __DIR__ . '/_app/analytics.php';
+require __DIR__ . '/_app/collect.php';
+require __DIR__ . '/_app/maintenance.php';
 
 const ASSET_TYPES = ['js' => 'text/javascript', 'css' => 'text/css', 'woff2' => 'font/woff2', 'svg' => 'image/svg+xml'];
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $route = str_starts_with($path, '/admin') ? substr($path, strlen('/admin')) : $path;
+
+if (is_public_route($path)) {
+    handle_public($path);
+}
 
 if (!gate_open()) {
     not_found();

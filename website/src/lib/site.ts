@@ -30,6 +30,13 @@ export function href(path = ""): string {
   return import.meta.env.BASE_URL.replace(/\/$/, "") + "/" + path.replace(/^\//, "");
 }
 
+/**
+ * Installer links go through aoze.fr/get/<file>, which counts the request and redirects to the
+ * same file on GitHub Releases (admin/server/_app/collect.php).
+ */
+export const DOWNLOAD_PATH = href("get/");
+export const downloadHref = (file: string): string => DOWNLOAD_PATH + file;
+
 /** A page in a given language: English at the root, French under /fr/. */
 export function pageHref(lang: "en" | "fr", path = ""): string {
   return href((lang === "fr" ? "fr/" : "") + path.replace(/^\//, ""));

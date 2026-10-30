@@ -121,3 +121,16 @@ export interface SecuritySettings {
   /** /admin answers as a missing page to anyone without the access key. */
   hidden: boolean;
 }
+
+export interface AnalyticsSettings {
+  enabled: boolean;
+  retentionDays: number;
+  retentionChoices: number[];
+  /** Visits and download requests currently stored, before the retention purge. */
+  sessions: number;
+  downloads: number;
+  oldestAt: string | null;
+  /** Month of the DB-IP country database in use. */
+  geoMonth: string | null;
+  maintainedAt: string | null;
+}

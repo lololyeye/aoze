@@ -108,7 +108,7 @@ const c = fr
 </dialog>
 
 <script>
-  import { RELEASE_DOWNLOADS } from "../lib/site";
+  import { DOWNLOAD_PATH } from "../lib/site";
 
   // Every installer link opens the notice first; "OK" starts the download.
   const dialog = document.querySelector<HTMLDialogElement>("[data-install-notice]");
@@ -132,7 +132,8 @@ const c = fr
     });
     dialog.querySelector("[data-in-ok]")!.addEventListener("click", () => {
       close();
-      if (url.startsWith(RELEASE_DOWNLOADS)) location.href = url;
+      const target = new URL(url, location.href);
+      if (target.origin === location.origin && target.pathname.startsWith(DOWNLOAD_PATH)) location.href = target.href;
     });
     dialog.querySelectorAll<HTMLButtonElement>("[data-copy-text]").forEach((b) =>
       b.addEventListener("click", async () => {

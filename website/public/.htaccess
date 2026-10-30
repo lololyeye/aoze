@@ -17,6 +17,10 @@ ErrorDocument 404 /404.html
 
   # Old GitHub Pages paths (/aoze/...) lead to the same page here.
   RewriteRule ^aoze(?:/(.*))?$ /$1 [R=301,L]
+
+  # Audience events (/e) and installer requests (/get/<file>) are answered by the admin's PHP,
+  # which redirects downloads to GitHub Releases (admin/_app/collect.php).
+  RewriteRule ^(e|get/[^/]+)$ admin/index.php [L]
 </IfModule>
 
 <IfModule mod_headers.c>

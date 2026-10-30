@@ -6,34 +6,38 @@ import { html, type Html } from "../html";
 import type { IconName } from "../icons";
 import { card, empty, kpi, kpis, panel } from "../ui";
 
-/** The site has no audience measurement yet: these pages say what they will show, never a made-up number. */
-function notMeasured(iconName: IconName, list: string[]): Html {
+/** Until the charts are connected, these pages say what they will show, never a made-up number. */
+async function notMeasured(iconName: IconName, list: string[]): Promise<Html> {
+  const settings = await data.analyticsSettings();
+  const on = settings.state === "live" && settings.data.enabled;
   return html`<div class="grid">${panel("Mesure d'audience", empty({
     icon: iconName,
-    title: "Pas encore active",
-    text: "Le site ne compte pas encore ses visites. La mesure sera activée après la mise à jour de la politique de confidentialité ; cette page montrera alors :",
+    title: on ? "Mesure active" : "Pas encore active",
+    text: on
+      ? `${formatNumber(settings.data.sessions)} visites enregistrées pour l'instant. Les graphiques de cette page ne sont pas encore branchés ; ils montreront :`
+      : "Le site ne compte pas encore ses visites. La mesure sera activée après la mise à jour de la politique de confidentialité ; cette page montrera alors :",
     list,
     action: html`<a class="btn btn-ghost btn-sm" href="#/settings">Voir les réglages</a>`,
   }), { wide: true })}</div>`;
 }
 
-export const traffic = async (): Promise<Html> => notMeasured("analytics", [
+export const traffic = (): Promise<Html> => notMeasured("analytics", [
   "Pages vues", "Visiteurs uniques", "Visiteurs qui reviennent", "Sessions", "Durée moyenne", "Pages par session", "Évolution jour, semaine, mois",
 ]);
 
-export const visitors = async (): Promise<Html> => notMeasured("users", [
+export const visitors = (): Promise<Html> => notMeasured("users", [
   "Pays", "Navigateurs", "Systèmes", "Appareils", "Nouveaux et réguliers", "Pages d'entrée et de sortie",
 ]);
 
-export const acquisition = async (): Promise<Html> => notMeasured("link", [
+export const acquisition = (): Promise<Html> => notMeasured("link", [
   "Accès direct", "Moteurs de recherche", "Discord", "TikTok", "Autres sites", "Campagnes UTM",
 ]);
 
-export const pages = async (): Promise<Html> => notMeasured("file", [
+export const pages = (): Promise<Html> => notMeasured("file", [
   "Pages les plus vues", "Français et anglais", "Temps de lecture", "Pages d'arrivée", "Taux de sortie", "Visites de la page Téléchargement",
 ]);
 
-export const conversions = async (): Promise<Html> => notMeasured("funnel", [
+export const conversions = (): Promise<Html> => notMeasured("funnel", [
   "Arrivée sur le site", "Section de téléchargement vue", "Clic sur Télécharger", "Téléchargement demandé", "Par langue", "Par source",
 ]);
 

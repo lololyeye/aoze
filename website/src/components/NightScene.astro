@@ -45,7 +45,6 @@ const pines = [
         ? <circle class="tw" cx={s.x} cy={s.y} r={s.r} opacity={s.o} style={`--dur:${s.tw.dur}s;--delay:${s.tw.delay}s`} />
         : <circle cx={s.x} cy={s.y} r={s.r} opacity={s.o} />)}
     </g>
-    <!-- A shooting star now and then, across the upper sky. -->
     <line class="night-shoot" x1="0" y1="0" x2="120" y2="0" stroke={`url(#${id("shoot")})`} stroke-width="1.6" stroke-linecap="round" />
   </svg>
   <svg class="night-land" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice" focusable="false">

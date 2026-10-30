@@ -153,7 +153,6 @@ const en = {
   },
 
   compare: {
-    eyebrow: "Before / after",
     title: "Drag the line and compare",
     lead: "This is what Aoze's engines really produce from that small file, not a mock-up.",
     tabs: "Demo",
@@ -181,7 +180,6 @@ const en = {
     noteLink: "a script in the repository",
   },
   features: {
-    eyebrow: "Features",
     title: "What Aoze does",
     lead: "There is a workspace for images, one for clips and one for conversions, and each shows only the options that fit your file.",
     image: {
@@ -216,7 +214,6 @@ const en = {
     more: ["Every option is explained in the", "README", ", and the video engine in", "its own notes", "."],
   },
   how: {
-    eyebrow: "How it works",
     title: "From your file to the result",
     steps: [
       { title: "Import", text: "Drop files anywhere in the window. Aoze opens the right workspace." },
@@ -226,7 +223,6 @@ const en = {
     ],
   },
   editors: {
-    eyebrow: "For edits",
     title: "Made with editors in mind",
     trio: ["The settings that matter for a clip you're about to post, and nothing you have to fight with."],
     fpsLabel: "24 FPS to 60 FPS",
@@ -242,7 +238,6 @@ const en = {
     panelCaption: "The Clip panel, set for an edit.",
   },
   perf: {
-    eyebrow: "Performance",
     title: "Fast, even on a modest PC",
     lead: "Aoze reads your hardware and adapts to it, from a small laptop to a gaming PC.",
     items: [
@@ -259,7 +254,6 @@ const en = {
     privacy: "Privacy policy",
   },
   oss: {
-    eyebrow: "MIT License",
     title: "The code is open",
     lead: "Aoze is MIT licensed. The code, the releases and the issues all live on GitHub.",
     github: "View on GitHub",
@@ -509,7 +503,6 @@ const fr: Dict = {
   },
 
   compare: {
-    eyebrow: "Avant / après",
     title: "Faites glisser la ligne pour comparer",
     lead: "C'est ce que les moteurs d'Aoze produisent vraiment à partir de ce petit fichier, pas une maquette.",
     tabs: "Démo",
@@ -537,7 +530,6 @@ const fr: Dict = {
     noteLink: "un script du dépôt",
   },
   features: {
-    eyebrow: "Fonctionnalités",
     title: "Ce que fait Aoze",
     lead: "Un espace pour les images, un pour les clips et un pour les conversions, et chacun n'affiche que les options utiles à votre fichier.",
     image: {
@@ -572,7 +564,6 @@ const fr: Dict = {
     more: ["Chaque option est expliquée dans le", "README", " (en anglais), et le moteur vidéo dans", "ses propres notes", "."],
   },
   how: {
-    eyebrow: "Comment ça marche",
     title: "De votre fichier au résultat",
     steps: [
       { title: "Importer", text: "Déposez vos fichiers n'importe où dans la fenêtre. Aoze ouvre le bon espace." },
@@ -582,7 +573,6 @@ const fr: Dict = {
     ],
   },
   editors: {
-    eyebrow: "Pour les edits",
     title: "Pensé avec des editors",
     trio: ["Les réglages qui comptent pour un clip qu'on va poster, sans rien qui vous complique la vie."],
     fpsLabel: "De 24 à 60 FPS",
@@ -598,7 +588,6 @@ const fr: Dict = {
     panelCaption: "Le panneau Clip, réglé pour un edit.",
   },
   perf: {
-    eyebrow: "Performances",
     title: "Rapide, même sur un petit PC",
     lead: "Aoze lit votre matériel et s'y adapte, du petit portable au PC gamer.",
     items: [
@@ -615,7 +604,6 @@ const fr: Dict = {
     privacy: "Politique de confidentialité",
   },
   oss: {
-    eyebrow: "Licence MIT",
     title: "Le code est ouvert",
     lead: "Aoze est sous licence MIT. Le code, les versions et les tickets sont sur GitHub.",
     github: "Voir sur GitHub",

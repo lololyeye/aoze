@@ -6,13 +6,13 @@
 //   data-r="version"        text: 1.2.0
 //   data-r="href:asset.url" attribute: the installer link
 //   data-r="html:bodyHtml"  inner HTML: the release notes rendered by GitHub
-import { API_LATEST } from "../lib/site";
+import { API_LATEST, INSTALLER, RELEASE_DOWNLOADS } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 ---
-<script is:inline define:vars={{ api: API_LATEST, lang, notesTitle: ui[lang].download.notes("{name}") }}>
+<script is:inline define:vars={{ api: API_LATEST, downloads: RELEASE_DOWNLOADS, installer: INSTALLER.source, lang, notesTitle: ui[lang].download.notes("{name}") }}>
   const fr = lang === "fr";
   const fmtSize = (b) => {
     const mb = (b / 1024 / 1024).toFixed(1);
@@ -24,9 +24,9 @@ const { lang } = Astro.props;
     fetch(api, { headers: { Accept: "application/vnd.github.full+json" } })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((r) => {
-        const a = r.assets.find((x) => /_x64-setup\.exe$/i.test(x.name));
-        // Only an installer from this repository's own releases is ever linked.
-        if (!a || !a.browser_download_url.startsWith("https://github.com/lololyeye/aoze/releases/download/")) return;
+        const pattern = new RegExp(installer, "i");
+        const a = r.assets.find((x) => pattern.test(x.name));
+        if (!a || !a.browser_download_url.startsWith(downloads)) return;
         const data = {
           url: r.html_url,
           "asset.url": a.browser_download_url,

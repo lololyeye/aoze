@@ -28,7 +28,7 @@ const summaryEn = [
 ---
 {fr ? (
   <Legal lang={lang} path="terms/" title="Conditions d'utilisation" description="Les règles simples d'utilisation de l'application Aoze et de son site."
-    eyebrow="Conditions d'utilisation" h1="Conditions d'utilisation." lead="Les règles d'utilisation de l'application Aoze et de ce site, écrites pour être lues." toc={toc} summary={summaryFr}>
+    h1="Conditions d'utilisation" lead="Les règles d'utilisation de l'application Aoze et de ce site, écrites pour être lues." toc={toc} summary={summaryFr}>
     <section id="objet">
       <h2>À quoi servent ces conditions</h2>
       <p>Elles s'appliquent à l'utilisation de ce site et de l'application Aoze, publiés par <Fill value={legal.publisherName} label="nom ou raison sociale" /> (voir les <a href={pageHref(lang, "legal/")}>mentions légales</a>). En utilisant le site ou Aoze, vous les acceptez.</p>
@@ -112,7 +112,7 @@ const summaryEn = [
   </Legal>
 ) : (
   <Legal lang={lang} path="terms/" title="Terms of use" description="The simple rules for using the Aoze app and its website."
-    eyebrow="Terms of use" h1="Terms of use." lead="The rules for using the Aoze app and this website, written to be read." toc={toc} summary={summaryEn}>
+    h1="Terms of use" lead="The rules for using the Aoze app and this website, written to be read." toc={toc} summary={summaryEn}>
     <section id="purpose">
       <h2>What these terms are for</h2>
       <p>They apply to the use of this website and of the Aoze app, published by <Fill value={legal.publisherName} label="nom ou raison sociale" /> (see the <a href={pageHref(lang, "legal/")}>legal notice</a>). By using the website or Aoze, you accept them.</p>

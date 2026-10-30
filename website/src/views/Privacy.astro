@@ -30,7 +30,7 @@ const summaryEn = [
 ---
 {fr ? (
   <Legal lang={lang} path="privacy/" title="Confidentialité" description="Ce que l'application Aoze et son site font de vos données, vérifié dans le code."
-    eyebrow="Confidentialité" h1="Vos données, simplement." lead="Ce que l'application Aoze et ce site font, et ne font pas, avec vos données. Tout ce qui suit a été vérifié dans le code source d'Aoze." toc={toc} summary={summaryFr}>
+    h1="Vos données, simplement" lead="Ce que l'application Aoze et ce site font, et ne font pas, avec vos données. Tout ce qui suit a été vérifié dans le code source d'Aoze." toc={toc} summary={summaryFr}>
     <section id="qui">
       <h2>Qui est responsable</h2>
       <p>Aoze et ce site sont publiés par <Fill value={legal.publisherName} label="nom ou raison sociale" /> (voir les <a href={pageHref(lang, "legal/")}>mentions légales</a>). Pour toute question sur vos données : <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
@@ -129,7 +129,7 @@ const summaryEn = [
   </Legal>
 ) : (
   <Legal lang={lang} path="privacy/" title="Privacy" description="What the Aoze app and its website do with your data, checked against the code."
-    eyebrow="Privacy" h1="Your data, plainly." lead="What the Aoze app and this website do, and don't do, with your data. Everything below was checked against Aoze's source code." toc={toc} summary={summaryEn}>
+    h1="Your data, plainly" lead="What the Aoze app and this website do, and don't do, with your data. Everything below was checked against Aoze's source code." toc={toc} summary={summaryEn}>
     <section id="who">
       <h2>Who is responsible</h2>
       <p>Aoze and this website are published by <Fill value={legal.publisherName} label="nom ou raison sociale" /> (see the <a href={pageHref(lang, "legal/")}>legal notice</a>). For any question about your data: <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>

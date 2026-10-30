@@ -37,7 +37,7 @@ const toc: [string, string][] = fr
 ---
 {fr ? (
   <Legal lang={lang} path="license/" title="Licence" description="Aoze est sous licence MIT. Ce que cela permet, et les composants qui ont une autre licence."
-    eyebrow="Licence MIT" h1="Licence." lead="Aoze est un logiciel libre sous licence MIT. Voici ce que cela vous permet, et quelles parties de l'installeur ont une autre licence." toc={toc}>
+    h1="Licence" lead="Aoze est un logiciel libre sous licence MIT. Voici ce que cela vous permet, et quelles parties de l'installeur ont une autre licence." toc={toc}>
     <section id="licence">
       <h2>La licence d'Aoze</h2>
       <p>Le code source d'Aoze (l'application et ce site) est publié sous la <strong>licence MIT</strong>{holder && <>, <code>{holder}</code></>}. Le texte officiel est dans le fichier <a href={LICENSE_URL}>LICENSE</a> du dépôt, et il est reproduit en bas de cette page.</p>
@@ -77,7 +77,7 @@ const toc: [string, string][] = fr
   </Legal>
 ) : (
   <Legal lang={lang} path="license/" title="License" description="Aoze is under the MIT License. What it allows, and the parts that have another licence."
-    eyebrow="MIT License" h1="License." lead="Aoze is free software under the MIT License. Here is what it lets you do, and which parts of the installer have a different licence." toc={toc}>
+    h1="License" lead="Aoze is free software under the MIT License. Here is what it lets you do, and which parts of the installer have a different licence." toc={toc}>
     <section id="licence">
       <h2>Aoze's licence</h2>
       <p>Aoze's source code (the app and this website) is published under the <strong>MIT License</strong>{holder && <>, <code>{holder}</code></>}. The official text is in the repository's <a href={LICENSE_URL}>LICENSE</a> file, and it is reproduced at the bottom of this page.</p>

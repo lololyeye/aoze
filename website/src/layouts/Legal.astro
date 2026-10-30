@@ -10,7 +10,6 @@ interface Props {
   path: string;
   title: string;
   description: string;
-  eyebrow: string;
   h1: string;
   lead: string;
   /** The page's sections, in order: [id, title]. */
@@ -18,7 +17,7 @@ interface Props {
   /** A few plain sentences that sum the page up. */
   summary?: string[];
 }
-const { lang, path, title, description, eyebrow, h1, lead, toc, summary } = Astro.props;
+const { lang, path, title, description, h1, lead, toc, summary } = Astro.props;
 const words = lang === "fr"
   ? { updated: "Dernière mise à jour :", summary: "En bref", contents: "Sur cette page" }
   : { updated: "Last updated:", summary: "In short", contents: "On this page" };

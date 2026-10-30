@@ -97,7 +97,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .skip:focus { top: 12px; }
 
-/* ── Buttons ─────────────────────────────────────────────── */
 .btn {
   --h: 46px;
   display: inline-flex; align-items: center; gap: 10px;
@@ -125,7 +124,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .link:hover { color: var(--accent-hover); }
 
-/* ── The crossbar: the bar of the "A" that runs past the letter. Used as the site's one ornament. */
+/* The crossbar: the bar of the "A" that runs past the letter, the site's one ornament. */
 .eyebrow {
   display: inline-flex; align-items: center; gap: 12px;
   color: var(--accent); font: 600 14px/1 var(--font); letter-spacing: -0.005em;
@@ -137,7 +136,6 @@ ul { margin: 0; padding: 0; list-style: none; }
     linear-gradient(var(--accent), var(--accent)) 0 50% / calc(100% - 4px) 2px no-repeat;
 }
 
-/* ── Header ──────────────────────────────────────────────── */
 .site-header { position: sticky; top: 0; z-index: 50; height: 72px; pointer-events: none; }
 /* The bar floats as a capsule over the page, the same at every scroll position and on every page. */
 .site-header .wrap {
@@ -194,14 +192,13 @@ ul { margin: 0; padding: 0; list-style: none; }
   .menu-open .nav a:last-child { border-bottom: 0; }
 }
 
-/* ── Sections ────────────────────────────────────────────── */
 section { padding-block: clamp(72px, 11vw, 136px); }
 .section-head { display: grid; gap: 18px; max-width: 720px; margin-bottom: clamp(36px, 5vw, 56px); }
 .section-head h2 { font-size: clamp(2rem, 4.2vw, 3rem); }
 .section-head p { color: var(--text-2); font-size: clamp(1.02rem, 1.4vw, 1.14rem); max-width: 60ch; }
 .divider { border: 0; border-top: 1px solid var(--line); margin: 0; }
 
-/* ── Reveal on scroll (only when JS runs) ──
+/* Reveal on scroll (only when JS runs).
    Blocks come in from a soft blur. With reduced motion they only fade: nothing travels. */
 .js .reveal {
   opacity: 0; transform: translateY(22px); filter: blur(6px);
@@ -241,7 +238,7 @@ section { padding-block: clamp(72px, 11vw, 136px); }
   .js .in .split-rise .w, .js .split-rise.in .w { opacity: 1; }
 }
 
-/* ── Cursor glow on cards (position set by scripts/motion.ts) ── */
+/* Cursor glow on cards; scripts/motion.ts sets the position. */
 .spot { position: relative; isolation: isolate; }
 .spot::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
@@ -252,7 +249,6 @@ section { padding-block: clamp(72px, 11vw, 136px); }
   .spot:hover::before { opacity: 1; }
 }
 
-/* ── Footer ──────────────────────────────────────────────── */
 .site-footer { border-top: 1px solid var(--line); padding-block: 40px 48px; }
 .site-footer .wrap { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 28px; }
 .site-footer .sign { color: var(--text-3); font-size: 14px; margin-top: 8px; }

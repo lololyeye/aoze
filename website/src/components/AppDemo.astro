@@ -45,7 +45,6 @@ const initial = "image";
 ---
 <figure class="window demo" data-demo>
   <div class="app" role="group" aria-label={d.label}>
-    <!-- Title bar -->
     <div class="tb" aria-hidden="true">
       <span class="tb-brand">
         <svg viewBox="250 210 600 600" width="17" height="17">
@@ -70,7 +69,6 @@ const initial = "image";
     </div>
 
     <div class="body">
-      <!-- Sidebar -->
       <nav class="sb" aria-label={d.label}>
         <div class="sb-group sb-tabs" role="tablist" aria-orientation="vertical">
           <span class="sb-hl" aria-hidden="true"><span class="sb-line"></span></span>
@@ -95,7 +93,6 @@ const initial = "image";
       </nav>
 
       <div class="views">
-        <!-- Home -->
         <div class="view v-home" id="demo-view-home" role="tabpanel" aria-labelledby="demo-tab-home" hidden>
           <NightScene class="demo-night" stars={50} />
           <div class="home-center">
@@ -127,7 +124,6 @@ const initial = "image";
           <p class="home-sign" aria-hidden="true">Made for aoxy, by zero.</p>
         </div>
 
-        <!-- Image & GIF -->
         <div class="view" id="demo-view-image" role="tabpanel" aria-labelledby="demo-tab-image">
           <div class="stage">
             <div class="st-head">
@@ -163,7 +159,6 @@ const initial = "image";
           </aside>
         </div>
 
-        <!-- Clip -->
         <div class="view" id="demo-view-clip" role="tabpanel" aria-labelledby="demo-tab-clip" hidden>
           <div class="stage">
             <div class="st-head">
@@ -206,7 +201,6 @@ const initial = "image";
           </aside>
         </div>
 
-        <!-- Convert -->
         <div class="view" id="demo-view-convert" role="tabpanel" aria-labelledby="demo-tab-convert" hidden>
           <div class="stage">
             <div class="st-head">
@@ -293,7 +287,6 @@ const initial = "image";
   .app svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .sb-i, .card, .cc-btn { font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
 
-  /* Title bar */
   .tb { display: flex; align-items: center; justify-content: space-between; height: 44px; flex: none; padding-left: 16px; border-bottom: 1px solid var(--d-border); }
   .tb-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--d-text-2); font-size: 13px; font-weight: 500; }
   .tb-brand svg { color: var(--d-text); }
@@ -308,7 +301,6 @@ const initial = "image";
 
   .body { position: relative; display: flex; flex: 1; min-height: 0; }
 
-  /* Sidebar */
   .sb {
     display: flex; flex-direction: column; width: 200px; flex: none; padding: 12px 10px;
     border-right: 1px solid var(--d-border);
@@ -358,7 +350,6 @@ const initial = "image";
   .view.enter { animation: view-in 0.26s var(--d-ease); }
   @keyframes view-in { from { opacity: 0; transform: translateY(6px); } }
 
-  /* Home */
   .v-home { position: relative; flex-direction: column; overflow: hidden; }
   .v-home :global(.demo-night) { position: absolute; inset: 0; --land: 44%; opacity: 0.9; }
   .home-center { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; }
@@ -439,7 +430,6 @@ const initial = "image";
   .tl-thumb { position: absolute; left: 33%; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: var(--d-text); }
   .tl-time { font-size: 11.5px; font-variant-numeric: tabular-nums; }
 
-  /* Convert */
   .cv-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; padding: 24px; background: var(--d-bg-sunken); }
   .cv-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 12px; background: var(--d-surface); border: 1px solid var(--d-border-strong); }
   .cv-label { color: var(--d-text-3); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -462,7 +452,6 @@ const initial = "image";
   @keyframes sheen { to { transform: translateX(100%); } }
   .cv-gif { justify-self: center; margin-top: 6px; padding: 3px 9px; border-radius: 5px; background: var(--d-surface-2); color: var(--d-text-2); font-size: 11px; font-weight: 600; }
 
-  /* Right panel */
   .panel { display: flex; flex-direction: column; width: 300px; flex: none; min-height: 0; border-left: 1px solid var(--d-border); background: var(--d-bg); }
   .p-scroll {
     flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 15px; padding: 16px 16px 12px;
@@ -485,7 +474,6 @@ const initial = "image";
   .p-btn-busy { opacity: 0.55; box-shadow: none; }
   .p-kbd { color: var(--d-text-3); font-size: 11px; text-align: center; }
 
-  /* Caption */
   .demo figcaption { margin-top: 16px; font-size: 14.5px; color: var(--text-2); max-width: 72ch; }
   .demo-hint { color: var(--text-2); }
 

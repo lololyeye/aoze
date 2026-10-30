@@ -42,7 +42,6 @@ const perfIcons = [
 const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
 ---
 <Base lang={lang} path="" jsonLd={jsonLd}>
-  <!-- Hero -->
   <section class="hero">
     <NightScene class="hero-bg" stars={36} />
     <div class="wrap hero-grid">
@@ -68,7 +67,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     </div>
   </section>
 
-  <!-- Before / after -->
   <section id="compare" class="compare-section">
     <div class="wrap">
       <div class="section-head reveal">
@@ -120,7 +118,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
 
   <hr class="divider" />
 
-  <!-- Features -->
   <section id="features">
     <div class="wrap">
       <div class="section-head reveal">
@@ -142,7 +139,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     </div>
   </section>
 
-  <!-- How it works -->
   <section id="how" class="how">
     <div class="wrap">
       <div class="section-head reveal">
@@ -162,7 +158,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
 
   <hr class="divider" />
 
-  <!-- Editors -->
   <section id="editors" class="editors">
     <div class="wrap editors-grid">
       <div>
@@ -189,7 +184,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     </div>
   </section>
 
-  <!-- Performance -->
   <section id="performance" class="perf">
     <div class="wrap">
       <div class="section-head reveal">
@@ -209,7 +203,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     </div>
   </section>
 
-  <!-- Local -->
   <section id="local" class="local">
     <div class="wrap local-inner reveal" data-anim="draw" data-stagger>
       <svg class="local-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -224,7 +217,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
 
   <hr class="divider" />
 
-  <!-- Open source -->
   <section id="open-source" class="oss">
     <div class="wrap oss-grid">
       <div class="section-head reveal">
@@ -245,7 +237,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     </div>
   </section>
 
-  <!-- Final call -->
   <section class="final">
     <div class="wrap">
       <div class="final-inner reveal" data-anim="rise">
@@ -291,7 +282,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
   .demo-tabs button:hover { color: var(--text); }
   .demo-tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-strong); }
 
-  /* Before / after */
   .demo-tabs { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--line); margin-bottom: 20px; }
   .demo-tabs button { padding: 9px 18px; font-size: 15px; }
   .demo-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 40px; margin: 18px 0 0; font-size: 15px; }
@@ -319,7 +309,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     .motion-labels span:last-child { top: calc(50% + 12px); }
   }
 
-  /* Features */
   .features { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
   .feature { padding: 32px 32px 8px 0; display: flex; flex-direction: column; gap: 18px; }
   .feature + .feature { padding-left: 32px; border-left: 1px solid var(--line); }
@@ -366,7 +355,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     .steps li:not(:last-child)::after { display: none; }
   }
 
-  /* Editors */
   .editors-grid { display: grid; grid-template-columns: 1fr auto; gap: clamp(40px, 7vw, 96px); align-items: start; }
   .trio { color: var(--text) !important; font-size: clamp(1.25rem, 2.2vw, 1.6rem) !important; line-height: 1.35; font-weight: 500; letter-spacing: -0.015em; }
   .fps { display: flex; align-items: center; gap: 18px; font: 600 clamp(3rem, 8vw, 5.5rem)/1 var(--font); letter-spacing: -0.04em; margin-bottom: 40px; font-variant-numeric: tabular-nums; }
@@ -408,7 +396,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     .panel-shot img { width: min(316px, 100%); }
   }
 
-  /* Performance */
   /* Four cells of one panel, read row by row; each icon says what its cell is about. */
   .perf-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
@@ -427,14 +414,12 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     .perf-cell { padding: 22px 20px; gap: 16px; }
   }
 
-  /* Local */
   .local-inner { display: grid; justify-items: center; text-align: center; gap: 18px; max-width: 720px; }
   .local-icon { width: 52px; height: 52px; color: var(--text-2); margin-bottom: 6px; }
   .local h2 { font-size: clamp(2rem, 5vw, 3.4rem); }
   .local p { color: var(--text-2); font-size: clamp(1.02rem, 1.4vw, 1.14rem); max-width: 52ch; }
   .local .fine { font-size: 14px; color: var(--text-3); }
 
-  /* Open source */
   .oss-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(40px, 6vw, 80px); align-items: start; }
   .oss-grid .section-head { margin-bottom: 0; }
   .oss-list { margin: 0; border-top: 1px solid var(--line); }
@@ -446,7 +431,6 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
     .oss-list div { grid-template-columns: 1fr; gap: 4px; }
   }
 
-  /* Final */
   .final { padding-top: 0; }
   .final-inner {
     position: relative; isolation: isolate; overflow: clip;
@@ -460,7 +444,7 @@ const downloadIcon = '<path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14" />';
   .final-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
   .final p { font-size: 14px; }
 
-  /* ── Entrances: each section comes in its own way (the blocks are revealed by Base.astro) ── */
+  /* Entrances: each section has its own; Base.astro adds .in when a block scrolls into view. */
   /* Before / after: the picture opens from its middle, like the slider. */
   :global(.js) .demo-panel[data-anim] > :global(:first-child) { clip-path: inset(0 50% 0 50% round var(--radius)); transition: clip-path 1.4s cubic-bezier(0.7, 0, 0.2, 1) 0.1s; }
   :global(.js) .demo-panel[data-anim].in > :global(:first-child) { clip-path: inset(0 0 0 0 round var(--radius)); }

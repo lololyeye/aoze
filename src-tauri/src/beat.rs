@@ -364,7 +364,10 @@ mod tests {
         assert!(track(&onset_envelope(&vec![0.0; 100])).is_none());
     }
 
+    /// Tuning aid, not a check: prints the onset strength and tempo found in real tracks.
+    /// `AOZE_BEAT_FILES="a.mp3;b.mp4" cargo test measure_files -- --ignored --nocapture`
     #[test]
+    #[ignore]
     fn measure_files() {
         let Ok(list) = std::env::var("AOZE_BEAT_FILES") else { return };
         for f in list.split(';') {

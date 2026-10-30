@@ -825,24 +825,13 @@ async fn run_clip(
     let mut work_mp = 0.0;
     let mut notices: Vec<String> = Vec::new();
 
-    // ---- Timing: frame rate, speed, motion blur ----
-    let curve = SpeedCurve::from_settings(&a.speed);
-    let target_fps = changes_fps(a, info.fps);
-    let smooth_up = a.smooth != SmoothMotion::Off && target_fps.is_some_and(|f| f as f64 > info.fps + 0.01);
-    let slows = curve.as_ref().is_some_and(|c| c.min() < 0.999);
-    let shutter = blur_shutter(a.motion_blur);
-    let use_rife = spec.rife.is_some() && (smooth_up || slows || shutter.is_some());
+    let Timing { curve, target_fps, smooth_up, slows, use_rife, timed, rife_shutter, dedup } = plan_timing(a, info.fps, spec.rife.is_some());
     if spec.rife.is_none() && (smooth_up || slows) {
         on_log("Smooth Motion engine unavailable: frames are repeated instead of interpolated".into());
         notice("smoothUnavailable", &mut notices);
     }
-    // Speed changes and RIFE renders go through the time map (timemap.rs).
-    let timed = use_rife || curve.is_some();
-    let rife_shutter = if use_rife { shutter } else { None };
-    // Anime on twos: spread the motion between drawings when making new frames.
-    let dedup = use_rife && (smooth_up || slows);
 
-    // ---- Clean-up: Real-ESRGAN's anime video model for anime, waifu2x otherwise ----
+    // Real-ESRGAN's anime video model cleans anime; waifu2x everything else.
     let eparams = engine_params(a, spec.params);
     let cleanup = match &eparams {
         Some(_) if anime && spec.esrgan.is_some() => Some(Cleanup::Esrgan(crate::esrgan::native_scale(a.scale))),
@@ -851,28 +840,18 @@ async fn run_clip(
     };
     let frames_path = cleanup.is_some() || timed;
 
-    // ---- Smart Reframe ----
     // Any new shape is analysed: black bars are found even for a still crop.
     let need_analysis = geo0.crop.is_some() || use_rife;
 
-    // ---- Dynamic range ----
-    // Clean-up and Smooth Motion work on 8-bit images, so an HDR source going
-    // through them is tone mapped first.
     let src_hdr = info.transfer.is_hdr();
-    let output_transfer = match a.hdr {
-        HdrMode::Off => Transfer::Sdr,
-        HdrMode::Auto if src_hdr && !frames_path => info.transfer,
-        HdrMode::Auto => Transfer::Sdr,
-        HdrMode::Enhanced if src_hdr && !frames_path => info.transfer,
-        HdrMode::Enhanced => Transfer::Pq,
-    };
+    let output_transfer = output_transfer_for(a.hdr, info.transfer, frames_path);
     if src_hdr && frames_path && a.hdr != HdrMode::Off {
         on_log("HDR source: Clean-up / Smooth Motion process 8-bit frames, the clip is tone mapped to SDR first".into());
     }
     let placebo = src_hdr && output_transfer == Transfer::Sdr && ff.libplacebo();
     on_log(format!("colour: {:?} -> {:?}{}", info.transfer, output_transfer, if placebo { " (libplacebo tone mapping)" } else { "" }));
 
-    // ---- Analysis (one low-resolution decode) ----
+    // One low-resolution decode feeds Smart Reframe and the cut / held-drawing detection.
     let mut progress_at = 0.0f32;
     let analysis = if need_analysis {
         on_stage(Stage::Extracting);
@@ -887,24 +866,7 @@ async fn run_clip(
 
     let geo = clip_geometry_with(info, a, analysis.as_ref());
     let target = geo.out;
-    // The moving crop runs on the decoded frames, before any processing (fewer pixels to process).
-    let mut crop_vf: Vec<String> = Vec::new();
-    if let Some(Plan::Crop { w, h, path }) = geo.crop.and_then(|_| reframe::plan(info.width, info.height, info.fps, a.format, a.reframe, a.focus, analysis.as_ref())) {
-        let first = path.first().copied().unwrap_or(((info.width - w) / 2, (info.height - h) / 2));
-        if path.iter().all(|p| *p == first) {
-            crop_vf.push(format!("crop={w}:{h}:{}:{}", first.0, first.1));
-            on_log(format!("Smart Reframe: {w}x{h} window, still at {},{}", first.0, first.1));
-        } else {
-            let cmd = work.join("reframe.cmd");
-            std::fs::write(&cmd, reframe::crop_commands("rf", &path, info.fps))?;
-            let moves = path.windows(2).filter(|p| p[0] != p[1]).count();
-            on_log(format!("Smart Reframe: {w}x{h} window following the content ({moves} moving frames)"));
-            crop_vf.push(format!("sendcmd=f='{}'", color::escape_filter_path(&cmd)));
-            crop_vf.push(reframe::crop_filter("rf", w, h, first));
-        }
-    } else if geo.fill {
-        on_log(format!("Smart Reframe: whole picture on a blurred background, {}x{}", target.width, target.height));
-    }
+    let crop_vf = reframe_filters(info, a, &geo, analysis.as_ref(), work, on_log)?;
 
     let (out_rate_s, out_fps) = out_rate(&info.fps_rational, info.fps, if timed { target_fps } else { None });
     let mut warp: Option<TimeWarp> = None;
@@ -914,43 +876,7 @@ async fn run_clip(
     // (video input args, index of the input carrying the audio, resize still needed, rate after this stage)
     let (mut video_input, audio_input, resize_to, stage_fps): (Vec<OsString>, usize, Option<Resize>, f64) = if frames_path {
         let frames_dir = work.join("frames");
-        let done_marker = work.join("frames.done");
-        // Resume: frames already extracted by an interrupted run.
-        let n = match std::fs::read_to_string(&done_marker).ok().and_then(|t| t.trim().parse::<usize>().ok()) {
-            Some(n) => {
-                on_log(format!("resuming: {n} frames already extracted"));
-                n
-            }
-            None => {
-                let _ = std::fs::remove_dir_all(&frames_dir);
-                std::fs::create_dir_all(&frames_dir)?;
-                on_stage(Stage::Extracting);
-                let mut args: Vec<OsString> = Vec::new();
-                // Frame i at i / fps: the crop commands are timed on that.
-                let mut vf = vec![format!("fps={}", info.fps_rational), "setpts=N/FRAME_RATE/TB".to_string()];
-                if src_hdr {
-                    if placebo {
-                        args.extend(vulkan_device(spec.params.gpu));
-                        vf.extend(color::placebo_to_sdr());
-                    } else {
-                        let plan = ColorPlan { input: info.transfer, output: Transfer::Sdr, look: Default::default(), creative: None };
-                        vf.extend(color::prepare(&plan, work, "tonemap", &info.color_matrix)?.unwrap_or_default());
-                    }
-                }
-                vf.extend(crop_vf.iter().cloned());
-                args.push("-i".into());
-                args.push(spec.source.into());
-                args.extend(os(&["-vf", &vf.join(","), "-q:v", "2"]));
-                args.push(frames_dir.join("%08d.jpg").into());
-                ff_timed(ff, &args, info.duration_ms, Phase { start: progress_at, span: 0.06 }, on_progress, on_log, cancel).await?;
-                let n = count_files(&frames_dir) as usize;
-                if n == 0 {
-                    return Err(AppError::new(ErrorCode::DecodeFailed, format!("no frames decoded from {}", spec.source.display())));
-                }
-                std::fs::write(&done_marker, n.to_string())?;
-                n
-            }
-        };
+        let n = extract_clip_frames(ff, spec, &frames_dir, work, placebo, &crop_vf, progress_at, on_stage, on_progress, on_log, cancel).await?;
         let frame_path = |i: usize| frames_dir.join(format!("{:08}.jpg", i + 1));
         let body_start = progress_at + 0.06;
 
@@ -1232,7 +1158,7 @@ async fn run_clip(
         (input, 0, resize, info.fps)
     };
 
-    // ---- Audio follows the speed (pitch kept) ----
+    // With a speed change, the audio is stretched to match, pitch kept.
     let src_duration_s = info.duration_ms as f64 / 1000.0;
     let mut audio_index = info.has_audio.then_some(audio_input);
     let mut audio_codec = info.audio_codec.as_deref();
@@ -1290,7 +1216,6 @@ async fn run_clip(
     let final_fps = if timed { out_fps } else { after.fps.filter(|f| (*f as f64 - info.fps).abs() > 0.01).map_or(info.fps, |f| f as f64) };
     let out_duration_s = if timed { out_frames as f64 / out_fps } else { src_duration_s };
 
-    // ---- Beat Sync ----
     if a.beat.on && (a.beat.zoom || a.beat.shake) {
         if !info.has_audio {
             on_log("Beat Sync: the clip has no audio".into());
@@ -1315,31 +1240,12 @@ async fn run_clip(
         }
     }
 
-    // ---- Glow, colour, LUT ----
-    let input_transfer = if frames_path || placebo { Transfer::Sdr } else { info.transfer };
+    // Frames made from images, and libplacebo's output, are already SDR BT.709.
+    let sdr_frames = frames_path || placebo;
     if placebo && !frames_path {
         filters.extend(color::placebo_to_sdr());
     }
-    if a.look.glow > 0 {
-        filters.push(glow_filter(a.look.glow, target, input_transfer.is_hdr()));
-    }
-    let creative = match a.lut.as_deref() {
-        Some(id) => looks::resolve(id, a.lut_strength, spec.luts_dir.unwrap_or(Path::new("")))?,
-        None => None,
-    };
-    if creative.is_some() {
-        on_log(format!("look: {} at {} %", a.lut.as_deref().unwrap_or_default(), a.lut_strength));
-    }
-    let matrix = if frames_path || placebo { "bt709" } else { info.color_matrix.as_str() };
-    let plan = ColorPlan { input: input_transfer, output: output_transfer, look: a.look, creative };
-    match color::prepare(&plan, work, "color", matrix)? {
-        Some(f) => filters.extend(f),
-        None if output_transfer.is_hdr() => {
-            filters.push("format=yuv420p10le".into());
-            filters.push(format!("setparams=color_primaries=bt2020:color_trc={}:colorspace=bt2020nc", hdr_trc(output_transfer)));
-        }
-        None => filters.push("format=yuv420p".into()),
-    }
+    filters.extend(colour_filters(a, info, target, sdr_frames, output_transfer, spec.luts_dir, work, on_log)?);
     let mp4 = Mp4Encode {
         input: &video_input,
         audio_input: audio_index,
@@ -1353,15 +1259,183 @@ async fn run_clip(
         hdr: output_transfer.is_hdr().then_some(output_transfer),
     };
     let report = encode_mp4(ff, &mp4, final_start, on_progress, on_log, cancel).await?;
-    // Output time -> source time, for the Before / After viewer.
-    let timing = warp.as_ref().map(|w| {
-        let steps = (w.out_duration() / 0.1).ceil() as usize;
-        (0..=steps).map(|i| {
-            let t = (i as f64 * 0.1).min(w.out_duration());
-            [t, w.to_source(t)]
-        }).collect()
-    });
+    let timing = warp.as_ref().map(timing_points);
     Ok(ClipDone { engine_ms, work_mp, report, notices, timing })
+}
+
+/// Decodes the clip to numbered JPEGs in `frames_dir`, tone mapped to SDR and cropped, and
+/// returns how many there are. A `frames.done` marker lets an interrupted run resume here.
+#[allow(clippy::too_many_arguments)]
+async fn extract_clip_frames(
+    ff: &Ffmpeg,
+    spec: &AnimSpec<'_>,
+    frames_dir: &Path,
+    work: &Path,
+    placebo: bool,
+    crop: &[String],
+    progress_at: f32,
+    on_stage: StageSink<'_>,
+    on_progress: ProgressSink<'_>,
+    on_log: LogSink<'_>,
+    cancel: &CancellationToken,
+) -> AppResult<usize> {
+    let info = spec.info;
+    let done_marker = work.join("frames.done");
+    if let Some(n) = std::fs::read_to_string(&done_marker).ok().and_then(|t| t.trim().parse::<usize>().ok()) {
+        on_log(format!("resuming: {n} frames already extracted"));
+        return Ok(n);
+    }
+    let _ = std::fs::remove_dir_all(frames_dir);
+    std::fs::create_dir_all(frames_dir)?;
+    on_stage(Stage::Extracting);
+    let mut args: Vec<OsString> = Vec::new();
+    // Frame i at i / fps: the crop commands are timed on that.
+    let mut vf = vec![format!("fps={}", info.fps_rational), "setpts=N/FRAME_RATE/TB".to_string()];
+    if info.transfer.is_hdr() {
+        if placebo {
+            args.extend(vulkan_device(spec.params.gpu));
+            vf.extend(color::placebo_to_sdr());
+        } else {
+            let plan = ColorPlan { input: info.transfer, output: Transfer::Sdr, look: Default::default(), creative: None };
+            vf.extend(color::prepare(&plan, work, "tonemap", &info.color_matrix)?.unwrap_or_default());
+        }
+    }
+    vf.extend(crop.iter().cloned());
+    args.push("-i".into());
+    args.push(spec.source.into());
+    args.extend(os(&["-vf", &vf.join(","), "-q:v", "2"]));
+    args.push(frames_dir.join("%08d.jpg").into());
+    ff_timed(ff, &args, info.duration_ms, Phase { start: progress_at, span: 0.06 }, on_progress, on_log, cancel).await?;
+    let n = count_files(frames_dir) as usize;
+    if n == 0 {
+        return Err(AppError::new(ErrorCode::DecodeFailed, format!("no frames decoded from {}", spec.source.display())));
+    }
+    std::fs::write(&done_marker, n.to_string())?;
+    Ok(n)
+}
+
+/// How a clip reaches its new frame rate and speed.
+struct Timing {
+    curve: Option<SpeedCurve>,
+    target_fps: Option<f32>,
+    smooth_up: bool,
+    slows: bool,
+    use_rife: bool,
+    /// Speed changes and RIFE renders go through the time map (timemap.rs).
+    timed: bool,
+    rife_shutter: Option<(u32, u32)>,
+    /// Anime on twos: spread the motion between drawings when making new frames.
+    dedup: bool,
+}
+
+fn plan_timing(a: &AnimSettings, src_fps: f64, rife_available: bool) -> Timing {
+    let curve = SpeedCurve::from_settings(&a.speed);
+    let target_fps = changes_fps(a, src_fps);
+    let smooth_up = a.smooth != SmoothMotion::Off && target_fps.is_some_and(|f| f as f64 > src_fps + 0.01);
+    let slows = curve.as_ref().is_some_and(|c| c.min() < 0.999);
+    let shutter = blur_shutter(a.motion_blur);
+    let use_rife = rife_available && (smooth_up || slows || shutter.is_some());
+    Timing {
+        timed: use_rife || curve.is_some(),
+        rife_shutter: if use_rife { shutter } else { None },
+        dedup: use_rife && (smooth_up || slows),
+        curve,
+        target_fps,
+        smooth_up,
+        slows,
+        use_rife,
+    }
+}
+
+/// Clean-up and Smooth Motion work on 8-bit images, so an HDR source going through them is
+/// tone mapped first; Enhanced then rebuilds HDR10 from the SDR frames.
+fn output_transfer_for(mode: HdrMode, source: Transfer, frames_path: bool) -> Transfer {
+    let keep_hdr = source.is_hdr() && !frames_path;
+    match mode {
+        HdrMode::Off => Transfer::Sdr,
+        HdrMode::Auto if keep_hdr => source,
+        HdrMode::Auto => Transfer::Sdr,
+        HdrMode::Enhanced if keep_hdr => source,
+        HdrMode::Enhanced => Transfer::Pq,
+    }
+}
+
+/// Smart Reframe's crop, as filters for the decoded frames. It runs before any processing, so
+/// later steps have fewer pixels to handle. A moving window is driven by a sendcmd script.
+fn reframe_filters(
+    info: &MediaInfo,
+    a: &AnimSettings,
+    geo: &ClipGeometry,
+    analysis: Option<&analysis::Analysis>,
+    work: &Path,
+    on_log: LogSink<'_>,
+) -> AppResult<Vec<String>> {
+    let mut filters = Vec::new();
+    let crop = geo.crop.and_then(|_| reframe::plan(info.width, info.height, info.fps, a.format, a.reframe, a.focus, analysis));
+    if let Some(Plan::Crop { w, h, path }) = crop {
+        let first = path.first().copied().unwrap_or(((info.width - w) / 2, (info.height - h) / 2));
+        if path.iter().all(|p| *p == first) {
+            filters.push(format!("crop={w}:{h}:{}:{}", first.0, first.1));
+            on_log(format!("Smart Reframe: {w}x{h} window, still at {},{}", first.0, first.1));
+        } else {
+            let cmd = work.join("reframe.cmd");
+            std::fs::write(&cmd, reframe::crop_commands("rf", &path, info.fps))?;
+            let moves = path.windows(2).filter(|p| p[0] != p[1]).count();
+            on_log(format!("Smart Reframe: {w}x{h} window following the content ({moves} moving frames)"));
+            filters.push(format!("sendcmd=f='{}'", color::escape_filter_path(&cmd)));
+            filters.push(reframe::crop_filter("rf", w, h, first));
+        }
+    } else if geo.fill {
+        on_log(format!("Smart Reframe: whole picture on a blurred background, {}x{}", geo.out.width, geo.out.height));
+    }
+    Ok(filters)
+}
+
+/// Glow, Look adjustments, the LUT and the final pixel format.
+#[allow(clippy::too_many_arguments)]
+fn colour_filters(
+    a: &AnimSettings,
+    info: &MediaInfo,
+    size: Dimensions,
+    sdr_frames: bool,
+    output: Transfer,
+    luts_dir: Option<&Path>,
+    work: &Path,
+    on_log: LogSink<'_>,
+) -> AppResult<Vec<String>> {
+    let input = if sdr_frames { Transfer::Sdr } else { info.transfer };
+    let mut filters = Vec::new();
+    if a.look.glow > 0 {
+        filters.push(glow_filter(a.look.glow, size, input.is_hdr()));
+    }
+    let creative = match a.lut.as_deref() {
+        Some(id) => looks::resolve(id, a.lut_strength, luts_dir.unwrap_or(Path::new("")))?,
+        None => None,
+    };
+    if creative.is_some() {
+        on_log(format!("look: {} at {} %", a.lut.as_deref().unwrap_or_default(), a.lut_strength));
+    }
+    let matrix = if sdr_frames { "bt709" } else { info.color_matrix.as_str() };
+    let plan = ColorPlan { input, output, look: a.look, creative };
+    match color::prepare(&plan, work, "color", matrix)? {
+        Some(f) => filters.extend(f),
+        None if output.is_hdr() => {
+            filters.push("format=yuv420p10le".into());
+            filters.push(format!("setparams=color_primaries=bt2020:color_trc={}:colorspace=bt2020nc", hdr_trc(output)));
+        }
+        None => filters.push("format=yuv420p".into()),
+    }
+    Ok(filters)
+}
+
+/// Output time -> source time every 0.1 s, for the Before / After viewer.
+fn timing_points(warp: &TimeWarp) -> Vec<[f64; 2]> {
+    let end = warp.out_duration();
+    let steps = (end / 0.1).ceil() as usize;
+    (0..=steps).map(|i| {
+        let t = (i as f64 * 0.1).min(end);
+        [t, warp.to_source(t)]
+    }).collect()
 }
 
 /// Soft bloom: bright areas, blurred, screened over the picture.

@@ -1,8 +1,8 @@
 import { api, ApiError } from "../api";
 import * as data from "../data";
-import { formatAgo, formatDateTime } from "../format";
+import { formatAgo, formatDateTime, formatNumber } from "../format";
 import { html, type Html } from "../html";
-import { card, confirmAction, pageHead, pill, row, toast } from "../ui";
+import { card, confirmAction, kpi, kpis, pill, row, toast } from "../ui";
 
 const refresh = () => window.dispatchEvent(new Event("admin:refresh"));
 
@@ -20,14 +20,51 @@ const disableForm = html`<form class="form inline-form" data-2fa-disable hidden>
   <div class="form-actions"><button class="btn btn-ghost" type="button" data-cancel>Annuler</button><button class="btn btn-danger" type="submit">Désactiver</button></div>
 </form>`;
 
-export async function security(): Promise<Html> {
-  const [settings, sessions, logins, activity] = await Promise.all([data.security(), data.sessions(), data.logins(), data.activity()]);
-  const failed = logins.state === "unavailable" ? 0 : logins.data.filter((l) => !l.success).length;
+const failedNote = (failed: number): Html | string => failed
+  ? html`<p class="card-intro">${pill("warn", `${failed} échec${failed > 1 ? "s" : ""}`)} <span class="muted">Après 5 échecs en 15 minutes, la connexion est bloquée 15 minutes pour l'adresse concernée.</span></p>`
+  : "";
 
+export async function logins(): Promise<Html> {
+  const list = await data.logins();
+  const entries = list.state === "live" ? list.data : [];
+  const failed = entries.filter((l) => !l.success).length;
   return html`
-    ${pageHead("Sécurité et activité", "Votre compte, vos sessions et tout ce qui a été fait ici.")}
+    ${list.state === "live" ? kpis([
+      kpi({ icon: "check", label: "Connexions réussies", value: formatNumber(entries.length - failed), hint: "dans l'historique affiché" }),
+      kpi({ icon: "alert", label: "Tentatives refusées", value: formatNumber(failed), hint: "mot de passe ou code faux" }),
+    ]) : ""}
     <div class="grid">
-      ${card("Compte", settings, (s) => html`<dl class="kvs">
+      ${card("Historique des connexions", list, (rows) => html`
+        ${failedNote(failed)}
+        ${rows.length ? html`<div class="table-wrap"><table class="table">
+          <thead><tr><th>Date</th><th>Résultat</th><th>Adresse IP</th><th>Appareil</th></tr></thead>
+          <tbody>${rows.map((l) => html`<tr>
+            <td>${formatDateTime(l.at)}</td>
+            <td>${l.success ? pill("ok", "Réussie") : pill("bad", "Refusée")}</td>
+            <td class="mono">${l.ip}</td>
+            <td>${l.device}</td>
+          </tr>`)}</tbody>
+        </table></div>` : html`<p class="unavailable">Aucune connexion enregistrée.</p>`}`, { wide: true, icon: "lock" })}
+    </div>`;
+}
+
+export async function sessions(): Promise<Html> {
+  const list = await data.sessions();
+  return html`<div class="grid">
+    ${card("Sessions ouvertes", list, (rows) => html`<ul class="list">
+      ${rows.map((s) => html`<li><strong>${s.device}</strong>
+        ${s.current ? pill("ok", "Cette session") : ""}
+        <span class="muted">${s.ip}, ouverte ${formatAgo(s.createdAt)}, active ${formatAgo(s.lastSeenAt)}</span>
+        ${s.current ? "" : html`<button class="btn btn-ghost btn-sm" type="button" data-revoke="${s.id}">Fermer</button>`}
+      </li>`)}
+    </ul>`, { wide: true, icon: "users" })}
+  </div>`;
+}
+
+export async function account(): Promise<Html> {
+  const settings = await data.security();
+  return html`<div class="grid">
+    ${card("Compte", settings, (s) => html`<dl class="kvs">
         ${row("Accès à /admin", s.hidden ? pill("ok", "Masqué, clé d'accès requise") : pill("warn", "Visible par tous : ajoutez access_key à config.php"))}
         ${row("Double authentification", s.twoFactor ? pill("ok", "Activée") : pill("warn", "Désactivée"))}
         ${row("Mot de passe modifié", formatAgo(s.passwordChangedAt))}
@@ -40,32 +77,17 @@ export async function security(): Promise<Html> {
           : html`<button class="btn btn-primary" type="button" data-2fa-start>Activer la double authentification</button>`}
       </div>
       ${passwordForm}
-      ${s.twoFactor ? disableForm : html`<div data-2fa-setup></div>`}`)}
+      ${s.twoFactor ? disableForm : html`<div data-2fa-setup></div>`}`, { wide: true, icon: "security" })}
+  </div>`;
+}
 
-      ${card("Sessions ouvertes", sessions, (list) => html`<ul class="list">
-        ${list.map((s) => html`<li><strong>${s.device}</strong>
-          ${s.current ? pill("ok", "Cette session") : ""}
-          <span class="muted">${s.ip}, active ${formatAgo(s.lastSeenAt)}</span>
-          ${s.current ? "" : html`<button class="btn btn-ghost btn-sm" type="button" data-revoke="${s.id}">Fermer</button>`}
-        </li>`)}
-      </ul>`)}
-
-      ${card("Connexions", logins, (list) => html`
-        ${failed ? html`<p class="card-intro">${pill("warn", `${failed} échec${failed > 1 ? "s" : ""}`)} <span class="muted">Après 5 échecs en 15 minutes, la connexion est bloquée 15 minutes pour l'adresse concernée.</span></p>` : ""}
-        ${list.length ? html`<div class="table-wrap"><table class="table">
-          <thead><tr><th>Date</th><th>Résultat</th><th>Adresse IP</th><th>Appareil</th></tr></thead>
-          <tbody>${list.map((l) => html`<tr>
-            <td>${formatDateTime(l.at)}</td>
-            <td>${l.success ? pill("ok", "Réussie") : pill("bad", "Refusée")}</td>
-            <td class="mono">${l.ip}</td>
-            <td>${l.device}</td>
-          </tr>`)}</tbody>
-        </table></div>` : html`<p class="unavailable">Aucune connexion enregistrée.</p>`}`, { wide: true })}
-
-      ${card("Journal d'activité", activity, (list) => list.length
-        ? html`<ul class="timeline">${list.map((e) => html`<li><span class="when">${formatDateTime(e.at)}</span><strong>${e.action}</strong><span>${e.detail}</span></li>`)}</ul>`
-        : html`<p class="unavailable">Rien pour l'instant.</p>`, { wide: true })}
-    </div>`;
+export async function audit(): Promise<Html> {
+  const activity = await data.activity();
+  return html`<div class="grid">
+    ${card("Journal d'activité", activity, (list) => list.length
+      ? html`<ul class="timeline">${list.map((e) => html`<li><span class="when">${formatDateTime(e.at)}</span><strong>${e.action}</strong><span>${e.detail}</span></li>`)}</ul>`
+      : html`<p class="unavailable">Rien pour l'instant.</p>`, { wide: true, icon: "file" })}
+  </div>`;
 }
 
 function onSubmit(form: HTMLFormElement | null, send: (f: FormData) => Promise<void>): void {

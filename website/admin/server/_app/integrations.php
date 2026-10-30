@@ -105,6 +105,7 @@ function map_releases(array $list): array
                 'url' => $asset['browser_download_url'],
             ],
             'downloads' => array_sum(array_column($installers, 'download_count')),
+            'assets' => array_map(fn ($a) => ['name' => $a['name'], 'size' => $a['size'], 'downloads' => $a['download_count']], $r['assets']),
             'notesHtml' => $r['body_html'] ?? null,
         ];
     }

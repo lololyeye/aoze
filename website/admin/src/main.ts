@@ -2,64 +2,119 @@ import "@fontsource-variable/inter/wght.css";
 import "./admin.css";
 import { api, ApiError, loadSession, type SessionState } from "./api";
 import { html, raw, type Html } from "./html";
-import { applyBarHeights } from "./ui";
-import { hosting } from "./views/hosting";
+import { icon, type IconName } from "./icons";
+import { applySizes, bindTooltips, skeleton } from "./ui";
+import * as analytics from "./views/analytics";
+import * as application from "./views/application";
+import * as infrastructure from "./views/infrastructure";
 import { overview } from "./views/overview";
-import { releases } from "./views/releases";
-import { bindSecurity, security } from "./views/security";
-import { bindSite, site } from "./views/site";
+import * as security from "./views/security";
+import { applyPreferences, bindSettings, settings } from "./views/settings";
+import * as website from "./views/website";
 
-interface Route {
-  path: string;
+interface Page {
+  slug: string;
   label: string;
-  icon: string;
+  lead: string;
   render: () => Promise<Html>;
   bind?: (root: HTMLElement) => void;
 }
 
-const ICONS = {
-  overview: '<path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-3H4zM14 7h6V4h-6z"/>',
-  releases: '<path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/>',
-  site: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/>',
-  hosting: '<rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/><path d="M8 7.5h.01M8 16.5h.01"/>',
-  security: '<path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/>',
-};
+interface Section {
+  slug: string;
+  label: string;
+  icon: IconName;
+  pages: Page[];
+  /** Pages with a period selector. */
+  ranged?: boolean;
+}
 
-const ROUTES: Route[] = [
-  { path: "/", label: "Vue d'ensemble", icon: ICONS.overview, render: overview },
-  { path: "/releases", label: "Releases", icon: ICONS.releases, render: releases },
-  { path: "/site", label: "Site", icon: ICONS.site, render: site, bind: bindSite },
-  { path: "/hosting", label: "Hébergement", icon: ICONS.hosting, render: hosting },
-  { path: "/security", label: "Sécurité", icon: ICONS.security, render: security, bind: bindSecurity },
+const SECTIONS: Section[] = [
+  { slug: "", label: "Vue d'ensemble", icon: "overview", pages: [
+    { slug: "", label: "Vue d'ensemble", lead: "L'état d'Aoze, du site et de l'hébergement en un coup d'œil.", render: overview },
+  ] },
+  { slug: "analytics", label: "Analytics", icon: "analytics", ranged: true, pages: [
+    { slug: "traffic", label: "Trafic", lead: "Pages vues, visites et leur évolution.", render: analytics.traffic },
+    { slug: "visitors", label: "Visiteurs", lead: "D'où viennent les visiteurs et avec quel appareil.", render: analytics.visitors },
+    { slug: "acquisition", label: "Acquisition", lead: "Comment les visiteurs arrivent sur aoze.fr.", render: analytics.acquisition },
+    { slug: "pages", label: "Pages", lead: "Les pages lues, par où on entre et par où on part.", render: analytics.pages },
+    { slug: "downloads", label: "Téléchargements", lead: "Ce qui est réellement téléchargé, et ce qu'on ne peut pas mesurer.", render: analytics.downloads },
+    { slug: "conversions", label: "Conversions", lead: "Du premier passage sur le site jusqu'au téléchargement.", render: analytics.conversions },
+  ] },
+  { slug: "application", label: "Application", icon: "application", pages: [
+    { slug: "releases", label: "Releases", lead: "Les versions publiées sur GitHub.", render: application.releases },
+    { slug: "integrity", label: "Intégrité", lead: "Ce que reçoit l'auto-update, vérifié comme le fait l'application.", render: application.integrity },
+    { slug: "distribution", label: "Distribution", lead: "Quels fichiers GitHub distribue, et à qui.", render: application.distribution },
+  ] },
+  { slug: "website", label: "Site", icon: "website", pages: [
+    { slug: "announcements", label: "Annonces", lead: "Le bandeau affiché en haut du site public.", render: website.announcements, bind: website.bindAnnouncements },
+    { slug: "content", label: "Contenu public", lead: "Les liens et les pages que le site met en avant.", render: website.content },
+  ] },
+  { slug: "infrastructure", label: "Infrastructure", icon: "infrastructure", pages: [
+    { slug: "hosting", label: "Hébergement", lead: "aoze.fr chez o2switch.", render: infrastructure.hosting },
+    { slug: "deployment", label: "Déploiement", lead: "De GitHub Actions jusqu'au serveur.", render: infrastructure.deployment },
+    { slug: "https", label: "HTTPS", lead: "Les certificats du domaine.", render: infrastructure.https },
+    { slug: "availability", label: "Disponibilité", lead: "Les pages principales, vérifiées par le serveur lui-même.", render: infrastructure.availability },
+  ] },
+  { slug: "security", label: "Sécurité", icon: "security", pages: [
+    { slug: "logins", label: "Connexions", lead: "Chaque tentative de connexion à l'admin.", render: security.logins },
+    { slug: "sessions", label: "Sessions", lead: "Les appareils connectés en ce moment.", render: security.sessions, bind: security.bindSecurity },
+    { slug: "account", label: "Compte et 2FA", lead: "Mot de passe, double authentification et accès à /admin.", render: security.account, bind: security.bindSecurity },
+    { slug: "audit", label: "Journal", lead: "Tout ce qui a été fait depuis l'admin.", render: security.audit },
+  ] },
+  { slug: "settings", label: "Réglages", icon: "settings", pages: [
+    { slug: "", label: "Réglages", lead: "Mesure d'audience, confidentialité et préférences de l'admin.", render: settings, bind: bindSettings },
+  ] },
 ];
 
 const LOGO = `<svg viewBox="240 200 640 620" aria-hidden="true"><path d="M292 772 L512 248 L732 772" fill="none" stroke="#eef1f5" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/><path d="M392 616 L800 616" fill="none" stroke="#3dd6d0" stroke-width="76" stroke-linecap="round"/><circle cx="800" cy="616" r="62" fill="#5ff0d4"/></svg>`;
 
-const icon = (paths: string): Html =>
-  raw(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`);
+const href = (section: Section, page?: Page): string =>
+  `#/${[section.slug, page?.slug ?? ""].filter(Boolean).join("/")}`;
 
 const app = document.querySelector<HTMLElement>("#app")!;
 let session: SessionState | null = null;
 let expired = false;
 
+/** The sidebar becomes a drawer on narrow screens. */
+function openNav(open: boolean): void {
+  document.body.classList.toggle("nav-open", open);
+  app.querySelector("[data-open-nav]")?.setAttribute("aria-expanded", String(open));
+}
+
 function shell(email: string): void {
   app.innerHTML = html`
     <div class="layout">
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
         <a class="brand" href="#/">${raw(LOGO)}<span>Aoze</span><span class="brand-tag">Admin</span></a>
         <nav class="nav" aria-label="Administration">
-          ${ROUTES.map((r) => html`<a href="${`#${r.path}`}" data-path="${r.path}">${icon(r.icon)}<span>${r.label}</span></a>`)}
+          ${SECTIONS.map((s) => html`<a href="${href(s)}" data-section="${s.slug}">${icon(s.icon)}<span>${s.label}</span></a>`)}
         </nav>
-        <div class="sidebar-foot">
-          <span class="signed-in" title="${email}">${email}</span>
-          <a class="nav-out" href="https://aoze.fr" target="_blank" rel="noopener">${icon('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>')}<span>Voir le site</span></a>
-          <button class="nav-out" type="button" data-logout>${icon('<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/>')}<span>Se déconnecter</span></button>
+        <div class="account">
+          <span class="avatar" aria-hidden="true">${email.slice(0, 1).toUpperCase()}</span>
+          <span class="account-mail" title="${email}">${email}</span>
+          <button class="icon-btn" type="button" data-logout aria-label="Se déconnecter" data-tip="Se déconnecter">${icon("logout")}</button>
         </div>
       </aside>
-      <main class="main" id="main" tabindex="-1"></main>
-    </div>
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <dialog id="confirm" class="dialog"></dialog>`.value;
+      <div class="scrim" data-close-nav></div>
+      <div class="content">
+        <header class="topbar">
+          <button class="icon-btn menu-btn" type="button" data-open-nav aria-label="Ouvrir le menu" aria-controls="sidebar" aria-expanded="false">${icon("menu")}</button>
+          <ol class="crumbs" id="crumbs"></ol>
+          <div class="topbar-actions">
+            <button class="icon-btn" type="button" data-refresh aria-label="Actualiser" data-tip="Actualiser">${icon("refresh")}</button>
+            <a class="btn btn-ghost btn-sm" href="https://aoze.fr" target="_blank" rel="noopener">${icon("external")}<span>Voir le site</span></a>
+          </div>
+        </header>
+        <div class="page-intro" id="intro"></div>
+        <main class="main" id="main" tabindex="-1"></main>
+      </div>
+    </div>`.value;
+
+  app.querySelector("[data-open-nav]")!.addEventListener("click", () => openNav(true));
+  app.querySelector("[data-close-nav]")!.addEventListener("click", () => openNav(false));
+  app.querySelector(".nav")!.addEventListener("click", () => openNav(false));
+  app.querySelector("[data-refresh]")!.addEventListener("click", () => void route());
   app.querySelector("[data-logout]")!.addEventListener("click", async () => {
     try {
       await api("logout", {});
@@ -71,7 +126,7 @@ function shell(email: string): void {
   });
 }
 
-/** The sign-in and first-run screens share one card; `onSubmit` returns an error message or nothing. */
+/** The sign-in and first-run screens share one card; `onSubmit` throws to show an error. */
 function gate(opts: { title: string; lead: string; fields: Html; submit: string; onSubmit: (form: FormData) => Promise<void> }): void {
   document.title = `${opts.title} · Aoze Admin`;
   app.innerHTML = html`
@@ -107,6 +162,15 @@ function gate(opts: { title: string; lead: string; fields: Html; submit: string;
   });
 }
 
+function message(title: string, text: string): void {
+  document.title = `${title} · Aoze Admin`;
+  app.innerHTML = html`<main class="login"><div class="login-card">
+    <div class="login-logo">${raw(LOGO)}</div>
+    <h1>${title}</h1>
+    <p class="muted">${text}</p>
+  </div></main>`.value;
+}
+
 const field = (name: string, label: string, type: string, autocomplete: string, minLength = 0): Html =>
   html`<label class="field"><span>${label}</span><input name="${name}" type="${type}" autocomplete="${autocomplete}" ${minLength ? raw(`minlength="${minLength}"`) : ""} required /></label>`;
 
@@ -125,13 +189,7 @@ function login(): void {
 
 function setup(ready: boolean): void {
   if (!ready) {
-    document.title = "Mise en place · Aoze Admin";
-    app.innerHTML = html`<main class="login"><div class="login-card">
-      <div class="login-logo">${raw(LOGO)}</div>
-      <h1>Mise en place</h1>
-      <p class="muted">Aucun compte administrateur n'existe encore. Ajoutez un code de mise en place (au moins 24 caractères) dans ~/aoze-admin/config.php, puis rechargez cette page.</p>
-    </div></main>`.value;
-    return;
+    return message("Mise en place", "Aucun compte administrateur n'existe encore. Ajoutez un code de mise en place (au moins 24 caractères) dans ~/aoze-admin/config.php, puis rechargez cette page.");
   }
   gate({
     title: "Mise en place",
@@ -149,6 +207,27 @@ function setup(ready: boolean): void {
   });
 }
 
+function locate(): [Section, Page] {
+  const [sectionSlug = "", pageSlug = ""] = location.hash.replace(/^#\/?/, "").split("/");
+  const section = SECTIONS.find((s) => s.slug === sectionSlug) ?? SECTIONS[0]!;
+  return [section, section.pages.find((p) => p.slug === pageSlug) ?? section.pages[0]!];
+}
+
+const rangePicker = (): Html => html`<div class="segmented" role="group" aria-label="Période" data-tip="Disponible dès que la mesure d'audience sera active">
+  ${["7 j", "30 j", "90 j", "12 mois"].map((label, i) => html`<button type="button" disabled ${i === 1 ? raw('aria-pressed="true"') : ""}>${label}</button>`)}
+  <button type="button" disabled>${icon("calendar")}<span>Personnalisée</span></button>
+</div>`;
+
+function intro(section: Section, page: Page): Html {
+  const tabs = section.pages.length > 1
+    ? html`<nav class="tabs" aria-label="${section.label}">${section.pages.map((p) =>
+        html`<a href="${href(section, p)}" ${p === page ? raw('aria-current="page"') : ""}>${p.label}</a>`)}</nav>`
+    : "";
+  return html`<div class="intro-text"><h1>${page.label}</h1><p>${page.lead}</p></div>
+    ${section.ranged ? rangePicker() : ""}
+    ${tabs}`;
+}
+
 let renderId = 0;
 
 async function route(): Promise<void> {
@@ -156,36 +235,47 @@ async function route(): Promise<void> {
     try {
       session = await loadSession();
     } catch {
-      app.innerHTML = html`<main class="login"><div class="login-card"><h1>Serveur injoignable</h1><p class="muted">Réessayez dans un instant.</p></div></main>`.value;
-      return;
+      return message("Serveur injoignable", "Réessayez dans un instant.");
     }
   }
   if (session.state === "setup") return setup(session.setupReady === true);
   if (session.state !== "signed-in") return login();
 
   if (!app.querySelector(".layout")) shell(session.email ?? "");
-  const path = location.hash.replace(/^#/, "") || "/";
-  const current = ROUTES.find((r) => r.path === path) ?? ROUTES[0]!;
-  app.querySelectorAll<HTMLAnchorElement>(".nav a").forEach((a) => a.toggleAttribute("aria-current", a.dataset.path === current.path));
+  const [section, page] = locate();
+  document.querySelector<HTMLElement>("#tip")!.hidden = true;
+  app.querySelectorAll<HTMLAnchorElement>(".nav a").forEach((a) => a.toggleAttribute("aria-current", a.dataset.section === section.slug));
+  app.querySelector("#crumbs")!.innerHTML = html`<li>Aoze</li>${section.pages.length > 1 ? html`<li>${section.label}</li>` : ""}<li aria-current="page">${page.label}</li>`.value;
+  app.querySelector("#intro")!.innerHTML = intro(section, page).value;
+
   const main = app.querySelector<HTMLElement>("#main")!;
-  main.setAttribute("aria-busy", "true");
   const id = ++renderId;
+  main.setAttribute("aria-busy", "true");
+  const slow = setTimeout(() => {
+    if (id === renderId) main.innerHTML = skeleton().value;
+  }, 120);
   let content: Html;
   try {
-    content = await current.render();
+    content = await page.render();
   } catch (e) {
     console.error(e);
     content = html`<section class="card"><h2>Cette page n'a pas pu s'afficher.</h2><p class="note">Rechargez la page. Si le problème revient, le détail est dans la console du navigateur.</p></section>`;
   }
-  if (id !== renderId || !app.contains(main)) return; // a later navigation, or a sign-out, won
+  clearTimeout(slow);
+  if (id !== renderId || !app.contains(main)) return;
   main.innerHTML = content.value;
   main.removeAttribute("aria-busy");
-  applyBarHeights(main);
-  current.bind?.(main);
+  applySizes(main);
+  page.bind?.(main);
   main.focus({ preventScroll: true });
-  document.title = `${current.label} · Aoze Admin`;
+  document.title = `${page.label} · Aoze Admin`;
 }
 
+applyPreferences();
+bindTooltips(document.querySelector<HTMLElement>("#tip")!);
+addEventListener("keydown", (e) => {
+  if (e.key === "Escape") openNav(false);
+});
 addEventListener("hashchange", () => void route());
 addEventListener("admin:refresh", () => void route());
 addEventListener("admin:signed-out", () => {

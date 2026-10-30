@@ -3,7 +3,7 @@ import * as data from "../data";
 import { formatDateTime } from "../format";
 import { html, type Html } from "../html";
 import type { Announcement, AnnouncementLevel } from "../types";
-import { card, confirmAction, pageHead, pill, toast } from "../ui";
+import { card, confirmAction, panel, pill, row, toast } from "../ui";
 
 const PUBLIC_LINKS: [string, string][] = [
   ["Téléchargement", "Dernière release GitHub, choisie automatiquement"],
@@ -63,23 +63,26 @@ function form(a: Announcement): Html {
   </form>`;
 }
 
-export async function site(): Promise<Html> {
+export async function announcements(): Promise<Html> {
   const announcement = await data.announcement();
-  return html`
-    ${pageHead("Site", "Le bandeau d'annonce du site public et les liens qu'il affiche.")}
-    <div class="grid">
-      ${card("Bandeau d'annonce", announcement, (a) => html`
-        ${statusLine(a)}
-        ${form(a)}
-        <h3 class="sub">Aperçu</h3>
-        <div class="previews" data-previews>${banner(a, "fr")}${banner(a, "en")}</div>`, { wide: true })}
+  return html`<div class="grid">
+    ${card("Bandeau d'annonce", announcement, (a) => html`
+      ${statusLine(a)}
+      ${form(a)}
+      <h3 class="sub">Aperçu</h3>
+      <div class="previews" data-previews>${banner(a, "fr")}${banner(a, "en")}</div>`, { wide: true, icon: "info" })}
+  </div>`;
+}
 
-      <section class="card card-wide">
-        <header class="card-head"><h2>Liens publics</h2></header>
-        <dl class="kvs">${PUBLIC_LINKS.map(([k, v]) => html`<div class="kv"><dt>${k}</dt><dd class="wrap">${v}</dd></div>`)}</dl>
-        <p class="note">Les textes et les liens du site sont dans le dépôt GitHub : ils se modifient par un commit, relu avant publication. Le bandeau est le seul contenu modifiable ici.</p>
-      </section>
-    </div>`;
+export async function content(): Promise<Html> {
+  const pages = await data.pages();
+  return html`<div class="grid">
+    ${panel("Liens publics", html`<dl class="kvs">${PUBLIC_LINKS.map(([k, v]) => row(k, html`<span class="wrap">${v}</span>`))}</dl>`, { icon: "link" })}
+    ${card("Pages publiées", pages, (list) => html`<ul class="list">
+      ${list.map((p) => html`<li><a class="mono" href="${`https://aoze.fr${p.path}`}" target="_blank" rel="noopener">${p.path}</a>${pill(p.status === 200 ? "ok" : "bad", String(p.status))}</li>`)}
+    </ul>`, { icon: "file" })}
+    ${panel("Modifier le site", html`<p class="muted">Les textes et les liens du site sont dans le dépôt GitHub : ils se modifient par un commit, relu avant publication. Le bandeau d'annonce est le seul contenu modifiable depuis l'admin.</p>`, { wide: true, icon: "website" })}
+  </div>`;
 }
 
 const CONFIRM = {
@@ -88,7 +91,7 @@ const CONFIRM = {
 } as const;
 
 /** Live preview while typing. Publishing and removing change the public site, so they ask first. */
-export function bindSite(root: HTMLElement): void {
+export function bindAnnouncements(root: HTMLElement): void {
   const formEl = root.querySelector<HTMLFormElement>("[data-announcement]");
   const previews = root.querySelector<HTMLElement>("[data-previews]");
   if (!formEl || !previews) return;

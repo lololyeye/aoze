@@ -17,9 +17,16 @@ export interface Release {
   url: string;
   prerelease: boolean;
   installer: Installer | null;
-  /** Every asset of the release, including the copies used by automatic updates. */
+  /** Every installer of the release, including the copies used by automatic updates. */
   downloads: number;
+  assets: Asset[];
   notesHtml: string | null;
+}
+
+export interface Asset {
+  name: string;
+  size: number;
+  downloads: number;
 }
 
 export interface Check {

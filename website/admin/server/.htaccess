@@ -5,6 +5,9 @@ DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # With DirectorySlash Off, mod_rewrite skips "/admin" (a directory without its slash) unless
+  # told otherwise, and Apache then answers 403, which reveals the folder.
+  RewriteOptions AllowNoSlash
   # This file's rewrite rules replace the site's for /admin, so the redirect to https://aoze.fr
   # is repeated here: the cookies only travel over HTTPS.
   RewriteCond %{HTTPS} !=on [OR]

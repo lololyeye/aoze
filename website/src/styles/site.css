@@ -1,29 +1,4 @@
-/* Aoze website. Colours come from the desktop app (src/styles/tokens.css): night blue + one teal. */
-:root {
-  color-scheme: dark;
-  --bg: #0a0e15;
-  --bg-deep: #070a10;
-  --surface: #0f141c;
-  --surface-2: #141a24;
-  --line: rgb(160 195 235 / 0.09);
-  --line-strong: rgb(160 195 235 / 0.16);
-  --text: #e9edf3;
-  --text-2: #a7b0bd;
-  --text-3: #818b9b;
-  --accent: #3dd6d0;
-  --accent-hover: #62e6df;
-  --accent-ink: #032321;
-  --accent-soft: rgb(61 214 208 / 0.1);
-  /* Cards over the sky: dark glass. */
-  --panel: rgb(14 19 28 / 0.72);
-  --panel-solid: rgb(11 15 23 / 0.9);
-  --font: "Inter Variable", "Segoe UI", system-ui, sans-serif;
-  --mono: "Cascadia Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
-  --wrap: 1160px;
-  --gutter: clamp(16px, 4vw, 40px);
-  --radius: 14px;
-  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-}
+@import "./tokens.css";
 
 *, *::before, *::after { box-sizing: border-box; }
 

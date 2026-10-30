@@ -1,0 +1,110 @@
+import * as data from "../data";
+import { formatDateTime } from "../format";
+import { html, type Html } from "../html";
+import type { Announcement } from "../types";
+import { card, confirmAction, pageHead, pill, toast } from "../ui";
+
+const PUBLIC_LINKS: [string, string][] = [
+  ["Téléchargement", "Dernière release GitHub, choisie automatiquement"],
+  ["Code source", "https://github.com/lololyeye/aoze"],
+  ["Soutien", "https://ko-fi.com/aoze_support"],
+  ["Contact", "contact@aoze.fr"],
+];
+
+const toInput = (iso: string | null): string => (iso ? iso.slice(0, 16) : "");
+
+function banner(a: Announcement, lang: "fr" | "en"): Html {
+  const text = lang === "fr" ? a.textFr : a.textEn;
+  if (!text.trim()) return html`<p class="unavailable">Pas de texte en ${lang === "fr" ? "français" : "anglais"}.</p>`;
+  return html`<div class="${`banner-preview banner-${a.level}`}">
+    <span>${text}</span>${a.link ? html` <a href="${a.link}" tabindex="-1">${lang === "fr" ? "En savoir plus" : "Learn more"}</a>` : ""}
+  </div>`;
+}
+
+function form(a: Announcement): Html {
+  return html`<form class="form" data-announcement>
+    <div class="field-row">
+      <label class="field"><span>Texte en français</span><textarea name="textFr" maxlength="180" rows="2">${a.textFr}</textarea></label>
+      <label class="field"><span>Texte en anglais</span><textarea name="textEn" maxlength="180" rows="2">${a.textEn}</textarea></label>
+    </div>
+    <div class="field-row">
+      <label class="field"><span>Lien (facultatif)</span><input name="link" type="url" placeholder="https://aoze.fr/download/" value="${a.link}" /></label>
+      <label class="field"><span>Ton</span><select name="level">
+        <option value="info" ${a.level === "info" ? "selected" : ""}>Information</option>
+        <option value="warning" ${a.level === "warning" ? "selected" : ""}>Avertissement</option>
+      </select></label>
+    </div>
+    <div class="field-row">
+      <label class="field"><span>Début (facultatif)</span><input name="startsAt" type="datetime-local" value="${toInput(a.startsAt)}" /></label>
+      <label class="field"><span>Fin (facultatif)</span><input name="endsAt" type="datetime-local" value="${toInput(a.endsAt)}" /></label>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="submit" name="intent" value="draft">Enregistrer le brouillon</button>
+      ${a.status === "published"
+        ? html`<button class="btn btn-ghost" type="submit" name="intent" value="unpublish">Retirer du site</button>`
+        : ""}
+      <button class="btn btn-primary" type="submit" name="intent" value="publish">Publier</button>
+    </div>
+  </form>`;
+}
+
+export async function site(): Promise<Html> {
+  const announcement = await data.announcement();
+  return html`
+    ${pageHead("Site", "Le bandeau d'annonce du site public et les liens qu'il affiche.")}
+    <div class="grid">
+      ${card("Bandeau d'annonce", announcement, (a) => html`
+        <p class="card-intro">${a.status === "published" ? pill("ok", "En ligne") : pill("muted", "Brouillon")}
+          <span class="muted">Modifié ${formatDateTime(a.updatedAt)}. Il s'affiche en haut de toutes les pages, dans la langue du visiteur.</span></p>
+        ${form(a)}
+        <h3 class="sub">Aperçu</h3>
+        <div class="previews" data-previews>${banner(a, "fr")}${banner(a, "en")}</div>`, { wide: true })}
+
+      <section class="card card-wide">
+        <header class="card-head"><h2>Liens publics</h2></header>
+        <dl class="kvs">${PUBLIC_LINKS.map(([k, v]) => html`<div class="kv"><dt>${k}</dt><dd class="wrap">${v}</dd></div>`)}</dl>
+        <p class="note">Les textes et les liens du site sont dans le dépôt GitHub : ils se modifient par un commit, relu avant publication. Le bandeau est le seul contenu modifiable ici.</p>
+      </section>
+    </div>`;
+}
+
+/** Live preview while typing; submission goes through a confirmation when it changes the public site. */
+export function bindSite(root: HTMLElement): void {
+  const formEl = root.querySelector<HTMLFormElement>("[data-announcement]");
+  const previews = root.querySelector<HTMLElement>("[data-previews]");
+  if (!formEl || !previews) return;
+  const read = (): Announcement => {
+    const f = new FormData(formEl);
+    const value = (k: string) => String(f.get(k) ?? "");
+    return {
+      status: "draft",
+      level: value("level") === "warning" ? "warning" : "info",
+      textFr: value("textFr"),
+      textEn: value("textEn"),
+      link: value("link"),
+      startsAt: value("startsAt") || null,
+      endsAt: value("endsAt") || null,
+      updatedAt: new Date().toISOString(),
+    };
+  };
+  formEl.addEventListener("input", () => {
+    const a = read();
+    previews.innerHTML = html`${banner(a, "fr")}${banner(a, "en")}`.value;
+  });
+  formEl.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const intent = (e.submitter as HTMLButtonElement | null)?.value;
+    if (intent === "publish" && !(await confirmAction({
+      title: "Publier le bandeau ?",
+      text: "Il apparaîtra en haut de toutes les pages du site public, en français et en anglais.",
+      confirm: "Publier",
+    }))) return;
+    if (intent === "unpublish" && !(await confirmAction({
+      title: "Retirer le bandeau ?",
+      text: "Il disparaîtra du site public. Le texte reste enregistré comme brouillon.",
+      confirm: "Retirer",
+      danger: true,
+    }))) return;
+    toast("Exemple : rien n'est envoyé tant que le serveur n'est pas en place.", "muted");
+  });
+}

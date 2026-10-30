@@ -52,8 +52,7 @@ the app before installing).
 
 ## Audience measurement
 
-Off until it is turned on in Réglages, which should only happen once the privacy policy
-describes it. The site's script (`website/src/scripts/stats.ts`) sends page views, visible time
+Off until it is turned on in Réglages; the privacy policy describes it and lets visitors opt out. The site's script (`website/src/scripts/stats.ts`) sends page views, visible time
 and the download steps to `/e`; installer links go to `/get/<file>`, which records the request
 and redirects to the same file on GitHub Releases (always, even with measurement off).
 
@@ -67,6 +66,12 @@ and redirects to the same file on GitHub Releases (always, even with measurement
   retention (3 to 25 months), login attempts after 90 days and the activity log after 12 months,
   GitHub download counters, the monthly country database.
 - A download request is not a finished download: GitHub serves the file and says nothing more.
+- The Analytics pages read `api/analytics/report?from=&to=` (Paris days, 760 at most): stored
+  daily totals for finished days, the same queries on raw events for today, and the period of
+  the same length just before for comparison. Distinct visitors over a period are only given
+  while its raw visits are kept. `api/analytics/live` gives the visits of the last 5 minutes.
+- The privacy policy (`website/src/views/Privacy.astro`) states a 6-month retention: change it
+  there too when the setting changes.
 
 ## Security model
 

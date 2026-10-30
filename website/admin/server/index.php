@@ -17,6 +17,7 @@ require __DIR__ . '/_app/announcement.php';
 require __DIR__ . '/_app/analytics.php';
 require __DIR__ . '/_app/collect.php';
 require __DIR__ . '/_app/maintenance.php';
+require __DIR__ . '/_app/report.php';
 
 const ASSET_TYPES = ['js' => 'text/javascript', 'css' => 'text/css', 'woff2' => 'font/woff2', 'svg' => 'image/svg+xml'];
 

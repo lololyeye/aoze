@@ -1,0 +1,73 @@
+---
+// The privacy page's switch for audience measurement on this browser. The server keeps the
+// choice in the aoze_optout cookie and drops the visitor cookie (it is HttpOnly).
+import { href } from "../lib/site";
+import type { Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const fr = Astro.props.lang === "fr";
+const c = fr
+  ? {
+      on: "La mesure d'audience est active pour ce navigateur.",
+      off: "Vous avez refusé la mesure d'audience sur ce navigateur.",
+      browser: "Votre navigateur demande à ne pas être suivi (Do Not Track ou Global Privacy Control) : le site ne mesure aucune de vos visites.",
+      refuse: "Refuser la mesure",
+      accept: "Accepter à nouveau",
+      failed: "Le choix n'a pas pu être enregistré. Réessayez dans un instant.",
+      noscript: "Ce bouton a besoin de JavaScript. Vous pouvez aussi activer Do Not Track ou Global Privacy Control dans votre navigateur : le site les respecte.",
+    }
+  : {
+      on: "Audience measurement is on for this browser.",
+      off: "You turned audience measurement off for this browser.",
+      browser: "Your browser asks not to be tracked (Do Not Track or Global Privacy Control): the website measures none of your visits.",
+      refuse: "Turn measurement off",
+      accept: "Turn it back on",
+      failed: "Your choice could not be saved. Please try again in a moment.",
+      noscript: "This button needs JavaScript. You can also turn on Do Not Track or Global Privacy Control in your browser: the website respects them.",
+    };
+---
+<div class="stats-choice" data-stats-choice data-endpoint={href("e")} data-on={c.on} data-off={c.off} data-browser={c.browser}
+  data-refuse={c.refuse} data-accept={c.accept} data-failed={c.failed} hidden>
+  <p role="status" data-stats-state></p>
+  <button class="btn btn-ghost btn-sm" type="button" data-stats-toggle></button>
+</div>
+<noscript><p>{c.noscript}</p></noscript>
+
+<script>
+  const OPT_OUT_COOKIE = "aoze_optout=1";
+  const box = document.querySelector<HTMLElement>("[data-stats-choice]");
+  if (box) {
+    const d = box.dataset;
+    const state = box.querySelector<HTMLElement>("[data-stats-state]")!;
+    const button = box.querySelector<HTMLButtonElement>("[data-stats-toggle]")!;
+    const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+    const optedOut = () => document.cookie.split("; ").includes(OPT_OUT_COOKIE);
+    const show = () => {
+      state.textContent = optedOut() ? d.off! : d.on!;
+      button.textContent = optedOut() ? d.accept! : d.refuse!;
+    };
+    box.hidden = false;
+    if (nav.globalPrivacyControl === true || navigator.doNotTrack === "1") {
+      state.textContent = d.browser!;
+      button.hidden = true;
+    } else {
+      show();
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        try {
+          const res = await fetch(d.endpoint!, { method: "POST", body: JSON.stringify({ t: optedOut() ? "optin" : "optout" }) });
+          if (!res.ok) throw new Error(String(res.status));
+          show();
+        } catch {
+          state.textContent = d.failed!;
+        }
+        button.disabled = false;
+      });
+    }
+  }
+</script>
+
+<style>
+  .stats-choice { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 14px; padding: 16px 18px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+  .stats-choice p { flex: 1 1 260px; margin: 0; }
+</style>

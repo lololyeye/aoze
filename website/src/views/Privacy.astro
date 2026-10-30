@@ -1,6 +1,7 @@
 ---
 import Legal from "../layouts/Legal.astro";
 import Fill from "../components/Fill.astro";
+import StatsChoice from "../components/StatsChoice.astro";
 import { legal } from "../data/legal";
 import { ISSUES_URL, KOFI_URL, pageHref } from "../lib/site";
 import type { Lang } from "../i18n/ui";
@@ -12,25 +13,28 @@ const email = legal.privacyEmail ?? legal.contactEmail;
 const GITHUB_PRIVACY = "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement";
 const KOFI_PRIVACY = "https://more.ko-fi.com/privacy";
 const WEBVIEW2 = "https://learn.microsoft.com/microsoft-edge/webview2/concepts/data-privacy";
+const DBIP = "https://db-ip.com";
+const CNIL_AUDIENCE = "https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies-solutions-pour-les-outils-de-mesure-daudience";
+const UPDATED = "2026-10-31";
 const toc: [string, string][] = fr
-  ? [["qui", "Qui est responsable"], ["application", "L'application Aoze"], ["mises-a-jour", "Mises à jour"], ["site", "Le site"], ["cookies", "Cookies et stockage local"], ["tiers", "Services tiers"], ["contact", "Si vous nous écrivez"], ["base", "Finalités et bases légales"], ["duree", "Durées de conservation"], ["transferts", "Transferts hors UE"], ["droits", "Vos droits"], ["changements", "Modifications"]]
-  : [["who", "Who is responsible"], ["app", "The Aoze app"], ["updates", "Updates"], ["website", "The website"], ["cookies", "Cookies and local storage"], ["third", "Third-party services"], ["contact", "If you write to us"], ["basis", "Purposes and legal bases"], ["retention", "How long data is kept"], ["transfers", "Transfers outside the EU"], ["rights", "Your rights"], ["changes", "Changes"]];
+  ? [["qui", "Qui est responsable"], ["application", "L'application Aoze"], ["mises-a-jour", "Mises à jour"], ["site", "Le site"], ["mesure", "Mesure d'audience"], ["cookies", "Cookies et stockage local"], ["tiers", "Services tiers"], ["contact", "Si vous nous écrivez"], ["base", "Finalités et bases légales"], ["duree", "Durées de conservation"], ["transferts", "Transferts hors UE"], ["droits", "Vos droits"], ["changements", "Modifications"]]
+  : [["who", "Who is responsible"], ["app", "The Aoze app"], ["updates", "Updates"], ["website", "The website"], ["audience", "Audience measurement"], ["cookies", "Cookies and local storage"], ["third", "Third-party services"], ["contact", "If you write to us"], ["basis", "Purposes and legal bases"], ["retention", "How long data is kept"], ["transfers", "Transfers outside the EU"], ["rights", "Your rights"], ["changes", "Changes"]];
 const summaryFr = [
   "Aoze traite vos images, GIF et clips sur votre PC. Ils ne sont envoyés nulle part.",
   "La seule connexion que l'application fait d'elle-même est la recherche de mises à jour sur GitHub, que vous pouvez désactiver.",
-  "Le site n'a ni cookies, ni mesure d'audience, ni publicité, ni formulaire, ni compte.",
+  "Le site mesure sa fréquentation lui-même, sans service tiers ni publicité. Il n'enregistre pas votre adresse IP, et vous pouvez refuser en un clic.",
   "Le site est hébergé en France par o2switch, les téléchargements par GitHub : comme tout hébergeur, chacun voit votre adresse IP.",
 ];
 const summaryEn = [
   "Aoze processes your images, GIFs and clips on your PC. They are not sent anywhere.",
   "The only connection the app makes on its own is the update check on GitHub, which you can turn off.",
-  "The website has no cookies, no analytics, no ads, no forms and no accounts.",
+  "The website measures its own audience, with no third-party service and no ads. It doesn't store your IP address, and you can opt out in one click.",
   "The website is hosted in France by o2switch and the downloads by GitHub: like any host, each sees your IP address.",
 ];
 ---
 {fr ? (
   <Legal lang={lang} path="privacy/" title="Confidentialité" description="Ce que l'application Aoze et son site font de vos données, vérifié dans le code."
-    h1="Vos données, simplement" lead="Ce que l'application Aoze et ce site font, et ne font pas, avec vos données. Tout ce qui suit a été vérifié dans le code source d'Aoze." toc={toc} summary={summaryFr}>
+    h1="Vos données, simplement" lead="Ce que l'application Aoze et ce site font, et ne font pas, avec vos données. Tout ce qui suit a été vérifié dans le code source d'Aoze." toc={toc} summary={summaryFr} updated={UPDATED}>
     <section id="qui">
       <h2>Qui est responsable</h2>
       <p>Aoze et ce site sont publiés par <Fill value={legal.publisherName} label="nom ou raison sociale" /> (voir les <a href={pageHref(lang, "legal/")}>mentions légales</a>). Pour toute question sur vos données : <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
@@ -63,27 +67,51 @@ const summaryEn = [
 
     <section id="site">
       <h2>Le site</h2>
-      <p>Ce site est un ensemble de pages statiques : il n'a pas de serveur à nous, pas de base de données, pas de formulaire et pas de compte. Les polices et les images sont servies par le site lui-même (pas de Google Fonts, pas de vidéo intégrée d'un autre site).</p>
+      <p>Ce site est fait de pages statiques, sans formulaire, sans compte et sans publicité. Les polices et les images sont servies par le site lui-même (pas de Google Fonts, pas de vidéo intégrée d'un autre site).</p>
       <h3>Hébergement</h3>
       <p>Le site est hébergé en France par o2switch. Comme tout hébergeur, o2switch enregistre les données techniques de chaque visite (adresse IP, navigateur, page demandée, date) dans les journaux du serveur, pour afficher le site et le protéger. Nous ne nous en servons pas pour suivre les visiteurs ni pour mesurer l'audience.</p>
       <h3>Version et nombre de téléchargements</h3>
       <p>Les pages d'accueil et de téléchargement demandent à l'API de GitHub (<code>api.github.com</code>) le numéro de la dernière version et le total des téléchargements, directement depuis votre navigateur. GitHub reçoit donc votre adresse IP et des informations sur votre navigateur. Aucun cookie n'est utilisé pour cela.</p>
       <h3>Téléchargement</h3>
-      <p>Le bouton Télécharger mène au fichier hébergé sur GitHub Releases. GitHub compte les téléchargements de chaque fichier ; le site affiche seulement ce total. Nous ne savons pas qui a téléchargé Aoze.</p>
+      <p>Le bouton Télécharger passe par <code>aoze.fr/get/</code>, qui note la demande (voir la mesure d'audience ci-dessous) puis vous envoie vers le fichier hébergé sur GitHub Releases. GitHub compte aussi les téléchargements de chaque fichier. Nous ne savons pas si le téléchargement s'est terminé, ni qui l'a fait.</p>
+    </section>
+
+    <section id="mesure">
+      <h2>Mesure d'audience</h2>
+      <p>Pour savoir quelles pages servent, d'où viennent les visiteurs et si le téléchargement est facile à trouver, le site compte ses visites lui-même, sur notre serveur chez o2switch. Aucun service de mesure tiers, aucune publicité, aucun suivi d'un site à l'autre : ces statistiques ne servent qu'à améliorer ce site, ne sont ni vendues ni partagées, et ne sont pas croisées avec d'autres données.</p>
+      <h3>Ce qui est noté</h3>
+      <div class="rows">
+        <div class="row"><h3>La visite</h3><p>Les pages vues, la page d'arrivée et de sortie, le temps où chaque page est affichée, la langue du site.</p></div>
+        <div class="row"><h3>La provenance</h3><p>Le nom du site d'où vous venez (par exemple <code>discord.com</code>, sans le reste de l'adresse), et les paramètres de campagne <code>utm_</code> d'un lien partagé.</p></div>
+        <div class="row"><h3>L'appareil</h3><p>Ordinateur, mobile ou tablette, le nom du navigateur et du système, déduits de l'en-tête que tout navigateur envoie. Pas de version précise, pas d'empreinte du navigateur.</p></div>
+        <div class="row"><h3>Le pays</h3><p>Déduit de votre adresse IP avec une base de données installée sur notre serveur (<a href={DBIP}>IP to Country Lite de DB-IP</a>, licence CC BY 4.0). L'adresse IP elle-même n'est pas enregistrée.</p></div>
+        <div class="row"><h3>Le téléchargement</h3><p>Si le bouton Télécharger a été vu, cliqué, si l'avertissement de Windows a été accepté et si l'installeur a été demandé, avec sa version.</p></div>
+      </div>
+      <p>Pour reconnaître une visite qui continue ou un visiteur qui revient, le site dépose un cookie <code>aoze_v</code> : un identifiant tiré au hasard, qui ne dit rien de vous (voir les cookies ci-dessous). Contre les abus, une empreinte chiffrée de l'adresse IP compte les envois par minute ; elle est effacée dans l'heure.</p>
+      <p>Rien n'est mesuré si votre navigateur envoie le signal Do Not Track ou Global Privacy Control, ni pour les robots.</p>
+      <h3>Refuser la mesure</h3>
+      <p>Ce choix vaut pour ce navigateur et se garde 13 mois.</p>
+      <StatsChoice lang={lang} />
     </section>
 
     <section id="cookies">
       <h2>Cookies et stockage local</h2>
-      <p>Le site ne dépose <strong>aucun cookie</strong> et n'utilise aucun outil de mesure d'audience, aucun pixel publicitaire et aucun traceur. C'est pour cela qu'il n'affiche pas de bannière de cookies.</p>
-      <p>Une seule valeur peut être enregistrée dans votre navigateur : <code>aoze-lang</code>, dans le stockage local, quand vous changez de langue avec le bouton EN / FR. Elle sert uniquement à retenir ce choix, n'est jamais envoyée et s'efface avec les données du site dans votre navigateur.</p>
+      <p>Le site n'utilise aucun pixel publicitaire, aucun traceur d'un autre site et aucun cookie tiers. Il peut déposer deux cookies, propres à aoze.fr :</p>
+      <ul>
+        <li><code>aoze_v</code> : l'identifiant aléatoire de la mesure d'audience. Il dure 13 mois à partir de la première visite et n'est jamais prolongé. Seul le serveur du site peut le lire.</li>
+        <li><code>aoze_optout</code> : seulement si vous refusez la mesure, pour retenir ce choix 13 mois.</li>
+      </ul>
+      <p>Ce cookie de mesure ne sert qu'aux statistiques de ce site et respecte les conditions de la CNIL pour être <a href={CNIL_AUDIENCE}>dispensé de consentement</a> : c'est pour cela qu'il n'y a pas de bannière. Vous pouvez tout de même le refuser plus haut, ou effacer les cookies du site dans votre navigateur.</p>
+      <p>Une valeur peut aussi être enregistrée dans le stockage local : <code>aoze-lang</code>, quand vous changez de langue avec le bouton EN / FR. Elle sert uniquement à retenir ce choix et n'est jamais envoyée.</p>
     </section>
 
     <section id="tiers">
       <h2>Services tiers</h2>
       <ul>
-        <li><strong>GitHub</strong> héberge le site, le code et les téléchargements, et répond à la recherche de mises à jour. <a href={GITHUB_PRIVACY}>Déclaration de confidentialité de GitHub</a>.</li>
+        <li><strong>GitHub</strong> héberge le code et les téléchargements, et répond à la recherche de mises à jour. <a href={GITHUB_PRIVACY}>Déclaration de confidentialité de GitHub</a>.</li>
         <li><strong>Ko-fi</strong> reçoit les dons volontaires. Le site ne fait qu'un lien vers <a href={KOFI_URL}>ko-fi.com</a> : aucun script Ko-fi n'est chargé ici, et le paiement se fait entièrement chez Ko-fi et ses prestataires de paiement. Nous ne voyons jamais vos données de paiement. <a href={KOFI_PRIVACY}>Politique de confidentialité de Ko-fi</a>.</li>
         <li><strong>Microsoft</strong> fournit WebView2, utilisé par l'application pour afficher son interface.</li>
+        <li><strong>DB-IP</strong> publie la base qui donne le pays d'une adresse IP. Nous la téléchargeons sur notre serveur chaque mois : aucune adresse ne leur est envoyée.</li>
       </ul>
       <p>Quand vous ouvrez un de ces services, ses propres règles s'appliquent.</p>
     </section>
@@ -99,6 +127,7 @@ const summaryEn = [
         <li>Répondre à vos messages : intérêt légitime (article 6.1.f du RGPD), pouvoir répondre aux personnes qui nous écrivent.</li>
         <li>Héberger le site chez o2switch et distribuer Aoze via GitHub : intérêt légitime, publier le site et distribuer Aoze. o2switch héberge le site pour nous ; GitHub traite les données techniques de ses serveurs (adresse IP, journaux) en tant que responsable indépendant, selon sa propre <a href={GITHUB_PRIVACY}>déclaration de confidentialité</a>.</li>
         <li>Rechercher les mises à jour : intérêt légitime, vous proposer les correctifs et les nouvelles versions. La demande va directement à GitHub, nous n'en recevons rien, et vous pouvez la désactiver dans les Réglages.</li>
+        <li>Mesurer l'audience du site : intérêt légitime, comprendre comment le site est utilisé pour l'améliorer. Le cookie de mesure est dispensé de consentement (article 82 de la loi Informatique et Libertés) parce qu'il est limité à cette mesure ; vous pouvez vous y opposer à tout moment.</li>
       </ul>
     </section>
 
@@ -106,6 +135,7 @@ const summaryEn = [
       <h2>Durées de conservation</h2>
       <ul>
         <li>Vos e-mails : 3 ans après le dernier échange, puis ils sont supprimés.</li>
+        <li>Mesure d'audience : le détail des visites et des demandes de téléchargement 6 mois, puis seulement des totaux par jour, sans identifiant, 25 mois au plus. Le cookie <code>aoze_v</code> dure 13 mois.</li>
         <li>Journaux de GitHub : selon la <a href={GITHUB_PRIVACY}>déclaration de GitHub</a>. Nous ne les conservons pas, nous n'y avons pas accès.</li>
         <li>Données de l'application : sur votre PC, jusqu'à ce que vous les effaciez.</li>
       </ul>
@@ -119,7 +149,7 @@ const summaryEn = [
     <section id="droits">
       <h2>Vos droits</h2>
       <p>Selon la loi qui s'applique à vous (notamment le RGPD), vous pouvez demander l'accès à vos données, leur correction, leur effacement, la limitation de leur traitement, leur portabilité, ou vous opposer à leur traitement. Écrivez à <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
-      <p>Comme nous ne gardons presque aucune donnée, une demande portant sur les journaux de GitHub ou sur un paiement Ko-fi doit souvent être adressée à ces services. Vous pouvez aussi déposer une réclamation auprès de l'autorité de protection des données de votre pays, en France la <a href="https://www.cnil.fr">CNIL</a>.</p>
+      <p>Les mesures d'audience ne sont liées qu'à l'identifiant aléatoire du cookie : nous ne pouvons pas les rattacher à votre nom. Refuser la mesure supprime ce cookie. Une demande portant sur les journaux de GitHub ou sur un paiement Ko-fi doit souvent être adressée à ces services. Vous pouvez aussi déposer une réclamation auprès de l'autorité de protection des données de votre pays, en France la <a href="https://www.cnil.fr">CNIL</a>.</p>
     </section>
 
     <section id="changements">
@@ -129,7 +159,7 @@ const summaryEn = [
   </Legal>
 ) : (
   <Legal lang={lang} path="privacy/" title="Privacy" description="What the Aoze app and its website do with your data, checked against the code."
-    h1="Your data, plainly" lead="What the Aoze app and this website do, and don't do, with your data. Everything below was checked against Aoze's source code." toc={toc} summary={summaryEn}>
+    h1="Your data, plainly" lead="What the Aoze app and this website do, and don't do, with your data. Everything below was checked against Aoze's source code." toc={toc} summary={summaryEn} updated={UPDATED}>
     <section id="who">
       <h2>Who is responsible</h2>
       <p>Aoze and this website are published by <Fill value={legal.publisherName} label="nom ou raison sociale" /> (see the <a href={pageHref(lang, "legal/")}>legal notice</a>). For any question about your data: <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
@@ -162,27 +192,51 @@ const summaryEn = [
 
     <section id="website">
       <h2>The website</h2>
-      <p>This website is a set of static pages: no server of our own, no database, no forms and no accounts. Fonts and images are served by the site itself (no Google Fonts, no video embedded from another site).</p>
+      <p>This website is made of static pages, with no forms, no accounts and no ads. Fonts and images are served by the site itself (no Google Fonts, no video embedded from another site).</p>
       <h3>Hosting</h3>
       <p>The website is hosted in France by o2switch. Like any host, o2switch records the technical data of each visit (IP address, browser, page requested, date) in the server logs, to serve the site and protect it. We don't use them to follow visitors or to measure the audience.</p>
       <h3>Version and download count</h3>
       <p>The home and download pages ask GitHub's API (<code>api.github.com</code>) for the latest version number and the total number of downloads, straight from your browser. GitHub therefore receives your IP address and information about your browser. No cookie is used for this.</p>
       <h3>Downloading</h3>
-      <p>The Download button leads to the file hosted on GitHub Releases. GitHub counts the downloads of each file; the website only shows that total. We don't know who downloaded Aoze.</p>
+      <p>The Download button goes through <code>aoze.fr/get/</code>, which notes the request (see audience measurement below) and then sends you to the file hosted on GitHub Releases. GitHub also counts the downloads of each file. We don't know whether the download finished, or who made it.</p>
+    </section>
+
+    <section id="audience">
+      <h2>Audience measurement</h2>
+      <p>To know which pages are useful, where visitors come from and whether the download is easy to find, the website counts its visits itself, on our server at o2switch. No third-party analytics, no advertising, no tracking from one site to another: these statistics are only used to improve this website, are neither sold nor shared, and are not combined with other data.</p>
+      <h3>What is noted</h3>
+      <div class="rows">
+        <div class="row"><h3>The visit</h3><p>The pages viewed, the entry and exit pages, how long each page is on screen, the language of the site.</p></div>
+        <div class="row"><h3>Where it comes from</h3><p>The name of the site you came from (for example <code>discord.com</code>, without the rest of the address), and the <code>utm_</code> campaign parameters of a shared link.</p></div>
+        <div class="row"><h3>The device</h3><p>Computer, phone or tablet, and the name of the browser and the system, read from the header every browser sends. No precise version, no browser fingerprint.</p></div>
+        <div class="row"><h3>The country</h3><p>Worked out from your IP address with a database installed on our server (<a href={DBIP}>DB-IP's IP to Country Lite</a>, CC BY 4.0 licence). The IP address itself is not stored.</p></div>
+        <div class="row"><h3>The download</h3><p>Whether the Download button was seen and clicked, whether the Windows warning was accepted and whether the installer was requested, with its version.</p></div>
+      </div>
+      <p>To recognise a visit that goes on or a visitor who comes back, the website sets an <code>aoze_v</code> cookie: a random identifier that says nothing about you (see cookies below). Against abuse, an encrypted fingerprint of the IP address counts requests per minute; it is erased within the hour.</p>
+      <p>Nothing is measured when your browser sends the Do Not Track or Global Privacy Control signal, nor for bots.</p>
+      <h3>Opting out</h3>
+      <p>This choice applies to this browser and is kept for 13 months.</p>
+      <StatsChoice lang={lang} />
     </section>
 
     <section id="cookies">
       <h2>Cookies and local storage</h2>
-      <p>The website sets <strong>no cookies</strong> and uses no analytics, no advertising pixel and no tracker. That is why it shows no cookie banner.</p>
-      <p>Only one value can be saved in your browser: <code>aoze-lang</code>, in local storage, when you switch language with the EN / FR button. It only remembers that choice, is never sent anywhere, and is removed when you clear this site's data in your browser.</p>
+      <p>The website uses no advertising pixel, no tracker from another site and no third-party cookie. It may set two cookies of its own, for aoze.fr only:</p>
+      <ul>
+        <li><code>aoze_v</code>: the random identifier used for audience measurement. It lasts 13 months from the first visit and is never extended. Only the website's server can read it.</li>
+        <li><code>aoze_optout</code>: only if you opt out, to remember that choice for 13 months.</li>
+      </ul>
+      <p>This measurement cookie is only used for this website's statistics and meets the conditions of the French data protection authority (CNIL) to be <a href={CNIL_AUDIENCE}>exempt from consent</a>: that is why there is no banner. You can still refuse it above, or clear this site's cookies in your browser.</p>
+      <p>A value may also be saved in local storage: <code>aoze-lang</code>, when you switch language with the EN / FR button. It only remembers that choice and is never sent anywhere.</p>
     </section>
 
     <section id="third">
       <h2>Third-party services</h2>
       <ul>
-        <li><strong>GitHub</strong> hosts the website, the code and the downloads, and answers the update check. <a href={GITHUB_PRIVACY}>GitHub's privacy statement</a>.</li>
+        <li><strong>GitHub</strong> hosts the code and the downloads, and answers the update check. <a href={GITHUB_PRIVACY}>GitHub's privacy statement</a>.</li>
         <li><strong>Ko-fi</strong> receives voluntary donations. The website only links to <a href={KOFI_URL}>ko-fi.com</a>: no Ko-fi script is loaded here, and payment happens entirely on Ko-fi and its payment providers. We never see your payment details. <a href={KOFI_PRIVACY}>Ko-fi's privacy policy</a>.</li>
         <li><strong>Microsoft</strong> provides WebView2, which the app uses to draw its interface.</li>
+        <li><strong>DB-IP</strong> publishes the database that gives the country of an IP address. We download it to our server every month: no address is sent to them.</li>
       </ul>
       <p>When you open one of these services, its own rules apply.</p>
     </section>
@@ -198,6 +252,7 @@ const summaryEn = [
         <li>Answering your messages: legitimate interest (Article 6(1)(f) GDPR), so we can reply to people who write to us.</li>
         <li>Hosting the website at o2switch and distributing Aoze through GitHub: legitimate interest, to publish the website and distribute Aoze. o2switch hosts the website for us; GitHub processes the technical data of its servers (IP address, logs) as an independent controller, under its own <a href={GITHUB_PRIVACY}>privacy statement</a>.</li>
         <li>Checking for updates: legitimate interest, to offer you fixes and new versions. The request goes straight to GitHub, we receive nothing from it, and you can turn it off in Settings.</li>
+        <li>Measuring the website's audience: legitimate interest, to understand how the website is used and improve it. The measurement cookie is exempt from consent (Article 82 of the French Data Protection Act) because it is limited to this measurement; you can object at any time.</li>
       </ul>
     </section>
 
@@ -205,6 +260,7 @@ const summaryEn = [
       <h2>How long data is kept</h2>
       <ul>
         <li>Your emails: 3 years after the last exchange, then they are deleted.</li>
+        <li>Audience measurement: the details of visits and download requests for 6 months, then only daily totals, without any identifier, for 25 months at most. The <code>aoze_v</code> cookie lasts 13 months.</li>
         <li>GitHub's logs: as set out in <a href={GITHUB_PRIVACY}>GitHub's statement</a>. We don't keep them and have no access to them.</li>
         <li>The app's data: on your PC, until you delete it.</li>
       </ul>
@@ -218,7 +274,7 @@ const summaryEn = [
     <section id="rights">
       <h2>Your rights</h2>
       <p>Depending on the law that applies to you (the GDPR in particular), you can ask to access your data, correct it, erase it, restrict its use or take a copy of it, or object to its use. Write to <Fill value={email} label="adresse e-mail de contact RGPD" mailto />.</p>
-      <p>Since we keep almost no data, a request about GitHub's logs or a Ko-fi payment often has to go to those services. You can also complain to the data protection authority of your country, in France the <a href="https://www.cnil.fr">CNIL</a>.</p>
+      <p>Audience measurements are only linked to the cookie's random identifier: we cannot connect them to your name. Opting out deletes that cookie. A request about GitHub's logs or a Ko-fi payment often has to go to those services. You can also complain to the data protection authority of your country, in France the <a href="https://www.cnil.fr">CNIL</a>.</p>
     </section>
 
     <section id="changes">

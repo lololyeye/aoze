@@ -56,7 +56,13 @@ function aggregate_days(int $now): void
     }
 }
 
-function aggregate_day(string $day): void
+/**
+ * Every daily total of one day, computed from the raw events. The report also uses it for the
+ * current day, which is only stored once it is over.
+ *
+ * @return list<array{0: string, 1: string, 2: int}>
+ */
+function day_rows(string $day): array
 {
     $sessions = 'FROM sessions WHERE started_at >= :s AND started_at < :e';
     $pageviews = 'FROM pageviews WHERE at >= :s AND at < :e';
@@ -89,16 +95,27 @@ function aggregate_day(string $day): void
 
     $db = analytics_db();
     $bounds = [':s' => day_start($day), ':e' => (new DateTimeImmutable($day, new DateTimeZone(TIMEZONE)))->modify('+1 day')->getTimestamp()];
+    $rows = [];
+    foreach ($queries as $sql) {
+        $stmt = $db->prepare($sql);
+        $stmt->execute($bounds);
+        foreach ($stmt->fetchAll(PDO::FETCH_NUM) as [$metric, $dimension, $value]) {
+            $rows[] = [$metric, (string) $dimension, (int) $value];
+        }
+    }
+    return $rows;
+}
+
+function aggregate_day(string $day): void
+{
+    $db = analytics_db();
+    $rows = day_rows($day);
     $insert = $db->prepare('INSERT OR REPLACE INTO daily (day, metric, dimension, value) VALUES (?, ?, ?, ?)');
     $db->beginTransaction();
     try {
         $db->prepare('DELETE FROM daily WHERE day = ?')->execute([$day]);
-        foreach ($queries as $sql) {
-            $stmt = $db->prepare($sql);
-            $stmt->execute($bounds);
-            foreach ($stmt->fetchAll(PDO::FETCH_NUM) as [$metric, $dimension, $value]) {
-                $insert->execute([$day, $metric, (string) $dimension, (int) $value]);
-            }
+        foreach ($rows as [$metric, $dimension, $value]) {
+            $insert->execute([$day, $metric, $dimension, $value]);
         }
         $db->commit();
     } catch (Throwable $e) {

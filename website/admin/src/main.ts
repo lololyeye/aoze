@@ -3,6 +3,7 @@ import "./admin.css";
 import { api, ApiError, loadSession, type SessionState } from "./api";
 import { html, raw, type Html } from "./html";
 import { icon, type IconName } from "./icons";
+import { bindRangePicker, rangePicker } from "./range";
 import { applySizes, bindTooltips, skeleton } from "./ui";
 import * as analytics from "./views/analytics";
 import * as application from "./views/application";
@@ -34,12 +35,12 @@ const SECTIONS: Section[] = [
     { slug: "", label: "Vue d'ensemble", lead: "L'état d'Aoze, du site et de l'hébergement en un coup d'œil.", render: overview },
   ] },
   { slug: "analytics", label: "Analytics", icon: "analytics", ranged: true, pages: [
-    { slug: "traffic", label: "Trafic", lead: "Pages vues, visites et leur évolution.", render: analytics.traffic },
-    { slug: "visitors", label: "Visiteurs", lead: "D'où viennent les visiteurs et avec quel appareil.", render: analytics.visitors },
-    { slug: "acquisition", label: "Acquisition", lead: "Comment les visiteurs arrivent sur aoze.fr.", render: analytics.acquisition },
-    { slug: "pages", label: "Pages", lead: "Les pages lues, par où on entre et par où on part.", render: analytics.pages },
-    { slug: "downloads", label: "Téléchargements", lead: "Ce qui est réellement téléchargé, et ce qu'on ne peut pas mesurer.", render: analytics.downloads },
-    { slug: "conversions", label: "Conversions", lead: "Du premier passage sur le site jusqu'au téléchargement.", render: analytics.conversions },
+    { slug: "traffic", label: "Trafic", lead: "Pages vues, visites et leur évolution.", render: analytics.traffic, bind: analytics.bindAnalytics },
+    { slug: "visitors", label: "Visiteurs", lead: "D'où viennent les visiteurs et avec quel appareil.", render: analytics.visitors, bind: analytics.bindAnalytics },
+    { slug: "acquisition", label: "Acquisition", lead: "Comment les visiteurs arrivent sur aoze.fr.", render: analytics.acquisition, bind: analytics.bindAnalytics },
+    { slug: "pages", label: "Pages", lead: "Les pages lues, par où on entre et par où on part.", render: analytics.pages, bind: analytics.bindAnalytics },
+    { slug: "downloads", label: "Téléchargements", lead: "Ce qui est réellement téléchargé, et ce qu'on ne peut pas mesurer.", render: analytics.downloads, bind: analytics.bindAnalytics },
+    { slug: "conversions", label: "Conversions", lead: "Du premier passage sur le site jusqu'au téléchargement.", render: analytics.conversions, bind: analytics.bindAnalytics },
   ] },
   { slug: "application", label: "Application", icon: "application", pages: [
     { slug: "releases", label: "Releases", lead: "Les versions publiées sur GitHub.", render: application.releases },
@@ -115,6 +116,7 @@ function shell(email: string): void {
   app.querySelector("[data-close-nav]")!.addEventListener("click", () => openNav(false));
   app.querySelector(".nav")!.addEventListener("click", () => openNav(false));
   app.querySelector("[data-refresh]")!.addEventListener("click", () => void route());
+  bindRangePicker(app.querySelector<HTMLElement>("#intro")!);
   app.querySelector("[data-logout]")!.addEventListener("click", async () => {
     try {
       await api("logout", {});
@@ -212,11 +214,6 @@ function locate(): [Section, Page] {
   const section = SECTIONS.find((s) => s.slug === sectionSlug) ?? SECTIONS[0]!;
   return [section, section.pages.find((p) => p.slug === pageSlug) ?? section.pages[0]!];
 }
-
-const rangePicker = (): Html => html`<div class="segmented" role="group" aria-label="Période" data-tip="Disponible dès que la mesure d'audience sera active">
-  ${["7 j", "30 j", "90 j", "12 mois"].map((label, i) => html`<button type="button" disabled ${i === 1 ? raw('aria-pressed="true"') : ""}>${label}</button>`)}
-  <button type="button" disabled>${icon("calendar")}<span>Personnalisée</span></button>
-</div>`;
 
 function intro(section: Section, page: Page): Html {
   const tabs = section.pages.length > 1

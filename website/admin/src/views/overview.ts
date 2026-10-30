@@ -1,10 +1,11 @@
-import { bars } from "../charts";
+import { bars, delta } from "../charts";
 import * as data from "../data";
 import { downloadTotals, publicReleases } from "../downloads";
 import { daysUntil, formatAgo, formatDateTime, formatNumber, shortSha } from "../format";
 import { html, type Html } from "../html";
 import { icon } from "../icons";
-import type { CertificateStatus, Dataset, DeployStatus, ManifestStatus, PageStatus, WorkflowRun } from "../types";
+import { shiftDay, today } from "../range";
+import type { AnalyticsReport, CertificateStatus, Dataset, DeployStatus, ManifestStatus, PageStatus, WorkflowRun } from "../types";
 import { card, kpi, kpis, panel, pill, type Tone } from "../ui";
 
 interface Alert {
@@ -83,9 +84,25 @@ function services(manifest: Dataset<ManifestStatus>, run: Dataset<WorkflowRun | 
   ];
 }
 
+/** Visitors over the last 30 days, compared with the 30 before once those were measured too. */
+function visitorsKpi(set: Dataset<AnalyticsReport>): Html {
+  if (set.state === "unavailable") return kpi({ icon: "users", label: "Visiteurs du site", value: html`<span class="muted">Indisponible</span>`, hint: set.reason });
+  const r = set.data;
+  if (!r.measuredSince) {
+    return kpi({ icon: "users", label: "Visiteurs du site", value: html`<span class="muted">Non mesuré</span>`,
+      hint: html`<a href="#/settings">${r.enabled ? "aucune visite comptée pour l'instant" : "mesure d'audience pas encore active"}</a>` });
+  }
+  const current = r.current.visitors ?? r.current.totals.visitors ?? 0;
+  const previous = r.previous.visitors;
+  return kpi({ icon: "users", label: "Visiteurs du site", value: formatNumber(current),
+    hint: previous !== null && r.measuredSince <= r.previous.from ? html`${delta(current, previous)} sur 30 jours` : html`<a href="#/analytics/traffic">30 derniers jours</a>` });
+}
+
 export async function overview(): Promise<Html> {
-  const [releases, run, manifest, deploy, certs, pages, activity] = await Promise.all([
+  const end = today();
+  const [releases, run, manifest, deploy, certs, pages, activity, audience] = await Promise.all([
     data.releases(), data.websiteRun(), data.manifest(), data.deploy(), data.certificates(), data.pages(), data.activity(),
+    data.analyticsReport(shiftDay(end, -29), end),
   ]);
   const list = alerts(manifest, run, deploy, certs);
   const all = releases.state === "live" ? releases.data : [];
@@ -100,7 +117,7 @@ export async function overview(): Promise<Html> {
       kpi({ icon: "tag", label: "Version publique", value: latest ? latest.version : live ? "Aucune" : unknown, hint: latest ? `publiée ${formatAgo(latest.publishedAt)}` : "" }),
       kpi({ icon: "download", label: "Téléchargements de l'installeur", value: live ? formatNumber(totals.installer) : unknown, hint: "GitHub, toutes versions publiques" }),
       kpi({ icon: "update", label: "Vérifications de mise à jour", value: live ? formatNumber(totals.checks) : unknown, hint: "lectures de latest.json par l'application" }),
-      kpi({ icon: "users", label: "Visiteurs du site", value: html`<span class="muted">Non mesuré</span>`, hint: html`<a href="#/settings">mesure d'audience pas encore active</a>` }),
+      visitorsKpi(audience),
     ])}
     <div class="grid">
       ${panel("À surveiller", list.length

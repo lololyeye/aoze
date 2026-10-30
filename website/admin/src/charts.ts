@@ -79,3 +79,67 @@ export function ranking(items: Point[], unit = ""): Html {
     <span class="ranking-track"><span class="ranking-fill" data-w="${(i.value / max) * 100}"></span></span>
   </li>`)}</ol>`;
 }
+
+export interface Timeline {
+  label: string;
+  days: string[];
+  values: number[];
+  /** Same metric over the previous period, drawn dashed for comparison. */
+  previous?: number[];
+  format?: (n: number) => string;
+  dayLabel: (day: string) => string;
+}
+
+const linePath = (values: number[], max: number): string =>
+  values.map((v, i) => `${i ? "L" : "M"}${i + 0.5},${(100 - (v / max) * 100).toFixed(2)}`).join("");
+
+/** Daily values as a line over a stretched SVG; one invisible column per day carries its tooltip. */
+export function timeline(t: Timeline): Html {
+  const fmt = t.format ?? formatNumber;
+  const n = t.values.length;
+  const max = axisMax(Math.max(...t.values, ...(t.previous ?? []), 0));
+  const line = linePath(t.values, max);
+  const middle = t.days[Math.floor((n - 1) / 2)]!;
+  return html`<div class="chart-line" role="img" aria-label="${t.label}">
+    <div class="chart-axis" aria-hidden="true">
+      <span class="at-100">${fmt(max)}</span><span class="at-50">${fmt(max / 2)}</span><span class="at-0">0</span>
+    </div>
+    <div class="tl-plot">
+      <div class="chart-grid" aria-hidden="true"></div>
+      <svg viewBox="${`0 0 ${n} 100`}" preserveAspectRatio="none" aria-hidden="true">
+        <path class="tl-area" d="${`${line}L${n - 0.5},100L0.5,100Z`}"></path>
+        ${t.previous ? html`<path class="tl-prev" d="${linePath(t.previous, max)}"></path>` : ""}
+        <path class="tl-line" d="${line}"></path>
+        ${t.values.map((v, i) => html`<rect class="tl-hit" x="${i}" y="0" width="1" height="100"
+          data-tip="${`${t.dayLabel(t.days[i]!)} : ${fmt(v)}${t.previous ? ` (période précédente : ${fmt(t.previous[i] ?? 0)})` : ""}`}"></rect>`)}
+      </svg>
+      <div class="tl-days" aria-hidden="true"><span>${t.dayLabel(t.days[0]!)}</span>${n > 2 ? html`<span>${t.dayLabel(middle)}</span>` : ""}<span>${t.dayLabel(t.days[n - 1]!)}</span></div>
+    </div>
+  </div>
+  ${t.previous ? html`<p class="tl-legend"><span class="tl-key"></span>Période choisie<span class="tl-key tl-key-prev"></span>Période précédente</p>` : ""}`;
+}
+
+/** Each step as a share of the first one, with the share kept from the step before. */
+export function funnel(steps: { label: string; value: number }[]): Html {
+  const first = steps[0]?.value ?? 0;
+  return html`<ol class="funnel">${steps.map((s, i) => {
+    const before = steps[i - 1]?.value ?? 0;
+    return html`<li>
+      <span class="funnel-label">${s.label}</span>
+      <strong>${formatNumber(s.value)}</strong>
+      <span class="funnel-share">${percent(s.value, first)}</span>
+      <span class="ranking-track"><span class="ranking-fill" data-w="${first ? (s.value / first) * 100 : 0}"></span></span>
+      ${i ? html`<small>${before ? `${percent(s.value, before)} de l'étape précédente` : "aucune visite à l'étape précédente"}</small>` : ""}
+    </li>`;
+  })}</ol>`;
+}
+
+/** Change against the previous period; `lowerIsBetter` for rates such as bounces. */
+export function delta(current: number, previous: number, lowerIsBetter = false): Html {
+  if (!previous) return current ? html`<span class="delta">nouveau</span>` : html`<span class="delta">=</span>`;
+  const change = (current - previous) / previous;
+  const rounded = Math.round(change * 100);
+  if (!rounded) return html`<span class="delta">=</span>`;
+  const good = rounded > 0 !== lowerIsBetter;
+  return html`<span class="${`delta ${good ? "delta-good" : "delta-bad"}`}">${rounded > 0 ? "+" : "−"}${formatNumber(Math.abs(rounded))} %</span>`;
+}

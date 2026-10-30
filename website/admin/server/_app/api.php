@@ -237,6 +237,14 @@ function handle_api(string $method, string $route): never
             require_admin();
             json_response(200, analytics_settings());
 
+        case 'GET analytics/report':
+            require_admin();
+            json_response(200, analytics_report($_GET));
+
+        case 'GET analytics/live':
+            require_admin();
+            json_response(200, analytics_live());
+
         case 'POST analytics/settings':
             $admin = require_admin(write: true);
             $in = json_input();

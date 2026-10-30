@@ -134,3 +134,37 @@ export interface AnalyticsSettings {
   geoMonth: string | null;
   maintainedAt: string | null;
 }
+
+export interface SeriesPoint {
+  day: string;
+  sessions: number;
+  visitors: number;
+  pageviews: number;
+  downloads: number;
+  requested: number;
+}
+
+export interface PeriodSummary {
+  from: string;
+  to: string;
+  /** Sums of the daily totals (sessions, pageviews, engaged_ms, the funnel steps…). */
+  totals: Partial<Record<string, number>>;
+  /** Distinct visitors over the period, null once its raw visits are past the retention period. */
+  visitors: number | null;
+  series: SeriesPoint[];
+}
+
+export interface AnalyticsReport {
+  enabled: boolean;
+  today: string;
+  measuredSince: string | null;
+  current: PeriodSummary & { dimensions: Partial<Record<string, Record<string, number>>> };
+  /** The period of the same length just before. */
+  previous: PeriodSummary;
+  github: { since: string | null; series: { day: string; installer: number; updater: number }[] };
+}
+
+export interface LiveActivity {
+  active: number;
+  recent: { at: string; path: string; country: string }[];
+}

@@ -2,8 +2,8 @@
 // its own database, caches what it fetches, and dates every answer.
 import { api, ApiError } from "./api";
 import type {
-  ActivityEntry, AnalyticsSettings, Announcement, CertificateStatus, Dataset, DeployStatus, LoginEntry, ManifestStatus, PageStatus,
-  Release, SecuritySettings, ServerStatus, SessionEntry, WorkflowRun,
+  ActivityEntry, AnalyticsReport, AnalyticsSettings, Announcement, CertificateStatus, Dataset, DeployStatus, LoginEntry, ManifestStatus, PageStatus,
+  LiveActivity, Release, SecuritySettings, ServerStatus, SessionEntry, WorkflowRun,
 } from "./types";
 
 interface Dated<T> {
@@ -41,3 +41,5 @@ export const logins = () => plain<LoginEntry[]>("logins");
 export const sessions = () => plain<SessionEntry[]>("sessions");
 export const security = () => plain<SecuritySettings>("security");
 export const analyticsSettings = () => plain<AnalyticsSettings>("analytics/settings");
+export const analyticsReport = (from: string, to: string) => plain<AnalyticsReport>(`analytics/report?from=${from}&to=${to}`);
+export const liveActivity = () => plain<LiveActivity>("analytics/live");

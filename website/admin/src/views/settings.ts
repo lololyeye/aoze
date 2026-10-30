@@ -39,7 +39,7 @@ export async function settings(): Promise<Html> {
   return html`<div class="grid">
     ${card("Mesure d'audience", analytics, (s) => html`
       ${switchInput("data-analytics-enabled", s.enabled, "Mesurer la fréquentation du site",
-        "Visites, pages, sources et demandes de téléchargement, sur aoze.fr uniquement. À activer une fois la politique de confidentialité à jour.")}
+        "Visites, pages, sources et demandes de téléchargement, sur aoze.fr uniquement, comme le décrit la politique de confidentialité.")}
       <dl class="kvs settings-rows">
         ${row("État", s.enabled ? pill("ok", "Active") : pill("muted", "Désactivée"))}
         ${row("Conservation des visites", html`<select class="select" data-retention aria-label="Durée de conservation">
@@ -102,7 +102,7 @@ export function bindSettings(root: HTMLElement): void {
     const days = Number(select.value);
     const ok = await confirmAction({
       title: "Changer la durée de conservation ?",
-      text: "Si elle est plus courte, les visites plus anciennes seront effacées au prochain entretien, dans l'heure. Les totaux par jour restent.",
+      text: "Si elle est plus courte, les visites plus anciennes seront effacées au prochain entretien, dans l'heure. Les totaux par jour restent. La politique de confidentialité annonce 6 mois : mettez-la à jour avec la nouvelle durée.",
       confirm: "Changer",
     });
     if (!ok) {

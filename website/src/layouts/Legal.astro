@@ -16,8 +16,10 @@ interface Props {
   toc: [string, string][];
   /** A few plain sentences that sum the page up. */
   summary?: string[];
+  /** When this page changed last, if later than the other legal pages (YYYY-MM-DD). */
+  updated?: string;
 }
-const { lang, path, title, description, h1, lead, toc, summary } = Astro.props;
+const { lang, path, title, description, h1, lead, toc, summary, updated = legal.updated } = Astro.props;
 const words = lang === "fr"
   ? { updated: "Dernière mise à jour :", summary: "En bref", contents: "Sur cette page" }
   : { updated: "Last updated:", summary: "In short", contents: "On this page" };
@@ -28,7 +30,7 @@ const words = lang === "fr"
       <header class="legal-head">
         <h1>{h1}</h1>
         <p class="lead">{lead}</p>
-        <p class="updated">{words.updated} <time datetime={legal.updated}>{formatDate(legal.updated, lang)}</time></p>
+        <p class="updated">{words.updated} <time datetime={updated}>{formatDate(updated, lang)}</time></p>
       </header>
 
       {summary && (

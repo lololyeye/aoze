@@ -191,5 +191,6 @@ function setup(string $token, string $email, string $password): void
     $id = (int) $pdo->lastInsertId();
     $pdo->commit();
     audit($id, 'Compte créé', $email);
+    write_public_announcement(null);
     start_session($id);
 }

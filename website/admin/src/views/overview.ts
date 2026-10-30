@@ -12,7 +12,6 @@ interface Alert {
 
 const CERT_WARN_DAYS = 21;
 
-/** Only real data raises an alert: an example value can neither warn nor reassure. */
 function alerts(manifest: Dataset<ManifestStatus>, run: Dataset<WorkflowRun | null>, deploy: Dataset<DeployStatus>, certs: Dataset<CertificateStatus[]>): Alert[] {
   const list: Alert[] = [];
   if (manifest.state === "live") {
@@ -67,7 +66,7 @@ export async function overview(): Promise<Html> {
         ${list.length
           ? html`<ul class="alerts">${list.map((a) => html`<li class="${`alert alert-${a.tone}`}"><a href="${a.href}">${a.text}</a></li>`)}</ul>`
           : html`<p class="all-clear">${checked.length ? `Rien à signaler pour ${checked.join(", ")}.` : "Aucune vérification réelle pour l'instant."}</p>`}
-        ${pending.length ? html`<p class="note">Pas encore vérifié (données du serveur à venir) : ${pending.join(", ")}.</p>` : ""}
+        ${pending.length ? html`<p class="note">Impossible à vérifier pour le moment : ${pending.join(", ")}.</p>` : ""}
       </section>
 
       ${card("Téléchargements par version", releases, () =>

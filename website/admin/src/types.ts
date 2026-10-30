@@ -1,11 +1,5 @@
-/**
- * Where a piece of data comes from. The interface always shows it: an example is never
- * mistaken for a real figure, and missing data never reads as zero.
- */
-export type Dataset<T> =
-  | { state: "live"; data: T; fetchedAt: string }
-  | { state: "sample"; data: T }
-  | { state: "unavailable"; reason: string };
+/** Data from the server, dated, or the reason it is missing: missing data never reads as zero. */
+export type Dataset<T> = { state: "live"; data: T; fetchedAt: string } | { state: "unavailable"; reason: string };
 
 export interface Installer {
   name: string;
@@ -87,6 +81,8 @@ export interface Announcement {
   startsAt: string | null;
   endsAt: string | null;
   updatedAt: string;
+  /** The draft differs from the banner that is live. */
+  pendingChanges: boolean;
 }
 
 export interface ActivityEntry {

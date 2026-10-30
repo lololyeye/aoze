@@ -13,7 +13,7 @@ function private_dir(): string
     return $dir ??= rtrim(getenv('AOZE_ADMIN_DIR') ?: dirname(__DIR__, 3) . '/aoze-admin', '/\\');
 }
 
-/** @return array{setup_token: string, origin: string} */
+/** @return array{setup_token: string, origin: string, github_token: string, public_dir: string} */
 function config(): array
 {
     static $config = null;
@@ -28,6 +28,10 @@ function config(): array
     return $config = [
         'setup_token' => is_string($values['setup_token'] ?? null) ? $values['setup_token'] : '',
         'origin' => is_string($values['origin'] ?? null) ? rtrim($values['origin'], '/') : 'https://aoze.fr',
+        // Optional, read-only: lifts GitHub's limit of 60 requests an hour per server address.
+        'github_token' => is_string($values['github_token'] ?? null) ? $values['github_token'] : '',
+        // Where the public site lives; the published banner is written there as announcement.json.
+        'public_dir' => is_string($values['public_dir'] ?? null) ? $values['public_dir'] : dirname(private_dir()) . '/public_html',
     ];
 }
 
@@ -53,10 +57,8 @@ function db(): PDO
 function migrate(PDO $pdo): void
 {
     $version = (int) $pdo->query('PRAGMA user_version')->fetchColumn();
-    if ($version >= 1) {
-        return;
-    }
-    $pdo->exec(<<<'SQL'
+    if ($version < 1) {
+        $pdo->exec(<<<'SQL'
         CREATE TABLE users (
             id INTEGER PRIMARY KEY,
             email TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -98,6 +100,14 @@ function migrate(PDO $pdo): void
         );
         PRAGMA user_version = 1;
         SQL);
+    }
+    if ($version < 2) {
+        $pdo->exec(<<<'SQL'
+            CREATE TABLE cache (key TEXT PRIMARY KEY, value TEXT NOT NULL, fetched_at INTEGER NOT NULL);
+            CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+            PRAGMA user_version = 2;
+            SQL);
+    }
 }
 
 /** Details go to the private log; the browser only ever gets a generic message. */

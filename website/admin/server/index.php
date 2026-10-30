@@ -9,6 +9,8 @@ require __DIR__ . '/_app/http.php';
 require __DIR__ . '/_app/totp.php';
 require __DIR__ . '/_app/auth.php';
 require __DIR__ . '/_app/api.php';
+require __DIR__ . '/_app/integrations.php';
+require __DIR__ . '/_app/announcement.php';
 
 send_security_headers();
 

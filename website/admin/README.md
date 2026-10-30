@@ -13,8 +13,10 @@ The private dashboard at `https://aoze.fr/admin/`: a small TypeScript app (`src/
   assets/                   built JS, CSS and fonts
 ~/aoze-admin/               private, outside the web folder (chmod 700)
   config.php                setup token and allowed origin (chmod 600)
-  admin.sqlite              account, sessions, login attempts, activity log
+  admin.sqlite              account, sessions, login attempts, activity log, cache, banner
   error.log                 server errors; the browser only sees a generic message
+~/public_html/announcement.json   the published banner (`null` when there is none), written by the
+                                  admin; the deployment's git reset leaves it alone
 ```
 
 `config.php`:
@@ -25,8 +27,21 @@ return [
     // One-time code to create the administrator account. Remove it once the account exists.
     'setup_token' => 'at least 24 random characters',
     'origin' => 'https://aoze.fr',
+    // Optional. GitHub allows 60 requests an hour per address without a token, and the address
+    // is shared on a hosting server. A fine-grained token with no permission raises it to 5000.
+    // 'github_token' => '',
 ];
 ```
+
+## Data
+
+The server reads GitHub (releases, `latest.json`, the website workflow, the `site` branch), the
+host (the deployment's `~/.aoze-site.git` and `~/aoze-deploy.log`, the HTTPS certificates, the
+main pages) and its own database. GitHub and network answers are cached (2 to 60 minutes); when
+a refresh fails the last good answer is shown with its date. `latest.json` is checked the way the
+updater checks it: version, official download URL, size and SHA-256 of the published file, and the
+file and version named in the signature's trusted comment (the signature itself is verified by
+the app before installing).
 
 ## Security model
 

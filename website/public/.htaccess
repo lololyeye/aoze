@@ -26,6 +26,10 @@ ErrorDocument 404 /404.html
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
   # Browsers keep to HTTPS for a year once they have seen the site over HTTPS.
   Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+  # Written by the admin when a banner is published or removed: always checked again.
+  <If "%{REQUEST_URI} == '/announcement.json'">
+    Header set Cache-Control "no-cache"
+  </If>
 </IfModule>
 
 # Files under /_astro/ have a content hash in their name: they never change, cache them for a year.

@@ -17,7 +17,7 @@ function send_security_headers(): void
     header('Referrer-Policy: no-referrer');
     header('X-Robots-Tag: noindex, nofollow');
     header('Cache-Control: no-store');
-    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
 }
 
 /** @param array<mixed>|object $body */

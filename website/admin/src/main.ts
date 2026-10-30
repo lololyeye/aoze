@@ -178,7 +178,7 @@ async function route(): Promise<void> {
     content = html`<section class="card"><h2>Cette page n'a pas pu s'afficher.</h2><p class="note">Rechargez la page. Si le problème revient, le détail est dans la console du navigateur.</p></section>`;
   }
   if (id !== renderId || !app.contains(main)) return; // a later navigation, or a sign-out, won
-  main.innerHTML = html`<div class="sample-banner">Les cartes marquées « Exemple » montrent des valeurs fictives que le serveur remplacera (phase 4).</div>${content}`.value;
+  main.innerHTML = content.value;
   main.removeAttribute("aria-busy");
   applyBarHeights(main);
   current.bind?.(main);

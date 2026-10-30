@@ -3,6 +3,7 @@ import "@fontsource-variable/inter/wght.css";
 import "../styles/site.css";
 import Logo from "../components/Logo.astro";
 import Backdrop from "../components/Backdrop.astro";
+import Announcement from "../components/Announcement.astro";
 import { GITHUB_URL, RELEASES_URL, href, pageHref } from "../lib/site";
 import { ui, type Lang } from "../i18n/ui";
 
@@ -77,6 +78,7 @@ const home = pageHref(lang);
   <body>
     <Backdrop scene={scene} />
     <a class="skip" href="#main">{t.nav.skip}</a>
+    <Announcement lang={lang} />
 
     <header class="site-header">
       <div class="wrap">

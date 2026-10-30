@@ -178,6 +178,42 @@ function handle_api(string $method, string $route): never
             $rows = db()->query('SELECT at, action, detail FROM audit_log ORDER BY id DESC LIMIT ' . HISTORY_LIMIT)->fetchAll();
             json_response(200, array_map(fn (array $a) => ['at' => iso((int) $a['at']), 'action' => $a['action'], 'detail' => $a['detail']], $rows));
 
+        case 'GET releases':
+            require_admin();
+            json_response(200, releases());
+
+        case 'GET manifest':
+            require_admin();
+            json_response(200, manifest());
+
+        case 'GET build':
+            require_admin();
+            json_response(200, website_run());
+
+        case 'GET deploy':
+            require_admin();
+            json_response(200, deploy_status());
+
+        case 'GET certificates':
+            require_admin();
+            json_response(200, certificates());
+
+        case 'GET pages':
+            require_admin();
+            json_response(200, page_status());
+
+        case 'GET server':
+            require_admin();
+            json_response(200, server_status());
+
+        case 'GET announcement':
+            require_admin();
+            json_response(200, ['data' => announcement(), 'fetchedAt' => iso(time())]);
+
+        case 'POST announcement':
+            $admin = require_admin(write: true);
+            json_response(200, ['data' => save_announcement($admin, json_input()), 'fetchedAt' => iso(time())]);
+
         default:
             throw new HttpError(404, 'Introuvable.');
     }

@@ -1,0 +1,84 @@
+---
+// The banner published from the admin. The admin writes /announcement.json at the site's root;
+// when there is none, or it is outside its dates, nothing shows. A visitor can close it, and it
+// stays closed until a new banner is published.
+import { href } from "../lib/site";
+import type { Lang } from "../i18n/ui";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const fr = lang === "fr";
+---
+<div class="announce" data-announce data-src={href("announcement.json")} hidden>
+  <p><span class="announce-text"></span> <a class="announce-link" hidden>{fr ? "En savoir plus" : "Learn more"}</a></p>
+  <button class="announce-close" type="button" aria-label={fr ? "Fermer l'annonce" : "Close the announcement"}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+  </button>
+</div>
+
+<script>
+  interface Published {
+    id: string;
+    level: "info" | "warning";
+    text: { fr: string; en: string };
+    link: string;
+    startsAt: string | null;
+    endsAt: string | null;
+  }
+  const CLOSED_KEY = "aoze-announcement-closed";
+  const el = document.querySelector<HTMLElement>("[data-announce]");
+
+  const isSafeLink = (link: string) => /^https:\/\//.test(link) || /^\/(?!\/)/.test(link);
+
+  if (el) {
+    fetch(el.dataset.src!, { cache: "no-cache" })
+      .then((r) => (r.ok ? (r.json() as Promise<Published>) : null))
+      .then((a) => {
+        if (!a?.id) return;
+        const now = Date.now();
+        if ((a.startsAt && Date.parse(a.startsAt) > now) || (a.endsAt && Date.parse(a.endsAt) <= now)) return;
+        try {
+          if (localStorage.getItem(CLOSED_KEY) === a.id) return;
+        } catch {}
+        const text = a.text[document.documentElement.lang === "fr" ? "fr" : "en"];
+        if (!text) return;
+        el.dataset.level = a.level === "warning" ? "warning" : "info";
+        el.querySelector(".announce-text")!.textContent = text;
+        const link = el.querySelector<HTMLAnchorElement>(".announce-link")!;
+        if (a.link && isSafeLink(a.link)) {
+          link.href = a.link;
+          link.hidden = false;
+        }
+        el.querySelector(".announce-close")!.addEventListener("click", () => {
+          el.hidden = true;
+          try {
+            localStorage.setItem(CLOSED_KEY, a.id);
+          } catch {}
+        });
+        el.hidden = false;
+      })
+      .catch(() => {});
+  }
+</script>
+
+<style>
+  .announce {
+    position: relative; z-index: 51; display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 9px 48px; font-size: 14.5px; text-align: center; color: var(--text);
+    background: rgb(61 214 208 / 0.12); border-bottom: 1px solid rgb(61 214 208 / 0.25);
+    animation: announce-in 0.5s var(--ease);
+  }
+  .announce[hidden] { display: none; }
+  .announce[data-level="warning"] { background: rgb(245 194 90 / 0.12); border-color: rgb(245 194 90 / 0.3); color: #f8dca0; }
+  .announce p { margin: 0; }
+  .announce-link { color: inherit; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+  .announce-close {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 8px;
+    background: none; color: inherit; opacity: 0.7; cursor: pointer;
+  }
+  .announce-close:hover { opacity: 1; background: rgb(255 255 255 / 0.06); }
+  .announce-close svg { width: 16px; height: 16px; }
+  @keyframes announce-in { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .announce { animation: none; } }
+</style>

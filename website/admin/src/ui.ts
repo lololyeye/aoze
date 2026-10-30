@@ -9,9 +9,7 @@ export const pill = (tone: Tone, label: string): Html => html`<span class="pill 
 function sourceTag(set: Dataset<unknown>): Html {
   switch (set.state) {
     case "live":
-      return html`<span class="source source-live" title="${`Mis à jour ${formatAgo(set.fetchedAt)}`}">Direct</span>`;
-    case "sample":
-      return html`<span class="source source-sample" title="Valeurs d'exemple : le serveur les fournira">Exemple</span>`;
+      return html`<span class="source source-live" title="${`Mis à jour ${formatAgo(set.fetchedAt)}`}">${formatAgo(set.fetchedAt)}</span>`;
     case "unavailable":
       return html`<span class="source source-off">Indisponible</span>`;
   }

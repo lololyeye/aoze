@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://aoze.fr/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/fr/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/download/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/download/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/download/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/fr/download/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/download/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/download/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/credits/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/credits/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/credits/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/fr/credits/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/credits/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/credits/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/license/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/license/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/license/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/fr/license/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/license/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/license/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/legal/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/legal/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/legal/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/fr/legal/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/legal/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/legal/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/privacy/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/fr/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/privacy/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/terms/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/terms/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/terms/"/>
+  </url>
+  <url>
+    <loc>https://aoze.fr/fr/terms/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aoze.fr/terms/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aoze.fr/fr/terms/"/>
+  </url>
+</urlset>

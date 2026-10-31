@@ -1,0 +1,1 @@
+const a="lololyeye/aoze",r=`https://api.github.com/repos/${a}/releases?per_page=100`,o=/_x64-setup\.exe$/i;function l(t){return t.flatMap(e=>e.assets).filter(e=>o.test(e.name)).reduce((e,s)=>e+s.download_count,0)}function n(t=""){return"/".replace(/\/$/,"")+"/"+t.replace(/^\//,"")}const c=n("get/");export{r as A,c as D,n as h,l as i};

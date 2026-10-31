@@ -71,7 +71,7 @@ function collect_event(): void
         set_opt_out($kind === 'optout');
         return;
     }
-    $path = is_string($in['p'] ?? null) && preg_match('#^/[A-Za-z0-9/_.%-]{0,200}$#', $in['p']) === 1 ? $in['p'] : null;
+    $path = is_string($in['p'] ?? null) && preg_match('#^/(?!/)[A-Za-z0-9/_.%-]{0,200}$#', $in['p']) === 1 ? $in['p'] : null;
     if ($path === null || !is_counted() || !within_rate()) {
         return;
     }

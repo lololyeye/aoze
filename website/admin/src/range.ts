@@ -17,6 +17,7 @@ const MAX_DAYS = 760;
 /** Days are counted in Paris time, like the server's daily totals. */
 const parisDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" });
 const shortDay = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" });
+const shortDayYear = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 export const today = (): string => parisDay.format(new Date());
 
@@ -27,7 +28,10 @@ export function shiftDay(day: string, days: number): string {
 }
 
 export const dayCount = (p: Period): number => Math.round((Date.parse(p.to) - Date.parse(p.from)) / 86_400_000) + 1;
-export const formatDay = (day: string): string => shortDay.format(new Date(`${day}T00:00:00Z`));
+export const formatDay = (day: string, withYear = false): string => (withYear ? shortDayYear : shortDay).format(new Date(`${day}T00:00:00Z`));
+
+/** Day labels for a list of days, with the year when the list spans more than one. */
+export const dayLabeller = (first: string, last: string) => (day: string): string => formatDay(day, first.slice(0, 4) !== last.slice(0, 4));
 
 type Choice = { preset: string } | { preset: "custom"; from: string; to: string };
 
@@ -57,7 +61,8 @@ function choose(next: Choice): void {
 }
 
 export function periodLabel(p: Period = currentPeriod()): string {
-  return p.from === p.to ? formatDay(p.from) : `du ${formatDay(p.from)} au ${formatDay(p.to)}`;
+  const label = dayLabeller(p.from, p.to);
+  return p.from === p.to ? label(p.from) : `du ${label(p.from)} au ${label(p.to)}`;
 }
 
 export function rangePicker(): Html {

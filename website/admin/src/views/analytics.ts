@@ -4,7 +4,7 @@ import { downloadTotals, publicReleases } from "../downloads";
 import { formatAgo, formatDate, formatNumber } from "../format";
 import { html, type Html } from "../html";
 import { icon, type IconName } from "../icons";
-import { currentPeriod, formatDay, periodLabel } from "../range";
+import { currentPeriod, dayLabeller, periodLabel } from "../range";
 import type { AnalyticsReport, PeriodSummary, SeriesPoint } from "../types";
 import { card, empty, kpi, kpis, panel } from "../ui";
 
@@ -106,7 +106,7 @@ function series(c: Context, metric: keyof Omit<SeriesPoint, "day">, label: strin
     days: current.series.map((p) => p.day),
     values: current.series.map((p) => p[metric]),
     previous: c.comparable ? previous.series.map((p) => p[metric]) : undefined,
-    dayLabel: formatDay,
+    dayLabel: dayLabeller(current.from, current.to),
   });
 }
 
@@ -278,7 +278,7 @@ export async function downloads(): Promise<Html> {
                 label: "Téléchargements de l'installeur comptés par GitHub, par jour",
                 days: r.github.series.map((p) => p.day),
                 values: r.github.series.map((p) => p.installer),
-                dayLabel: formatDay,
+                dayLabel: dayLabeller(r.current.from, r.current.to),
               })}<p class="note">Relevé à chaque entretien horaire depuis le ${formatDate(r.github.since)} : une hausse est datée du jour où elle est vue. L'auto-update n'est pas compté ici.</p>`
             : html`<p class="unavailable">Pas encore de relevé des compteurs de GitHub.</p>`, { wide: true, icon: "analytics" })}`;
       })()

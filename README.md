@@ -30,7 +30,6 @@ Aoze is a free Windows app that **upscales, cleans up, smooths and compresses** 
 
 ## ✨ Why Aoze
 
-|  |  |
 |---|---|
 | 🖱️ **One click** | Drop a file, choose a preset, done. Every option has a **?** that explains it in plain words, and a guided tutorial shows you around on the first launch. |
 | 🔒 **100 % local** | Your files are processed on your own PC, with your own graphics card. Works offline. |

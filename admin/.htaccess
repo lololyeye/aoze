@@ -1,0 +1,20 @@
+Options -Indexes
+# No /admin -> /admin/ redirect: it would tell anyone the folder exists.
+DirectorySlash Off
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # With DirectorySlash Off, mod_rewrite skips "/admin" (a directory without its slash) unless
+  # told otherwise, and Apache then answers 403, which reveals the folder.
+  RewriteOptions AllowNoSlash
+  # This file's rewrite rules replace the site's for /admin, so the redirect to https://aoze.fr
+  # is repeated here: the cookies only travel over HTTPS.
+  RewriteCond %{HTTPS} !=on [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteRule ^ https://aoze.fr%{REQUEST_URI} [R=301,L]
+  # Every path, files included, goes through index.php, which answers as a missing page to
+  # anyone without the access key (_app/gate.php).
+  RewriteRule ^index\.php$ - [L]
+  RewriteRule ^ index.php [L]
+</IfModule>

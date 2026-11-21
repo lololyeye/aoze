@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1e26"/>
+      <stop offset="1" stop-color="#0a0b0f"/>
+    </linearGradient>
+    <linearGradient id="accent" gradientUnits="userSpaceOnUse" x1="392" y1="0" x2="862" y2="0">
+      <stop offset="0" stop-color="#2bb8d6"/>
+      <stop offset="1" stop-color="#5ff0d4"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="208" fill="url(#bg)"/>
+  <rect x="64.5" y="64.5" width="895" height="895" rx="207.5" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="3"/>
+  <!-- The "A": two strokes meeting at the apex -->
+  <path d="M292 772 L512 248 L732 772" fill="none" stroke="#eef1f5" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Crossbar extending past the right leg: the output is bigger than the input -->
+  <path d="M392 616 L800 616" fill="none" stroke="url(#accent)" stroke-width="76" stroke-linecap="round"/>
+  <circle cx="800" cy="616" r="62" fill="url(#accent)"/>
+</svg>
